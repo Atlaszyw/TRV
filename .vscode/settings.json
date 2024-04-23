@@ -1,0 +1,3 @@
+{
+    "verilog.linting.slang.arguments": "--std 1800-2023 -j 12 -I${workspaceFolder}/rtl/... -y /home/main/Projects/tinyriscv/rtl/... --Y sv --Y v"
+}

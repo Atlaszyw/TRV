@@ -1,0 +1,12 @@
+# Object files
+*.o
+*.ko
+*.obj
+
+/fpga_prj
+/fpga
+generated
+*.bin
+*.elf
+*.objdump
+*.reference_output
