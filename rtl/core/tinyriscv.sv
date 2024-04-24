@@ -18,21 +18,21 @@ module tinyriscv
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     output logic [MemAddrBus - 1:0] rib_ex_addr_o,  // 读、写外设的地址
-    input  wire [    MemBus - 1:0] rib_ex_data_i,  // 从外设读取的数据
+    input  wire  [    MemBus - 1:0] rib_ex_data_i,  // 从外设读取的数据
     output logic [    MemBus - 1:0] rib_ex_data_o,  // 写入外设的数据
     output logic                    rib_ex_req_o,   // 访问外设请求
     output logic                    rib_ex_we_o,    // 写外设标志
 
     output logic [MemAddrBus - 1:0] rib_pc_addr_o,  // 取指地址
-    input  wire [    MemBus - 1:0] rib_pc_data_i,  // 取到的指令内容
+    input  wire  [    MemBus - 1:0] rib_pc_data_i,  // 取到的指令内容
 
-    input  wire [RegAddrBus - 1:0] jtag_reg_addr_i,  // jtag模块读、写寄存器的地址
-    input  wire [    RegBus - 1:0] jtag_reg_data_i,  // jtag模块写寄存器数据
-    input  wire                    jtag_reg_we_i,    // jtag模块写寄存器标志
+    input  wire  [RegAddrBus - 1:0] jtag_reg_addr_i,  // jtag模块读、写寄存器的地址
+    input  wire  [    RegBus - 1:0] jtag_reg_data_i,  // jtag模块写寄存器数据
+    input  wire                     jtag_reg_we_i,    // jtag模块写寄存器标志
     output logic [    RegBus - 1:0] jtag_reg_data_o,  // jtag模块读取到的寄存器数据
 
     input rib_hold_flag_i,   // 总线暂停标志
@@ -148,8 +148,8 @@ module tinyriscv
 
     // pc_reg模块例化
     pc_reg u_pc_reg (
-        .clk              (clk),
-        .rst              (rst),
+        .clk_i            (clk_i),
+        .rst_ni           (rst_ni),
         .jtag_reset_flag_i(jtag_reset_flag_i),
         .pc_o             (pc_pc_o),
         .hold_flag_i      (ctrl_hold_flag_o),
@@ -158,8 +158,8 @@ module tinyriscv
     );
 
     // ctrl模块例化
-    ctrl u_ctrl (
-        .rst              (rst),
+    control_tr u_ctrl (
+        .rst_ni           (rst_ni),
         .jump_flag_i      (ex_jump_flag_o),
         .jump_addr_i      (ex_jump_addr_o),
         .hold_flag_ex_i   (ex_hold_flag_o),
@@ -173,8 +173,8 @@ module tinyriscv
 
     // regs模块例化
     regs u_regs (
-        .clk        (clk),
-        .rst        (rst),
+        .clk_i      (clk_i),
+        .rst_ni     (rst_ni),
         .we_i       (ex_reg_we_o),
         .waddr_i    (ex_reg_waddr_o),
         .wdata_i    (ex_reg_wdata_o),
@@ -190,8 +190,8 @@ module tinyriscv
 
     // csr_reg模块例化
     csr_reg u_csr_reg (
-        .clk              (clk),
-        .rst              (rst),
+        .clk_i            (clk_i),
+        .rst_ni           (rst_ni),
         .we_i             (ex_csr_we_o),
         .raddr_i          (id_csr_raddr_o),
         .waddr_i          (ex_csr_waddr_o),
@@ -210,8 +210,8 @@ module tinyriscv
 
     // if_id模块例化
     if_id u_if_id (
-        .clk        (clk),
-        .rst        (rst),
+        .clk_i      (clk_i),
+        .rst_ni     (rst_ni),
         .inst_i     (rib_pc_data_i),
         .inst_addr_i(pc_pc_o),
         .int_flag_i (int_i),
@@ -223,7 +223,7 @@ module tinyriscv
 
     // id模块例化
     id u_id (
-        .rst           (rst),
+        .rst_ni        (rst_ni),
         .inst_i        (if_inst_o),
         .inst_addr_i   (if_inst_addr_o),
         .reg1_rdata_i  (regs_rdata1_o),
@@ -250,8 +250,8 @@ module tinyriscv
 
     // id_ex模块例化
     id_ex u_id_ex (
-        .clk         (clk),
-        .rst         (rst),
+        .clk_i       (clk_i),
+        .rst_ni      (rst_ni),
         .inst_i      (id_inst_o),
         .inst_addr_i (id_inst_addr_o),
         .reg_we_i    (id_reg_we_o),
@@ -283,7 +283,7 @@ module tinyriscv
 
     // ex模块例化
     ex u_ex (
-        .rst            (rst),
+        .rst_ni         (rst_ni),
         .inst_i         (ie_inst_o),
         .inst_addr_i    (ie_inst_addr_o),
         .reg_we_i       (ie_reg_we_o),
@@ -327,8 +327,8 @@ module tinyriscv
 
     // div模块例化
     div u_div (
-        .clk        (clk),
-        .rst        (rst),
+        .clk_i      (clk_i),
+        .rst_ni     (rst_ni),
         .dividend_i (ex_div_dividend_o),
         .divisor_i  (ex_div_divisor_o),
         .start_i    (ex_div_start_o),
@@ -342,8 +342,8 @@ module tinyriscv
 
     // clint模块例化
     clint u_clint (
-        .clk            (clk),
-        .rst            (rst),
+        .clk_i          (clk_i),
+        .rst_ni         (rst_ni),
         .int_flag_i     (if_int_flag_o),
         .inst_i         (id_inst_o),
         .inst_addr_i    (id_inst_addr_o),

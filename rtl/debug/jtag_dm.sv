@@ -30,7 +30,7 @@ module jtag_dm #(
     parameter DMI_OP_BITS   = 2
 ) (
 
-    clk,
+    clk_i,
     rst_n,
 
     // rx
@@ -58,12 +58,12 @@ module jtag_dm #(
 
 );
 
-    parameter DM_RESP_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
-    parameter DTM_REQ_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
-    parameter SHIFT_REG_BITS = DTM_REQ_BITS;
+    localparam DM_RESP_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
+    localparam DTM_REQ_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
+    localparam SHIFT_REG_BITS = DTM_REQ_BITS;
 
     // 输入输出信号
-    input wire clk;
+    input wire clk_i;
     input wire rst_n;
     output wire dm_ack_o;
     input wire dtm_req_valid_i;
@@ -84,16 +84,16 @@ module jtag_dm #(
     output wire dm_reset_req_o;
 
     // DM模块寄存器
-    reg [31:0] dcsr;
-    reg [31:0] dmstatus;
-    reg [31:0] dmcontrol;
-    reg [31:0] hartinfo;
-    reg [31:0] abstractcs;
-    reg [31:0] data0;
-    reg [31:0] sbcs;
-    reg [31:0] sbaddress0;
-    reg [31:0] sbdata0;
-    reg [31:0] command;
+    logic [31:0] dcsr;
+    logic [31:0] dmstatus;
+    logic [31:0] dmcontrol;
+    logic [31:0] hartinfo;
+    logic [31:0] abstractcs;
+    logic [31:0] data0;
+    logic [31:0] sbcs;
+    logic [31:0] sbaddress0;
+    logic [31:0] sbdata0;
+    logic [31:0] command;
 
     // DM模块寄存器地址
     localparam DCSR = 16'h7b0;
@@ -110,17 +110,17 @@ module jtag_dm #(
 
     localparam OP_SUCC = 2'b00;
 
-    reg [31:0] read_data;
-    reg dm_reg_we;
-    reg [4:0] dm_reg_addr;
-    reg [31:0] dm_reg_wdata;
-    reg dm_mem_we;
-    reg [31:0] dm_mem_addr;
-    reg [31:0] dm_mem_wdata;
-    reg dm_halt_req;
-    reg dm_reset_req;
-    reg need_resp;
-    reg is_read_reg;
+    logic [31:0] read_data;
+    logic dm_reg_we;
+    logic [4:0] dm_reg_addr;
+    logic [31:0] dm_reg_wdata;
+    logic dm_mem_we;
+    logic [31:0] dm_mem_addr;
+    logic [31:0] dm_mem_wdata;
+    logic dm_halt_req;
+    logic dm_reset_req;
+    logic need_resp;
+    logic is_read_reg;
     wire rx_valid;
     wire [DTM_REQ_BITS-1:0] rx_data;
 
@@ -133,7 +133,7 @@ module jtag_dm #(
 
     wire read_dmstatus = (op == `DTM_OP_READ) & (address == DMSTATUS);
 
-    always @(posedge clk or negedge rst_n) begin
+    always @(posedge clk_i or negedge rst_n) begin
         if (!rst_n) begin
             dm_mem_we    <= 1'b0;
             dm_reg_we    <= 1'b0;
@@ -327,7 +327,7 @@ module jtag_dm #(
     full_handshake_tx #(
         .DW(DM_RESP_BITS)
     ) tx (
-        .clk       (clk),
+        .clk_i     (clk_i),
         .rst_n     (rst_n),
         .ack_i     (dtm_ack_i),
         .req_i     (need_resp),
@@ -340,7 +340,7 @@ module jtag_dm #(
     full_handshake_rx #(
         .DW(DTM_REQ_BITS)
     ) rx (
-        .clk        (clk),
+        .clk_i      (clk_i),
         .rst_n      (rst_n),
         .req_i      (dtm_req_valid_i),
         .req_data_i (dtm_req_data_i),

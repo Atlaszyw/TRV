@@ -19,8 +19,8 @@ module id_ex
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input [    InstBus - 1:0] inst_i,        // 指令内容
     input [InstAddrBus - 1:0] inst_addr_i,   // 指令地址
@@ -58,8 +58,8 @@ module id_ex
 
     wire [InstBus - 1:0] inst;
     gen_pipe_dff #(32) inst_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         INST_NOP,
         inst_i,
@@ -69,8 +69,8 @@ module id_ex
 
     wire [InstAddrBus - 1:0] inst_addr;
     gen_pipe_dff #(32) inst_addr_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         inst_addr_i,
@@ -80,8 +80,8 @@ module id_ex
 
     wire reg_we;
     gen_pipe_dff #(1) reg_we_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         WriteDisable,
         reg_we_i,
@@ -91,8 +91,8 @@ module id_ex
 
     wire [RegAddrBus - 1:0] reg_waddr;
     gen_pipe_dff #(5) reg_waddr_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroReg,
         reg_waddr_i,
@@ -102,8 +102,8 @@ module id_ex
 
     wire [RegBus - 1:0] reg1_rdata;
     gen_pipe_dff #(32) reg1_rdata_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         reg1_rdata_i,
@@ -113,8 +113,8 @@ module id_ex
 
     wire [RegBus - 1:0] reg2_rdata;
     gen_pipe_dff #(32) reg2_rdata_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         reg2_rdata_i,
@@ -124,8 +124,8 @@ module id_ex
 
     wire csr_we;
     gen_pipe_dff #(1) csr_we_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         WriteDisable,
         csr_we_i,
@@ -135,8 +135,8 @@ module id_ex
 
     wire [MemAddrBus - 1:0] csr_waddr;
     gen_pipe_dff #(32) csr_waddr_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         csr_waddr_i,
@@ -146,8 +146,8 @@ module id_ex
 
     wire [RegBus - 1:0] csr_rdata;
     gen_pipe_dff #(32) csr_rdata_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         csr_rdata_i,
@@ -157,8 +157,8 @@ module id_ex
 
     wire [MemAddrBus - 1:0] op1;
     gen_pipe_dff #(32) op1_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         op1_i,
@@ -168,8 +168,8 @@ module id_ex
 
     wire [MemAddrBus - 1:0] op2;
     gen_pipe_dff #(32) op2_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         op2_i,
@@ -179,8 +179,8 @@ module id_ex
 
     wire [MemAddrBus - 1:0] op1_jump;
     gen_pipe_dff #(32) op1_jump_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         op1_jump_i,
@@ -190,8 +190,8 @@ module id_ex
 
     wire [MemAddrBus - 1:0] op2_jump;
     gen_pipe_dff #(32) op2_jump_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         op2_jump_i,

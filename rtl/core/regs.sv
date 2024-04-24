@@ -19,8 +19,8 @@ module regs
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     // from ex
     input                    we_i,     // 写寄存器标志
@@ -52,8 +52,8 @@ module regs
     logic [RegBus - 1:0] regs[RegNum];
 
     // 写寄存器
-    always_ff @(posedge clk) begin
-        if (rst == RstDisable) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == RstDisable) begin
             // 优先ex模块写操作
             if ((we_i == WriteEnable) && (waddr_i != ZeroReg)) begin
                 regs[waddr_i] <= wdata_i;

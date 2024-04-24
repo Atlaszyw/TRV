@@ -19,8 +19,8 @@ module gen_pipe_dff #(
     parameter DW = 32
 ) (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
     input hold_en,
 
     input  wire  [DW-1:0] def_val,
@@ -31,8 +31,8 @@ module gen_pipe_dff #(
 
     logic [DW-1:0] qout_r;
 
-    always_ff @(posedge clk) begin
-        if (!rst | hold_en) begin
+    always_ff @(posedge clk_i) begin
+        if (!rst_ni | hold_en) begin
             qout_r <= def_val;
         end
         else begin
@@ -49,8 +49,8 @@ module gen_rst_0_dff #(
     parameter DW = 32
 ) (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input  wire  [DW-1:0] din,
     output logic [DW-1:0] qout
@@ -59,8 +59,8 @@ module gen_rst_0_dff #(
 
     logic [DW-1:0] qout_r;
 
-    always_ff @(posedge clk) begin
-        if (!rst) begin
+    always_ff @(posedge clk_i) begin
+        if (!rst_ni) begin
             qout_r <= {DW{1'b0}};
         end
         else begin
@@ -77,8 +77,8 @@ module gen_rst_1_dff #(
     parameter DW = 32
 ) (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input  wire  [DW-1:0] din,
     output logic [DW-1:0] qout
@@ -87,8 +87,8 @@ module gen_rst_1_dff #(
 
     logic [DW-1:0] qout_r;
 
-    always_ff @(posedge clk) begin
-        if (!rst) begin
+    always_ff @(posedge clk_i) begin
+        if (!rst_ni) begin
             qout_r <= {DW{1'b1}};
         end
         else begin
@@ -105,8 +105,8 @@ module gen_rst_def_dff #(
     parameter DW = 32
 ) (
 
-    input          clk,
-    input          rst,
+    input          clk_i,
+    input          rst_ni,
     input [DW-1:0] def_val,
 
     input  wire  [DW-1:0] din,
@@ -116,8 +116,8 @@ module gen_rst_def_dff #(
 
     logic [DW-1:0] qout_r;
 
-    always_ff @(posedge clk) begin
-        if (!rst) begin
+    always_ff @(posedge clk_i) begin
+        if (!rst_ni) begin
             qout_r <= def_val;
         end
         else begin
@@ -134,8 +134,8 @@ module gen_en_dff #(
     parameter DW = 32
 ) (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input  wire           en,
     input  wire  [DW-1:0] din,
@@ -145,8 +145,8 @@ module gen_en_dff #(
 
     logic [DW-1:0] qout_r;
 
-    always_ff @(posedge clk) begin
-        if (!rst) begin
+    always_ff @(posedge clk_i) begin
+        if (!rst_ni) begin
             qout_r <= {DW{1'b0}};
         end
         else if (en == 1'b1) begin

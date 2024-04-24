@@ -18,8 +18,8 @@
 // GPIO模块
 module gpio (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input        we_i,
     input [31:0] addr_i,
@@ -27,7 +27,7 @@ module gpio (
 
     output logic [31:0] data_o,
 
-    input  wire [ 1:0] io_pin_i,
+    input  wire  [ 1:0] io_pin_i,
     output logic [31:0] reg_ctrl,
     output logic [31:0] reg_data
 
@@ -49,10 +49,13 @@ module gpio (
     assign reg_ctrl = gpio_ctrl;
     assign reg_data = gpio_data;
 
+    logic addr_dummy;
+    assign addr_dummy = |addr_i[31:4];
+
 
     // 写寄存器
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             gpio_data <= 32'h0;
             gpio_ctrl <= 32'h0;
         end
@@ -80,7 +83,7 @@ module gpio (
 
     // 读寄存器
     always_comb begin
-        if (rst == 1'b0) begin
+        if (rst_ni == 1'b0) begin
             data_o = 32'h0;
         end
         else begin

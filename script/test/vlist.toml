@@ -1,0 +1,3 @@
+v = [
+    "$PRJ_ROOT/rtl/utils/glbl.v",
+]

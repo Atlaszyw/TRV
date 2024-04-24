@@ -19,8 +19,8 @@ module tinyriscv_soc_top
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     output logic over,  // 测试是否完成信号
     output logic succ,  // 测试是否成功信号
@@ -139,8 +139,8 @@ module tinyriscv_soc_top
     assign halted_ind = ~jtag_halt_req_o;
 
 
-    always_ff @(posedge clk) begin
-        if (rst == RstEnable) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             over <= 1'b1;
             succ <= 1'b1;
         end
@@ -152,8 +152,8 @@ module tinyriscv_soc_top
 
     // tinyriscv处理器核模块例化
     tinyriscv u_tinyriscv (
-        .clk          (clk),
-        .rst          (rst),
+        .clk_i        (clk_i),
+        .rst_ni       (rst_ni),
         .rib_ex_addr_o(m0_addr_i),
         .rib_ex_data_i(m0_data_o),
         .rib_ex_data_o(m0_data_i),
@@ -177,8 +177,8 @@ module tinyriscv_soc_top
 
     // rom模块例化
     rom u_rom (
-        .clk   (clk),
-        .rst   (rst),
+        .clk_i (clk_i),
+        .rst_ni(rst_ni),
         .we_i  (s0_we_o),
         .addr_i(s0_addr_o),
         .data_i(s0_data_o),
@@ -187,8 +187,8 @@ module tinyriscv_soc_top
 
     // ram模块例化
     ram u_ram (
-        .clk   (clk),
-        .rst   (rst),
+        .clk_i (clk_i),
+        .rst_ni(rst_ni),
         .we_i  (s1_we_o),
         .addr_i(s1_addr_o),
         .data_i(s1_data_o),
@@ -197,8 +197,8 @@ module tinyriscv_soc_top
 
     // timer模块例化
     timer timer_0 (
-        .clk      (clk),
-        .rst      (rst),
+        .clk_i    (clk_i),
+        .rst_ni   (rst_ni),
         .data_i   (s2_data_o),
         .addr_i   (s2_addr_o),
         .we_i     (s2_we_o),
@@ -208,8 +208,8 @@ module tinyriscv_soc_top
 
     // uart模块例化
     uart uart_0 (
-        .clk   (clk),
-        .rst   (rst),
+        .clk_i (clk_i),
+        .rst_ni(rst_ni),
         .we_i  (s3_we_o),
         .addr_i(s3_addr_o),
         .data_i(s3_data_o),
@@ -227,8 +227,8 @@ module tinyriscv_soc_top
 
     // gpio模块例化
     gpio gpio_0 (
-        .clk     (clk),
-        .rst     (rst),
+        .clk_i   (clk_i),
+        .rst_ni  (rst_ni),
         .we_i    (s4_we_o),
         .addr_i  (s4_addr_o),
         .data_i  (s4_data_o),
@@ -240,8 +240,8 @@ module tinyriscv_soc_top
 
     // spi模块例化
     spi spi_0 (
-        .clk     (clk),
-        .rst     (rst),
+        .clk_i   (clk_i),
+        .rst_ni  (rst_ni),
         .data_i  (s5_data_o),
         .addr_i  (s5_addr_o),
         .we_i    (s5_we_o),
@@ -254,8 +254,8 @@ module tinyriscv_soc_top
 
     // rib模块例化
     rib u_rib (
-        .clk(clk),
-        .rst(rst),
+        .clk_i (clk_i),
+        .rst_ni(rst_ni),
 
         // master 0 interface
         .m0_addr_i(m0_addr_i),
@@ -326,8 +326,8 @@ module tinyriscv_soc_top
 
     // 串口下载模块例化
     uart_debug u_uart_debug (
-        .clk        (clk),
-        .rst        (rst),
+        .clk_i      (clk_i),
+        .rst_ni     (rst_ni),
         .debug_en_i (uart_debug_pin),
         .req_o      (m3_req_i),
         .mem_we_o   (m3_we_i),
@@ -342,8 +342,8 @@ module tinyriscv_soc_top
         .DMI_DATA_BITS(32),
         .DMI_OP_BITS  (2)
     ) u_jtag_top (
-        .clk         (clk),
-        .jtag_rst_n  (rst),
+        .clk_i       (clk_i),
+        .jtag_rst_n  (rst_ni),
         .jtag_pin_TCK(jtag_TCK),
         .jtag_pin_TMS(jtag_TMS),
         .jtag_pin_TDI(jtag_TDI),

@@ -15,7 +15,7 @@
  */
 
 
-// clk = 50MHz时对应的波特率分频系数
+// clk_i = 50MHz时对应的波特率分频系数
 `define UART_BAUD_115200 32'h1B8
 
 // 串口寄存器地址
@@ -43,8 +43,8 @@
 // 串口更新固件模块
 module uart_debug (
 
-    input wire clk,  // 时钟信号
-    input wire rst,  // 复位信号
+    input wire clk_i,  // 时钟信号
+    input wire rst_ni,  // 复位信号
 
     input wire debug_en_i,  // 模块使能信号
 
@@ -94,11 +94,11 @@ module uart_debug (
 
 
     // 向总线请求信号
-    assign req_o = (rst == 1'b1 && debug_en_i == 1'b1) ? 1'b1 : 1'b0;
+    assign req_o = (rst_ni == 1'b1 && debug_en_i == 1'b1) ? 1'b1 : 1'b0;
 
 
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             mem_addr_o          <= 32'h0;
             mem_we_o            <= 1'b0;
             mem_wdata_o         <= 32'h0;
@@ -220,8 +220,8 @@ module uart_debug (
     end
 
     // 数据包的大小
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             need_to_rec_bytes <= 8'h0;
         end
         else begin
@@ -237,8 +237,8 @@ module uart_debug (
     end
 
     // 读接收到的串口数据
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             rec_bytes_index <= 8'h0;
         end
         else begin
@@ -258,8 +258,8 @@ module uart_debug (
     end
 
     // 固件大小
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             fw_file_size <= 32'h0;
         end
         else begin
@@ -272,8 +272,8 @@ module uart_debug (
     end
 
     // 烧写固件
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             write_mem_addr <= 32'h0;
         end
         else begin
@@ -291,8 +291,8 @@ module uart_debug (
         end
     end
 
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             write_mem_data <= 32'h0;
         end
         else begin
@@ -315,8 +315,8 @@ module uart_debug (
         end
     end
 
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             write_mem_byte_index0 <= 8'h0;
         end
         else begin
@@ -334,8 +334,8 @@ module uart_debug (
         end
     end
 
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             write_mem_byte_index1 <= 8'h0;
         end
         else begin
@@ -353,8 +353,8 @@ module uart_debug (
         end
     end
 
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             write_mem_byte_index2 <= 8'h0;
         end
         else begin
@@ -372,8 +372,8 @@ module uart_debug (
         end
     end
 
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             write_mem_byte_index3 <= 8'h0;
         end
         else begin
@@ -392,8 +392,8 @@ module uart_debug (
     end
 
     // CRC计算
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             crc_result <= 16'h0;
         end
         else begin
@@ -420,8 +420,8 @@ module uart_debug (
         end
     end
 
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             crc_bit_index <= 4'h0;
         end
         else begin
@@ -441,8 +441,8 @@ module uart_debug (
         end
     end
 
-    always @(posedge clk) begin
-        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+    always @(posedge clk_i) begin
+        if (rst_ni == 1'b0 || debug_en_i == 1'b0) begin
             crc_byte_index <= 8'h0;
         end
         else begin

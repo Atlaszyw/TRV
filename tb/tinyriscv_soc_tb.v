@@ -493,11 +493,6 @@ module tinyriscv_soc_tb;
         $finish;
     end
 
-    // read mem data
-    initial begin
-        $readmemh ("inst.data", tinyriscv_soc_top_0.u_rom._rom);
-    end
-
     // generate wave file, used by gtkwave
     initial begin
         $dumpfile("tinyriscv_soc_tb.vcd");

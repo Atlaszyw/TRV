@@ -18,8 +18,8 @@
 // spi master模块
 module spi (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input [31:0] data_i,
     input [31:0] addr_i,
@@ -27,10 +27,10 @@ module spi (
 
     output logic [31:0] data_o,
 
-    output logic  spi_mosi,  // spi控制器输出、spi设备输入信号
-    input  wire spi_miso,  // spi控制器输入、spi设备输出信号
+    output logic spi_mosi,  // spi控制器输出、spi设备输入信号
+    input  wire  spi_miso,  // spi控制器输入、spi设备输出信号
     output logic spi_ss,    // spi设备片选
-    output logic  spi_clk    // spi设备时钟，最大频率为输入clk的一半
+    output logic spi_clk    // spi设备时钟，最大频率为输入clk的一半
 
 );
 
@@ -45,36 +45,38 @@ module spi (
     // [1]: CPOL
     // [2]: CPHA
     // [3]: select slave, 1: select, 0: deselect
-    // [15:8]: clk div
-    logic  [31:0] spi_ctrl;
+    // [15:8]: clk_i div
+    logic [31:0] spi_ctrl;
     // spi数据寄存器
     // addr: 0x04
     // [7:0] cmd or inout data
-    logic  [31:0] spi_data;
+    logic [31:0] spi_data;
     // spi状态寄存器
     // addr: 0x08
     // [0]: 1: busy, 0: idle
-    logic  [31:0] spi_status;
+    logic [31:0] spi_status;
 
-    logic  [ 8:0] clk_cnt;  // 分频计数
-    logic         en;  // 使能，开始传输信号，传输期间一直有效
-    logic  [ 4:0] spi_clk_edge_cnt;  // spi clk时钟沿的个数
-    logic         spi_clk_edge_level;  // spi clk沿电平
-    logic  [ 7:0] rdata;  // 从spi设备读回来的数据
-    logic         done;  // 传输完成信号
-    logic  [ 3:0] bit_index;  // 数据bit索引
-    wire [ 8:0] div_cnt;
+    logic [ 8:0] clk_cnt;  // 分频计数
+    logic        en;  // 使能，开始传输信号，传输期间一直有效
+    logic [ 4:0] spi_clk_edge_cnt;  // spi clk时钟沿的个数
+    logic        spi_clk_edge_level;  // spi clk沿电平
+    logic [ 7:0] rdata;  // 从spi设备读回来的数据
+    logic        done;  // 传输完成信号
+    logic [ 3:0] bit_index;  // 数据bit索引
+    wire  [ 8:0] div_cnt;
 
 
     assign spi_ss  = ~spi_ctrl[3];  // SPI设备片选信号
 
     assign div_cnt = spi_ctrl[15:8];  // 0: 2分频，1：4分频，2：8分频，3：16分频，4：32分频，以此类推
 
+    logic [31:4] addr_dummy;
+    assign addr_dummy = |addr_i[31:4];
 
     // 产生使能信号
     // 传输期间一直有效
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             en <= 1'b0;
         end
         else begin
@@ -91,8 +93,8 @@ module spi (
     end
 
     // 对输入时钟进行计数
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             clk_cnt <= 9'h0;
         end
         else if (en == 1'b1) begin
@@ -110,8 +112,8 @@ module spi (
 
     // 对spi clk沿进行计数
     // 每当计数到分频值时产生一个上升沿脉冲
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             spi_clk_edge_cnt   <= 5'h0;
             spi_clk_edge_level <= 1'b0;
         end
@@ -138,8 +140,8 @@ module spi (
     end
 
     // bit序列
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             spi_clk   <= 1'b0;
             rdata     <= 8'h0;
             spi_mosi  <= 1'b0;
@@ -192,8 +194,8 @@ module spi (
     end
 
     // 产生结束(完成)信号
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             done <= 1'b0;
         end
         else begin
@@ -207,8 +209,8 @@ module spi (
     end
 
     // write reg
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             spi_ctrl   <= 32'h0;
             spi_data   <= 32'h0;
             spi_status <= 32'h0;
@@ -240,7 +242,7 @@ module spi (
 
     // read reg
     always @(*) begin
-        if (rst == 1'b0) begin
+        if (rst_ni == 1'b0) begin
             data_o = 32'h0;
         end
         else begin

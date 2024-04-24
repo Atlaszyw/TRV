@@ -19,7 +19,7 @@ module ex
     import tinyriscv_pkg::*;
 (
 
-    input rst,
+    input rst_ni,
 
     // from id
     input [    InstBus - 1:0] inst_i,        // 指令内容
@@ -71,7 +71,7 @@ module ex
     output logic [             2:0] div_op_o,        // 具体是哪一条除法指令
     output logic [RegAddrBus - 1:0] div_reg_waddr_o, // 除法运算结束后要写的寄存器地址
 
-    // to ctrl
+    // to control_tr
     output logic                     hold_flag_o,  // 是否暂停标志
     output logic                     jump_flag_o,  // 是否跳转标志
     output logic [InstAddrBus - 1:0] jump_addr_o   // 跳转目的地址

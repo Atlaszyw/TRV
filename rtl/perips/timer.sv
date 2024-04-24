@@ -18,14 +18,14 @@ module timer
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input [31:0] data_i,
     input [31:0] addr_i,
     input        we_i,
 
-    output logic  [31:0] data_o,
+    output logic [31:0] data_o,
     output logic        int_sig_o
 
 );
@@ -48,12 +48,14 @@ module timer
     // addr offset: 0x08
     logic [31:0] timer_value;
 
+    logic addr_dummy;
+    assign addr_dummy = |addr_i[31:4];
 
-    assign int_sig_o = ((timer_ctrl[2] == 1'b1) && (timer_ctrl[1] == 1'b1)) ? INT_ASSERT : INT_DEASSERT;
+    assign int_sig_o  = ((timer_ctrl[2] == 1'b1) && (timer_ctrl[1] == 1'b1)) ? INT_ASSERT : INT_DEASSERT;
 
     // counter
-    always_ff @(posedge clk) begin
-        if (rst == RstEnable) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             timer_count <= ZeroWord;
         end
         else begin
@@ -70,8 +72,8 @@ module timer
     end
 
     // write regs
-    always_ff @(posedge clk) begin
-        if (rst == RstEnable) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             timer_ctrl  <= ZeroWord;
             timer_value <= ZeroWord;
         end
@@ -97,7 +99,7 @@ module timer
 
     // read regs
     always @(*) begin
-        if (rst == RstEnable) begin
+        if (rst_ni == RstEnable) begin
             data_o = ZeroWord;
         end
         else begin

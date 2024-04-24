@@ -18,72 +18,72 @@ module rib
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     // master 0 interface
-    input  wire [MemAddrBus - 1:0] m0_addr_i,  // 主设备0读、写地址
-    input  wire [    MemBus - 1:0] m0_data_i,  // 主设备0写数据
-    output logic  [    MemBus - 1:0] m0_data_o,  // 主设备0读取到的数据
-    input  wire               m0_req_i,   // 主设备0访问请求标志
-    input  wire               m0_we_i,    // 主设备0写标志
+    input  wire  [MemAddrBus - 1:0] m0_addr_i,  // 主设备0读、写地址
+    input  wire  [    MemBus - 1:0] m0_data_i,  // 主设备0写数据
+    output logic [    MemBus - 1:0] m0_data_o,  // 主设备0读取到的数据
+    input  wire                     m0_req_i,   // 主设备0访问请求标志
+    input  wire                     m0_we_i,    // 主设备0写标志
 
     // master 1 interface
-    input  wire [MemAddrBus - 1:0] m1_addr_i,  // 主设备1读、写地址
-    input  wire [    MemBus - 1:0] m1_data_i,  // 主设备1写数据
-    output logic  [    MemBus - 1:0] m1_data_o,  // 主设备1读取到的数据
-    input  wire               m1_req_i,   // 主设备1访问请求标志
-    input  wire               m1_we_i,    // 主设备1写标志
+    input  wire  [MemAddrBus - 1:0] m1_addr_i,  // 主设备1读、写地址
+    input  wire  [    MemBus - 1:0] m1_data_i,  // 主设备1写数据
+    output logic [    MemBus - 1:0] m1_data_o,  // 主设备1读取到的数据
+    input  wire                     m1_req_i,   // 主设备1访问请求标志
+    input  wire                     m1_we_i,    // 主设备1写标志
 
     // master 2 interface
-    input  wire [MemAddrBus - 1:0] m2_addr_i,  // 主设备2读、写地址
-    input  wire [    MemBus - 1:0] m2_data_i,  // 主设备2写数据
-    output logic  [    MemBus - 1:0] m2_data_o,  // 主设备2读取到的数据
-    input  wire               m2_req_i,   // 主设备2访问请求标志
-    input  wire               m2_we_i,    // 主设备2写标志
+    input  wire  [MemAddrBus - 1:0] m2_addr_i,  // 主设备2读、写地址
+    input  wire  [    MemBus - 1:0] m2_data_i,  // 主设备2写数据
+    output logic [    MemBus - 1:0] m2_data_o,  // 主设备2读取到的数据
+    input  wire                     m2_req_i,   // 主设备2访问请求标志
+    input  wire                     m2_we_i,    // 主设备2写标志
 
     // master 3 interface
-    input  wire [MemAddrBus - 1:0] m3_addr_i,  // 主设备3读、写地址
-    input  wire [    MemBus - 1:0] m3_data_i,  // 主设备3写数据
-    output logic  [    MemBus - 1:0] m3_data_o,  // 主设备3读取到的数据
-    input  wire               m3_req_i,   // 主设备3访问请求标志
-    input  wire               m3_we_i,    // 主设备3写标志
+    input  wire  [MemAddrBus - 1:0] m3_addr_i,  // 主设备3读、写地址
+    input  wire  [    MemBus - 1:0] m3_data_i,  // 主设备3写数据
+    output logic [    MemBus - 1:0] m3_data_o,  // 主设备3读取到的数据
+    input  wire                     m3_req_i,   // 主设备3访问请求标志
+    input  wire                     m3_we_i,    // 主设备3写标志
 
     // slave 0 interface
-    output logic  [MemAddrBus - 1:0] s0_addr_o,  // 从设备0读、写地址
-    output logic  [    MemBus - 1:0] s0_data_o,  // 从设备0写数据
-    input  wire [    MemBus - 1:0] s0_data_i,  // 从设备0读取到的数据
-    output logic                s0_we_o,    // 从设备0写标志
+    output logic [MemAddrBus - 1:0] s0_addr_o,  // 从设备0读、写地址
+    output logic [    MemBus - 1:0] s0_data_o,  // 从设备0写数据
+    input  wire  [    MemBus - 1:0] s0_data_i,  // 从设备0读取到的数据
+    output logic                    s0_we_o,    // 从设备0写标志
 
     // slave 1 interface
-    output logic  [MemAddrBus - 1:0] s1_addr_o,  // 从设备1读、写地址
-    output logic  [    MemBus - 1:0] s1_data_o,  // 从设备1写数据
-    input  wire [    MemBus - 1:0] s1_data_i,  // 从设备1读取到的数据
-    output logic                s1_we_o,    // 从设备1写标志
+    output logic [MemAddrBus - 1:0] s1_addr_o,  // 从设备1读、写地址
+    output logic [    MemBus - 1:0] s1_data_o,  // 从设备1写数据
+    input  wire  [    MemBus - 1:0] s1_data_i,  // 从设备1读取到的数据
+    output logic                    s1_we_o,    // 从设备1写标志
 
     // slave 2 interface
-    output logic  [MemAddrBus - 1:0] s2_addr_o,  // 从设备2读、写地址
-    output logic  [    MemBus - 1:0] s2_data_o,  // 从设备2写数据
-    input  wire [    MemBus - 1:0] s2_data_i,  // 从设备2读取到的数据
-    output logic                s2_we_o,    // 从设备2写标志
+    output logic [MemAddrBus - 1:0] s2_addr_o,  // 从设备2读、写地址
+    output logic [    MemBus - 1:0] s2_data_o,  // 从设备2写数据
+    input  wire  [    MemBus - 1:0] s2_data_i,  // 从设备2读取到的数据
+    output logic                    s2_we_o,    // 从设备2写标志
 
     // slave 3 interface
-    output logic  [MemAddrBus - 1:0] s3_addr_o,  // 从设备3读、写地址
-    output logic  [    MemBus - 1:0] s3_data_o,  // 从设备3写数据
-    input  wire [    MemBus - 1:0] s3_data_i,  // 从设备3读取到的数据
-    output logic                s3_we_o,    // 从设备3写标志
+    output logic [MemAddrBus - 1:0] s3_addr_o,  // 从设备3读、写地址
+    output logic [    MemBus - 1:0] s3_data_o,  // 从设备3写数据
+    input  wire  [    MemBus - 1:0] s3_data_i,  // 从设备3读取到的数据
+    output logic                    s3_we_o,    // 从设备3写标志
 
     // slave 4 interface
-    output logic  [MemAddrBus - 1:0] s4_addr_o,  // 从设备4读、写地址
-    output logic  [    MemBus - 1:0] s4_data_o,  // 从设备4写数据
-    input  wire [    MemBus - 1:0] s4_data_i,  // 从设备4读取到的数据
-    output logic                s4_we_o,    // 从设备4写标志
+    output logic [MemAddrBus - 1:0] s4_addr_o,  // 从设备4读、写地址
+    output logic [    MemBus - 1:0] s4_data_o,  // 从设备4写数据
+    input  wire  [    MemBus - 1:0] s4_data_i,  // 从设备4读取到的数据
+    output logic                    s4_we_o,    // 从设备4写标志
 
     // slave 5 interface
-    output logic  [MemAddrBus - 1:0] s5_addr_o,  // 从设备5读、写地址
-    output logic  [    MemBus - 1:0] s5_data_o,  // 从设备5写数据
-    input  wire [    MemBus - 1:0] s5_data_i,  // 从设备5读取到的数据
-    output logic                s5_we_o,    // 从设备5写标志
+    output logic [MemAddrBus - 1:0] s5_addr_o,  // 从设备5读、写地址
+    output logic [    MemBus - 1:0] s5_data_o,  // 从设备5写数据
+    input  wire  [    MemBus - 1:0] s5_data_i,  // 从设备5读取到的数据
+    output logic                    s5_we_o,    // 从设备5写标志
 
     output logic hold_flag_o  // 暂停流水线标志
 
@@ -104,8 +104,8 @@ module rib
     parameter [1:0] grant2 = 2'h2;
     parameter [1:0] grant3 = 2'h3;
 
-    wire [3:0] req;
-    logic  [1:0] grant;
+    wire  [3:0] req;
+    logic [1:0] grant;
 
 
     // 主设备请求信号

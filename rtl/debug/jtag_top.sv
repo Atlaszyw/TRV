@@ -21,7 +21,7 @@ module jtag_top #(
     parameter DMI_OP_BITS   = 2
 ) (
 
-    input wire clk,
+    input wire clk_i,
     input wire jtag_rst_n,
 
     input  wire jtag_pin_TCK,
@@ -44,8 +44,8 @@ module jtag_top #(
 
 );
 
-    parameter DM_RESP_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
-    parameter DTM_REQ_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
+    localparam DM_RESP_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
+    localparam DTM_REQ_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
 
     // jtag_driver
     wire dtm_ack_o;
@@ -83,7 +83,7 @@ module jtag_top #(
         .DMI_DATA_BITS(DMI_DATA_BITS),
         .DMI_OP_BITS  (DMI_OP_BITS)
     ) u_jtag_dm (
-        .clk            (clk),
+        .clk_i          (clk_i),
         .rst_n          (jtag_rst_n),
         .dm_ack_o       (dm_ack_o),
         .dtm_req_valid_i(dtm_req_valid_o),

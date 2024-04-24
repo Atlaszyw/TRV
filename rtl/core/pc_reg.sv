@@ -18,8 +18,8 @@ module pc_reg
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input                       jump_flag_i,       // 跳转标志
     input [  InstAddrBus - 1:0] jump_addr_i,       // 跳转地址
@@ -31,9 +31,9 @@ module pc_reg
 );
 
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk_i) begin
         // 复位
-        if (rst == RstEnable || jtag_reset_flag_i == 1'b1) begin
+        if (rst_ni == RstEnable || jtag_reset_flag_i == 1'b1) begin
             pc_o <= CpuResetAddr;
             // 跳转
         end

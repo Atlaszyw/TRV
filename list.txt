@@ -2,7 +2,7 @@
 /home/main/Projects/tinyriscv/rtl/utils/full_handshake_rx.sv
 /home/main/Projects/tinyriscv/rtl/utils/full_handshake_tx.sv
 /home/main/Projects/tinyriscv/rtl/utils/gen_dff.sv
-/home/main/Projects/tinyriscv/rtl/core/ctrl.sv
+/home/main/Projects/tinyriscv/rtl/core/control_tr.sv
 /home/main/Projects/tinyriscv/rtl/core/tinyriscv_pkg.sv
 /home/main/Projects/tinyriscv/rtl/core/clint.sv
 /home/main/Projects/tinyriscv/rtl/core/id.sv

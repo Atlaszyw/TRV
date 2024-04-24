@@ -15,10 +15,12 @@
  */
 module rom
     import tinyriscv_pkg::*;
-(
+#(
+    parameter MemInitFile = "gpio.mif"
+) (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input                    we_i,    // write enable
     input [MemAddrBus - 1:0] addr_i,  // addr
@@ -31,18 +33,25 @@ module rom
     logic [MemBus - 1:0] _rom[RomNum];
 
 
-    always_ff @(posedge clk) begin
+    always @(posedge clk_i) begin
         if (we_i == WriteEnable) begin
             _rom[addr_i[31:2]] <= data_i;
         end
     end
 
-    always @(*) begin
-        if (rst == RstEnable) begin
+    always_comb begin
+        if (rst_ni == RstEnable) begin
             data_o = ZeroWord;
         end
         else begin
             data_o = _rom[addr_i[31:2]];
+        end
+    end
+
+    initial begin
+        if (MemInitFile != "") begin : gen_meminit
+            $display("Initializing memory %m from file '%s'.", MemInitFile);
+            $readmemh(MemInitFile, _rom);
         end
     end
 

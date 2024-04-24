@@ -131,7 +131,7 @@ make install
 
 7. 安装GNU工具链
 
-可以从百度网盘下载(链接：https://pan.baidu.com/s/10uLZYf_cgtH94kZI_N6JhQ 
+可以从百度网盘下载(链接：https://pan.baidu.com/s/10uLZYf_cgtH94kZI_N6JhQ
 提取码：uk0w)或者自行下载其他版本的，下载后解压到tools目录下。
 
 最后，需要确认tests/example/common.mk文件里的这几行内容要与你安装的工具链对应得上。
@@ -243,3 +243,10 @@ C语言程序例程位于tests\example目录里。
 
 如有疑问或者建议，欢迎私信或者发邮件(liangkangnan@163.com)给我。
 
+
+
+
+
+
+个人修改：
+1. 为了配合fpga工作，将uart_debug_pin修改为低电平有效

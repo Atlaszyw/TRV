@@ -1,0 +1,65 @@
+VLNV = "vendor:tinyriscv:fpga_top:0.0.1"
+description = "~"
+
+[design]
+    top = "tb_top"
+
+    ext_lib = [
+        # "/home2/zhangyw/Tools/Xilinx/Vivado/2023.2/data/verilog/src/unisims",
+    ]
+
+    inc_dirs = [
+    ]
+    roms = [
+        "$PRJ_ROOT/tb/gpio.mem",
+    ]
+    macros = [
+    ]
+
+    depend = [
+    ]
+
+
+    [design.param]
+        # "fpga_top.i_interposer.u_config_plane.u_ibex_wrapper.SRAMInitFile" = "driver.mem"
+        # "fpga_top.i_cpu_chiplet_dummy.i_cpu_chiplet.i_cpu_subsys_xbar.i_bootrom.MemInitFile" = "boot_code.mem"
+        # "fpga_top.i_cpu_chiplet_dummy.i_cpu_chiplet_dummy.i_cpu_subsys_xbar.i_bootrom.MemInitFile" = "boot_code.mem"
+
+    [design.filelists]
+        ##include "./svlist.toml"
+
+        ##include "./vlist.toml"
+
+[target]
+    default_tool = "vcs"
+    work_dir = "build"
+
+    [target.tools.vcs]
+        name = "fpga_func"
+        timescale = "1ns/10ps"
+        top = "tb_top"
+        lib_path = [
+            '/home2/zhangyw/Projects/chiplet_system_rtl/vivado_prj/vivado_prj.cache/compile_simlib/vcs',
+        ]
+        vlogan_args = [
+            "-full64",
+            "-kdb",
+            "-debug_access+all",
+        ]
+
+        vcs_args = [
+            "-full64",
+            "+vcs+incremental+compile",
+            "-debug_acc+pp+dmptf",
+            "-licqueue",
+            "-notice",
+            "-kdb",
+        ]
+
+        sim_args = [
+            "-ucli",
+            "-licqueue",
+            "+fsdb+autoflush",
+            "-i",
+            "/home2/zhangyw/Projects/tinyriscv/script/script/simulate.tcl",
+        ]

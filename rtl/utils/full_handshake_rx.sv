@@ -24,7 +24,7 @@ module full_handshake_rx #(
     parameter DW = 32
 ) (  // RX要接收数据的位宽
 
-    input clk,   // RX端时钟信号
+    input clk_i,   // RX端时钟信号
     input rst_n, // RX端复位信号
 
     // from tx
@@ -49,7 +49,7 @@ module full_handshake_rx #(
     logic req_d;
     logic req;
 
-    always @(posedge clk or negedge rst_n) begin
+    always @(posedge clk_i or negedge rst_n) begin
         if (!rst_n) begin
             state <= STATE_IDLE;
         end
@@ -87,7 +87,7 @@ module full_handshake_rx #(
 
 
     // 将请求信号打两拍进行同步
-    always_ff @(posedge clk or negedge rst_n) begin
+    always_ff @(posedge clk_i or negedge rst_n) begin
         if (!rst_n) begin
             req_d <= 1'b0;
             req   <= 1'b0;
@@ -102,7 +102,7 @@ module full_handshake_rx #(
     logic recv_rdy;
     logic ack;
 
-    always_ff @(posedge clk or negedge rst_n) begin
+    always_ff @(posedge clk_i or negedge rst_n) begin
         if (!rst_n) begin
             ack       <= 1'b0;
             recv_rdy  <= 1'b0;

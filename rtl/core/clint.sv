@@ -21,8 +21,8 @@ module clint
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     // from core
     input [INT_BUS - 1:0] int_flag_i,  // 中断输入信号
@@ -36,7 +36,7 @@ module clint
     input [InstAddrBus - 1:0] jump_addr_i,
     input                     div_started_i,
 
-    // from ctrl
+    // from control_tr
     input [Hold_Flag_Bus - 1:0] hold_flag_i,  // 流水线暂停标志
 
     // from csr_reg
@@ -47,7 +47,7 @@ module clint
 
     input global_int_en_i,  // 全局中断使能标志
 
-    // to ctrl
+    // to control_tr
     output logic hold_flag_o,  // 流水线暂停标志
 
     // to csr_reg
@@ -87,7 +87,7 @@ module clint
 
     // 中断仲裁逻辑
     always_comb begin
-        if (rst == RstEnable) begin
+        if (rst_ni == RstEnable) begin
             int_state = S_INT_IDLE;
         end
         else begin
@@ -113,8 +113,8 @@ module clint
     end
 
     // 写CSR寄存器状态切换
-    always_ff @(posedge clk) begin
-        if (rst == RstEnable) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             csr_state <= S_CSR_IDLE;
             cause     <= ZeroWord;
             inst_addr <= ZeroWord;
@@ -185,8 +185,8 @@ module clint
     end
 
     // 发出中断信号前，先写几个CSR寄存器
-    always_ff @(posedge clk) begin
-        if (rst == RstEnable) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             we_o    <= WriteDisable;
             waddr_o <= ZeroWord;
             data_o  <= ZeroWord;
@@ -227,8 +227,8 @@ module clint
     end
 
     // 发出中断信号给ex模块
-    always_ff @(posedge clk) begin
-        if (rst == RstEnable) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             int_assert_o <= INT_DEASSERT;
             int_addr_o   <= ZeroWord;
         end

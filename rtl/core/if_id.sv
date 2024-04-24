@@ -19,8 +19,8 @@ module if_id
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input [    InstBus - 1:0] inst_i,      // 指令内容
     input [InstAddrBus - 1:0] inst_addr_i, // 指令地址
@@ -39,8 +39,8 @@ module if_id
 
     wire [InstBus - 1:0] inst;
     gen_pipe_dff #(32) inst_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         INST_NOP,
         inst_i,
@@ -50,8 +50,8 @@ module if_id
 
     wire [InstAddrBus - 1:0] inst_addr;
     gen_pipe_dff #(32) inst_addr_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         ZeroWord,
         inst_addr_i,
@@ -61,8 +61,8 @@ module if_id
 
     wire [INT_BUS - 1:0] int_flag;
     gen_pipe_dff #(8) int_ff (
-        clk,
-        rst,
+        clk_i,
+        rst_ni,
         hold_en,
         INT_NONE,
         int_flag_i,

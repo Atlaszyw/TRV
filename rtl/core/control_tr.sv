@@ -16,11 +16,11 @@
 
 // 控制模块
 // 发出跳转、暂停流水线信号
-module ctrl
+module control_tr
     import tinyriscv_pkg::*;
 (
 
-    input rst,
+    input rst_ni,
 
     // from ex
     input                     jump_flag_i,

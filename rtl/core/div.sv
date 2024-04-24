@@ -21,8 +21,8 @@ module div
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     // from ex
     input [    RegBus - 1:0] dividend_i,  // 被除数
@@ -68,8 +68,8 @@ module div
     wire [31:0] minuend_tmp = minuend_ge_divisor ? minuend_sub_res[30:0] : minuend[30:0];
 
     // 状态机实现
-    always_ff @(posedge clk) begin
-        if (rst == RstEnable) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             state         <= STATE_IDLE;
             ready_o       <= DivResultNotReady;
             result_o      <= ZeroWord;

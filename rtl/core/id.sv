@@ -19,7 +19,7 @@ module id
     import tinyriscv_pkg::*;
 (
 
-    input rst,
+    input rst_ni,
 
     // from if_id
     input [    InstBus - 1:0] inst_i,      // 指令内容
@@ -67,7 +67,7 @@ module id
     wire [4:0] rs2 = inst_i[24:20];
 
 
-    always @(*) begin
+    always_comb begin
         inst_o       = inst_i;
         inst_addr_o  = inst_addr_i;
         reg1_rdata_o = reg1_rdata_i;

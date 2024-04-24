@@ -19,8 +19,8 @@ module ram
     import tinyriscv_pkg::*;
 (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input                    we_i,    // write enable
     input [MemAddrBus - 1:0] addr_i,  // addr
@@ -33,14 +33,14 @@ module ram
     logic [MemBus - 1:0] _ram[MemNum];
 
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk_i) begin
         if (we_i == WriteEnable) begin
             _ram[addr_i[31:2]] <= data_i;
         end
     end
 
     always_comb begin
-        if (rst == RstEnable) begin
+        if (rst_ni == RstEnable) begin
             data_o = ZeroWord;
         end
         else begin

@@ -19,8 +19,8 @@ module gen_ticks_sync #(
     parameter DP = 2,
     parameter DW = 32)(
 
-    input rst,
-    input clk,
+    input rst_ni,
+    input clk_i,
 
     input[DW-1:0] din,
     output logic[DW-1:0] dout
@@ -34,9 +34,9 @@ module gen_ticks_sync #(
     generate
         for (i = 0; i < DP; i = i + 1) begin: dp_width
             if (i == 0) begin: dp_is_0
-                gen_rst_0_dff #(DW) rst_0_dff(clk, rst, din, sync_dat[0]);
+                gen_rst_0_dff #(DW) rst_0_dff(clk_i, rst_ni, din, sync_dat[0]);
             end else begin: dp_is_not_0
-                gen_rst_0_dff #(DW) rst_0_dff(clk, rst, sync_dat[i-1], sync_dat[i]);
+                gen_rst_0_dff #(DW) rst_0_dff(clk_i, rst_ni, sync_dat[i-1], sync_dat[i]);
             end
         end
     endgenerate

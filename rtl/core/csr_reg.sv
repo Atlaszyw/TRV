@@ -16,8 +16,8 @@
 // CSR寄存器模块
 module csr_reg import tinyriscv_pkg::*;(
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     // form ex
     input we_i,                        // ex模块写寄存器标志
@@ -60,8 +60,8 @@ module csr_reg import tinyriscv_pkg::*;(
 
     // cycle counter
     // 复位撤销后就一直计数
-    always @ (posedge clk) begin
-        if (rst == RstEnable) begin
+    always @ (posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             cycle <= {ZeroWord, ZeroWord};
         end else begin
             cycle <= cycle + 1'b1;
@@ -70,8 +70,8 @@ module csr_reg import tinyriscv_pkg::*;(
 
     // write reg
     // 写寄存器操作
-    always @ (posedge clk) begin
-        if (rst == RstEnable) begin
+    always @ (posedge clk_i) begin
+        if (rst_ni == RstEnable) begin
             mtvec <= ZeroWord;
             mcause <= ZeroWord;
             mepc <= ZeroWord;

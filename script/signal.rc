@@ -1,0 +1,69 @@
+Magic 271485
+Revision Verdi_P-2019.06-SP2
+
+; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
+viewPort 0 41 3840 810 590 89
+
+; File list:
+; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
+openDirFile -d / "" "/home2/zhangyw/Projects/chiplet_system_rtl/script/top.fsdb"
+
+; file time scale:
+; fileTimeScale ### s|ms|us|ns|ps
+
+; signal spacing:
+signalSpacing 5
+
+; windowTimeUnit is used for zoom, cursor & marker
+; waveform viewport range
+zoom 5049394385.432140 5050000000.000000
+cursor 5050000000.000000
+marker 0.000000
+
+; user define markers
+; userMarker time_pos marker_name color linestyle
+; visible top row signal index
+top 0
+; marker line index
+markerPos 15
+
+; event list
+; addEvent event_name event_expression
+; curEvent event_name
+
+
+
+COMPLEX_EVENT_BEGIN
+
+
+COMPLEX_EVENT_END
+
+
+
+; toolbar current search type
+; curSTATUS search_type
+curSTATUS ByChange
+
+
+addGroup "mem_slave(Slave)"
+activeDirFile "" "/home2/zhangyw/Projects/chiplet_system_rtl/script/top.fsdb"
+addSignal -h 25 /tb_top/DUT/i_cpu_chiplet/i_cpu_chiplet/i_cpu_subsys_xbar/i_tcm_data/mem_slave/wdata[31:0]
+addSignal -h 25 -holdScope add[31:0]
+addSignal -h 25 -holdScope csn
+addSignal -h 25 -holdScope wen
+addSignal -h 25 -holdScope be[3:0]
+addSignal -h 25 -holdScope rdata[31:0]
+addGroup "G2"
+addSignal -h 25 /tb_top/DUT/i_cpu_chiplet/i_cpu_chiplet/i_cpu_with_debug/i_cpu_subsys/i_riscv_core/data_req_o
+addSignal -h 25 -holdScope data_gnt_i
+addSignal -h 25 -holdScope data_rvalid_i
+addSignal -h 25 -holdScope data_we_o
+addSignal -h 25 -holdScope data_be_o[3:0]
+addSignal -h 25 -holdScope data_addr_o[31:0]
+addSignal -h 25 -holdScope data_wdata_o[31:0]
+addSignal -h 25 -holdScope data_rdata_i[31:0]
+addGroup "G3"
+
+; getSignalForm Scope Hierarchy Status
+; active file of getSignalForm
+

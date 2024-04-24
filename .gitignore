@@ -10,3 +10,7 @@ generated
 *.elf
 *.objdump
 *.reference_output
+
+.venv
+/verdiLog
+novas.conf

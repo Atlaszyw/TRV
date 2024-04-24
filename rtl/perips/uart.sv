@@ -18,8 +18,8 @@
 // 串口模块(默认: 115200, 8 N 1)
 module uart (
 
-    input clk,
-    input rst,
+    input clk_i,
+    input rst_ni,
 
     input        we_i,
     input [31:0] addr_i,
@@ -79,7 +79,7 @@ module uart (
     logic [31:0] uart_status;
 
     // addr: 0x08
-    // rw. clk div
+    // rw. clk_i div
     logic [31:0] uart_baud;
 
     // addr: 0x10
@@ -88,10 +88,13 @@ module uart (
 
     assign tx_pin = tx_reg;
 
+    logic addr_dummy;
+    assign addr_dummy = |addr_i[31:8];
+
 
     // 写寄存器
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             uart_ctrl     <= 32'h0;
             uart_status   <= 32'h0;
             uart_rx       <= 32'h0;
@@ -136,7 +139,7 @@ module uart (
 
     // 读寄存器
     always @(*) begin
-        if (rst == 1'b0) begin
+        if (rst_ni == 1'b0) begin
             data_o = 32'h0;
         end
         else begin
@@ -162,8 +165,8 @@ module uart (
 
     // *************************** TX发送 ****************************
 
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             state         <= S_IDLE;
             cycle_cnt     <= 16'd0;
             tx_reg        <= 1'b0;
@@ -218,8 +221,8 @@ module uart (
     assign rx_negedge = rx_q1 && ~rx_q0;
 
 
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             rx_q0 <= 1'b0;
             rx_q1 <= 1'b0;
         end
@@ -230,8 +233,8 @@ module uart (
     end
 
     // 开始接收数据信号，接收期间一直有效
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             rx_start <= 1'b0;
         end
         else begin
@@ -249,8 +252,8 @@ module uart (
         end
     end
 
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             rx_div_cnt <= 16'h0;
         end
         else begin
@@ -265,8 +268,8 @@ module uart (
     end
 
     // 对时钟进行计数
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             rx_clk_cnt <= 16'h0;
         end
         else if (rx_start == 1'b1) begin
@@ -284,8 +287,8 @@ module uart (
     end
 
     // 每当时钟计数达到分频值时产生一个上升沿脉冲
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             rx_clk_edge_cnt   <= 4'h0;
             rx_clk_edge_level <= 1'b0;
         end
@@ -315,8 +318,8 @@ module uart (
     end
 
     // bit序列
-    always_ff @(posedge clk) begin
-        if (rst == 1'b0) begin
+    always_ff @(posedge clk_i) begin
+        if (rst_ni == 1'b0) begin
             rx_data <= 8'h0;
             rx_over <= 1'b0;
         end
