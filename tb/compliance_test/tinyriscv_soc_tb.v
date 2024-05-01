@@ -52,7 +52,7 @@ module tinyriscv_soc_tb;
 `endif
         $display("test running...");
         #40
-        rst = `RstDisable;
+        rst = `~RstEnable;
         #200
 /*
 `ifdef TEST_PROG

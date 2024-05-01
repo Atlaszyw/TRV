@@ -24,8 +24,8 @@ module full_handshake_rx #(
     parameter DW = 32
 ) (  // RX要接收数据的位宽
 
-    input clk_i,   // RX端时钟信号
-    input rst_n, // RX端复位信号
+    input clk_i,  // RX端时钟信号
+    input rst_n,  // RX端复位信号
 
     // from tx
     input          req_i,      // TX端请求信号

@@ -28,7 +28,7 @@ module spi (
     output logic [31:0] data_o,
 
     output logic spi_mosi,  // spi控制器输出、spi设备输入信号
-    input  wire  spi_miso,  // spi控制器输入、spi设备输出信号
+    input        spi_miso,  // spi控制器输入、spi设备输出信号
     output logic spi_ss,    // spi设备片选
     output logic spi_clk    // spi设备时钟，最大频率为输入clk的一半
 

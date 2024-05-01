@@ -31,23 +31,10 @@ module pc_reg
 );
 
 
-    always_ff @(posedge clk_i) begin
-        // 复位
-        if (rst_ni == RstEnable || jtag_reset_flag_i == 1'b1) begin
-            pc_o <= CpuResetAddr;
-            // 跳转
-        end
-        else if (jump_flag_i == JumpEnable) begin
-            pc_o <= jump_addr_i;
-            // 暂停
-        end
-        else if (hold_flag_i >= Hold_Pc) begin
-            pc_o <= pc_o;
-            // 地址加4
-        end
-        else begin
-            pc_o <= pc_o + 4'h4;
-        end
-    end
+    always_ff @(posedge clk_i)
+        if (rst_ni == RstEnable || jtag_reset_flag_i == 1'b1) pc_o <= CpuResetAddr;  // 复位
+        else if (jump_flag_i == JumpEnable) pc_o <= jump_addr_i;  // 跳转
+        else if (hold_flag_i >= Hold_Pc) pc_o <= pc_o;  // 暂停
+        else pc_o <= pc_o + 4'h4;  // 地址加4
 
 endmodule

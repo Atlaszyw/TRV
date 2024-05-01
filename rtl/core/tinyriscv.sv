@@ -22,17 +22,17 @@ module tinyriscv
     input rst_ni,
 
     output logic [MemAddrBus - 1:0] rib_ex_addr_o,  // 读、写外设的地址
-    input  wire  [    MemBus - 1:0] rib_ex_data_i,  // 从外设读取的数据
+    input        [    MemBus - 1:0] rib_ex_data_i,  // 从外设读取的数据
     output logic [    MemBus - 1:0] rib_ex_data_o,  // 写入外设的数据
     output logic                    rib_ex_req_o,   // 访问外设请求
     output logic                    rib_ex_we_o,    // 写外设标志
 
     output logic [MemAddrBus - 1:0] rib_pc_addr_o,  // 取指地址
-    input  wire  [    MemBus - 1:0] rib_pc_data_i,  // 取到的指令内容
+    input        [    MemBus - 1:0] rib_pc_data_i,  // 取到的指令内容
 
-    input  wire  [RegAddrBus - 1:0] jtag_reg_addr_i,  // jtag模块读、写寄存器的地址
-    input  wire  [    RegBus - 1:0] jtag_reg_data_i,  // jtag模块写寄存器数据
-    input  wire                     jtag_reg_we_i,    // jtag模块写寄存器标志
+    input        [RegAddrBus - 1:0] jtag_reg_addr_i,  // jtag模块读、写寄存器的地址
+    input        [    RegBus - 1:0] jtag_reg_data_i,  // jtag模块写寄存器数据
+    input                           jtag_reg_we_i,    // jtag模块写寄存器标志
     output logic [    RegBus - 1:0] jtag_reg_data_o,  // jtag模块读取到的寄存器数据
 
     input rib_hold_flag_i,   // 总线暂停标志
@@ -158,7 +158,7 @@ module tinyriscv
     );
 
     // ctrl模块例化
-    control_tr u_ctrl (
+    ctrl u_ctrl (
         .rst_ni           (rst_ni),
         .jump_flag_i      (ex_jump_flag_o),
         .jump_addr_i      (ex_jump_addr_o),

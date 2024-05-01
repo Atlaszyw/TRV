@@ -16,15 +16,15 @@
 
 // 带默认值和控制信号的流水线触发器
 module gen_pipe_dff #(
-    parameter DW = 32
+    parameter int unsigned DW = 32
 ) (
 
     input clk_i,
     input rst_ni,
     input hold_en,
 
-    input  wire  [DW-1:0] def_val,
-    input  wire  [DW-1:0] din,
+    input        [DW-1:0] def_val,
+    input        [DW-1:0] din,
     output logic [DW-1:0] qout
 
 );
@@ -46,13 +46,13 @@ endmodule
 
 // 复位后输出为0的触发器
 module gen_rst_0_dff #(
-    parameter DW = 32
+    parameter int unsigned DW = 32
 ) (
 
     input clk_i,
     input rst_ni,
 
-    input  wire  [DW-1:0] din,
+    input        [DW-1:0] din,
     output logic [DW-1:0] qout
 
 );
@@ -74,13 +74,13 @@ endmodule
 
 // 复位后输出为1的触发器
 module gen_rst_1_dff #(
-    parameter DW = 32
+    parameter int unsigned DW = 32
 ) (
 
     input clk_i,
     input rst_ni,
 
-    input  wire  [DW-1:0] din,
+    input        [DW-1:0] din,
     output logic [DW-1:0] qout
 
 );
@@ -102,14 +102,14 @@ endmodule
 
 // 复位后输出为默认值的触发器
 module gen_rst_def_dff #(
-    parameter DW = 32
+    parameter int unsigned DW = 32
 ) (
 
     input          clk_i,
     input          rst_ni,
     input [DW-1:0] def_val,
 
-    input  wire  [DW-1:0] din,
+    input        [DW-1:0] din,
     output logic [DW-1:0] qout
 
 );
@@ -131,14 +131,14 @@ endmodule
 
 // 带使能端、复位后输出为0的触发器
 module gen_en_dff #(
-    parameter DW = 32
+    parameter int unsigned DW = 32
 ) (
 
     input clk_i,
     input rst_ni,
 
-    input  wire           en,
-    input  wire  [DW-1:0] din,
+    input                 en,
+    input        [DW-1:0] din,
     output logic [DW-1:0] qout
 
 );

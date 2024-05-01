@@ -16,31 +16,31 @@
 
 // JTAG顶层模块
 module jtag_top #(
-    parameter DMI_ADDR_BITS = 6,
-    parameter DMI_DATA_BITS = 32,
-    parameter DMI_OP_BITS   = 2
+    parameter int unsigned DMI_ADDR_BITS = 6,
+    parameter int unsigned DMI_DATA_BITS = 32,
+    parameter int unsigned DMI_OP_BITS   = 2
 ) (
 
-    input wire clk_i,
-    input wire jtag_rst_n,
+    input clk_i,
+    input jtag_rst_n,
 
-    input  wire jtag_pin_TCK,
-    input  wire jtag_pin_TMS,
-    input  wire jtag_pin_TDI,
-    output wire jtag_pin_TDO,
+    input        jtag_pin_TCK,
+    input        jtag_pin_TMS,
+    input        jtag_pin_TDI,
+    output logic jtag_pin_TDO,
 
-    output wire        reg_we_o,
-    output wire [ 4:0] reg_addr_o,
-    output wire [31:0] reg_wdata_o,
-    input  wire [31:0] reg_rdata_i,
-    output wire        mem_we_o,
-    output wire [31:0] mem_addr_o,
-    output wire [31:0] mem_wdata_o,
-    input  wire [31:0] mem_rdata_i,
-    output wire        op_req_o,
+    output logic        reg_we_o,
+    output logic [ 4:0] reg_addr_o,
+    output logic [31:0] reg_wdata_o,
+    input        [31:0] reg_rdata_i,
+    output logic        mem_we_o,
+    output logic [31:0] mem_addr_o,
+    output logic [31:0] mem_wdata_o,
+    input        [31:0] mem_rdata_i,
+    output logic        op_req_o,
 
-    output wire halt_req_o,
-    output wire reset_req_o
+    output logic halt_req_o,
+    output logic reset_req_o
 
 );
 

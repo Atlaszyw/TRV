@@ -41,7 +41,7 @@ module ram
 
     always_comb begin
         if (rst_ni == RstEnable) begin
-            data_o = ZeroWord;
+            data_o = '0;
         end
         else begin
             data_o = _ram[addr_i[31:2]];

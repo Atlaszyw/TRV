@@ -27,7 +27,7 @@ module uart (
 
     output logic [31:0] data_o,
     output logic        tx_pin,
-    input  wire         rx_pin
+    input               rx_pin
 
 );
 

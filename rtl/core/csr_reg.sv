@@ -1,4 +1,4 @@
- /*
+/*
  Copyright 2020 Blue Liang, liangkangnan@163.com
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,71 +14,75 @@
  limitations under the License.
  */
 // CSR寄存器模块
-module csr_reg import tinyriscv_pkg::*;(
+module csr_reg
+    import tinyriscv_pkg::*;
+(
 
     input clk_i,
     input rst_ni,
 
     // form ex
-    input we_i,                        // ex模块写寄存器标志
-    input[MemAddrBus - 1:0] raddr_i,        // ex模块读寄存器地址
-    input[MemAddrBus - 1:0] waddr_i,        // ex模块写寄存器地址
-    input[RegBus- 1:0] data_i,             // ex模块写寄存器数据
+    input                    we_i,     // ex模块写寄存器标志
+    input [MemAddrBus - 1:0] raddr_i,  // ex模块读寄存器地址
+    input [MemAddrBus - 1:0] waddr_i,  // ex模块写寄存器地址
+    input [     RegBus- 1:0] data_i,   // ex模块写寄存器数据
 
     // from clint
-    input clint_we_i,                  // clint模块写寄存器标志
-    input[MemAddrBus - 1:0] clint_raddr_i,  // clint模块读寄存器地址
-    input[MemAddrBus - 1:0] clint_waddr_i,  // clint模块写寄存器地址
-    input[RegBus- 1:0] clint_data_i,       // clint模块写寄存器数据
+    input                    clint_we_i,     // clint模块写寄存器标志
+    input [MemAddrBus - 1:0] clint_raddr_i,  // clint模块读寄存器地址
+    input [MemAddrBus - 1:0] clint_waddr_i,  // clint模块写寄存器地址
+    input [     RegBus- 1:0] clint_data_i,   // clint模块写寄存器数据
 
-    output logic global_int_en_o,            // 全局中断使能标志
+    output logic global_int_en_o,  // 全局中断使能标志
 
     // to clint
-    output logic[RegBus- 1:0] clint_data_o,       // clint模块读寄存器数据
-    output logic[RegBus- 1:0] clint_csr_mtvec,   // mtvec
-    output logic[RegBus- 1:0] clint_csr_mepc,    // mepc
-    output logic[RegBus- 1:0] clint_csr_mstatus, // mstatus
+    output logic [RegBus- 1:0] clint_data_o,      // clint模块读寄存器数据
+    output logic [RegBus- 1:0] clint_csr_mtvec,   // mtvec
+    output logic [RegBus- 1:0] clint_csr_mepc,    // mepc
+    output logic [RegBus- 1:0] clint_csr_mstatus, // mstatus
 
     // to ex
-    output logic[RegBus- 1:0] data_o              // ex模块读寄存器数据
+    output logic [RegBus- 1:0] data_o  // ex模块读寄存器数据
 
-    );
+);
 
-    logic[DoubleRegBus- 1:0] cycle;
-    logic[RegBus- 1:0] mtvec;
-    logic[RegBus- 1:0] mcause;
-    logic[RegBus- 1:0] mepc;
-    logic[RegBus- 1:0] mie;
-    logic[RegBus- 1:0] mstatus;
-    logic[RegBus- 1:0] mscratch;
+    logic [DoubleRegBus- 1:0] cycle;
+    logic [RegBus- 1:0] mtvec;
+    logic [RegBus- 1:0] mcause;
+    logic [RegBus- 1:0] mepc;
+    logic [RegBus- 1:0] mie;
+    logic [RegBus- 1:0] mstatus;
+    logic [RegBus- 1:0] mscratch;
 
-    assign global_int_en_o = (mstatus[3] == 1'b1)? True: False;
+    assign global_int_en_o   = (mstatus[3] == 1'b1) ? True : False;
 
-    assign clint_csr_mtvec = mtvec;
-    assign clint_csr_mepc = mepc;
+    assign clint_csr_mtvec   = mtvec;
+    assign clint_csr_mepc    = mepc;
     assign clint_csr_mstatus = mstatus;
 
     // cycle counter
     // 复位撤销后就一直计数
-    always @ (posedge clk_i) begin
+    always @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
-            cycle <= {ZeroWord, ZeroWord};
-        end else begin
+            cycle <= {'0, '0};
+        end
+        else begin
             cycle <= cycle + 1'b1;
         end
     end
 
     // write reg
     // 写寄存器操作
-    always @ (posedge clk_i) begin
+    always @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
-            mtvec <= ZeroWord;
-            mcause <= ZeroWord;
-            mepc <= ZeroWord;
-            mie <= ZeroWord;
-            mstatus <= ZeroWord;
-            mscratch <= ZeroWord;
-        end else begin
+            mtvec    <= '0;
+            mcause   <= '0;
+            mepc     <= '0;
+            mie      <= '0;
+            mstatus  <= '0;
+            mscratch <= '0;
+        end
+        else begin
             // 优先响应ex模块的写操作
             if (we_i == WriteEnable) begin
                 case (waddr_i[11:0])
@@ -104,8 +108,9 @@ module csr_reg import tinyriscv_pkg::*;(
 
                     end
                 endcase
-            // clint模块写操作
-            end else if (clint_we_i == WriteEnable) begin
+                // clint模块写操作
+            end
+            else if (clint_we_i == WriteEnable) begin
                 case (clint_waddr_i[11:0])
                     CSR_MTVEC: begin
                         mtvec <= clint_data_i;
@@ -135,10 +140,11 @@ module csr_reg import tinyriscv_pkg::*;(
 
     // read reg
     // ex模块读CSR寄存器
-    always @ (*) begin
+    always @(*) begin
         if ((waddr_i[11:0] == raddr_i[11:0]) && (we_i == WriteEnable)) begin
             data_o = data_i;
-        end else begin
+        end
+        else begin
             case (raddr_i[11:0])
                 CSR_CYCLE: begin
                     data_o = cycle[31:0];
@@ -165,7 +171,7 @@ module csr_reg import tinyriscv_pkg::*;(
                     data_o = mscratch;
                 end
                 default: begin
-                    data_o = ZeroWord;
+                    data_o = '0;
                 end
             endcase
         end
@@ -173,10 +179,11 @@ module csr_reg import tinyriscv_pkg::*;(
 
     // read reg
     // clint模块读CSR寄存器
-    always @ (*) begin
+    always @(*) begin
         if ((clint_waddr_i[11:0] == clint_raddr_i[11:0]) && (clint_we_i == WriteEnable)) begin
             clint_data_o = clint_data_i;
-        end else begin
+        end
+        else begin
             case (clint_raddr_i[11:0])
                 CSR_CYCLE: begin
                     clint_data_o = cycle[31:0];
@@ -203,7 +210,7 @@ module csr_reg import tinyriscv_pkg::*;(
                     clint_data_o = mscratch;
                 end
                 default: begin
-                    clint_data_o = ZeroWord;
+                    clint_data_o = '0;
                 end
             endcase
         end

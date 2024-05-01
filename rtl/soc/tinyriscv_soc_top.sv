@@ -30,15 +30,15 @@ module tinyriscv_soc_top
     input uart_debug_pin,  // 串口下载使能引脚
 
     output logic       uart_tx_pin,  // UART发送引脚
-    input  wire        uart_rx_pin,  // UART接收引脚
+    input        uart_rx_pin,  // UART接收引脚
     inout  wire  [1:0] gpio,         // GPIO引脚
 
-    input  wire  jtag_TCK,  // JTAG TCK引脚
-    input  wire  jtag_TMS,  // JTAG TMS引脚
-    input  wire  jtag_TDI,  // JTAG TDI引脚
+    input  jtag_TCK,  // JTAG TCK引脚
+    input  jtag_TMS,  // JTAG TMS引脚
+    input  jtag_TDI,  // JTAG TDI引脚
     output logic jtag_TDO,  // JTAG TDO引脚
 
-    input  wire  spi_miso,  // SPI MISO引脚
+    input  spi_miso,  // SPI MISO引脚
     output logic spi_mosi,  // SPI MOSI引脚
     output logic spi_ss,    // SPI SS引脚
     output logic spi_clk    // SPI CLK引脚
@@ -218,6 +218,7 @@ module tinyriscv_soc_top
         .rx_pin(uart_rx_pin)
     );
 
+
     // io0
     assign gpio[0]  = (gpio_ctrl[1:0] == 2'b01) ? gpio_data[0] : 1'bz;
     assign io_in[0] = gpio[0];
@@ -254,9 +255,6 @@ module tinyriscv_soc_top
 
     // rib模块例化
     rib u_rib (
-        .clk_i (clk_i),
-        .rst_ni(rst_ni),
-
         // master 0 interface
         .m0_addr_i(m0_addr_i),
         .m0_data_i(m0_data_i),
@@ -266,10 +264,10 @@ module tinyriscv_soc_top
 
         // master 1 interface
         .m1_addr_i(m1_addr_i),
-        .m1_data_i(ZeroWord),
+        .m1_data_i('0),
         .m1_data_o(m1_data_o),
         .m1_req_i (RIB_REQ),
-        .m1_we_i  (WriteDisable),
+        .m1_we_i  (~WriteEnable),
 
         // master 2 interface
         .m2_addr_i(m2_addr_i),
@@ -328,7 +326,7 @@ module tinyriscv_soc_top
     uart_debug u_uart_debug (
         .clk_i      (clk_i),
         .rst_ni     (rst_ni),
-        .debug_en_i (uart_debug_pin),
+        .debug_en_i (~uart_debug_pin),
         .req_o      (m3_req_i),
         .mem_we_o   (m3_we_i),
         .mem_addr_o (m3_addr_i),

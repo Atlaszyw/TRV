@@ -16,7 +16,7 @@
 
 // 控制模块
 // 发出跳转、暂停流水线信号
-module control_tr
+module ctrl
     import tinyriscv_pkg::*;
 (
 

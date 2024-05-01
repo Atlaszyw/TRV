@@ -72,7 +72,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         inst_addr_i,
         inst_addr
     );
@@ -83,7 +83,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        WriteDisable,
+        ~WriteEnable,
         reg_we_i,
         reg_we
     );
@@ -94,7 +94,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroReg,
+        '0,
         reg_waddr_i,
         reg_waddr
     );
@@ -105,7 +105,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         reg1_rdata_i,
         reg1_rdata
     );
@@ -116,7 +116,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         reg2_rdata_i,
         reg2_rdata
     );
@@ -127,7 +127,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        WriteDisable,
+        ~WriteEnable,
         csr_we_i,
         csr_we
     );
@@ -138,7 +138,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         csr_waddr_i,
         csr_waddr
     );
@@ -149,7 +149,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         csr_rdata_i,
         csr_rdata
     );
@@ -160,7 +160,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         op1_i,
         op1
     );
@@ -171,7 +171,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         op2_i,
         op2
     );
@@ -182,7 +182,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         op1_jump_i,
         op1_jump
     );
@@ -193,7 +193,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         op2_jump_i,
         op2_jump
     );

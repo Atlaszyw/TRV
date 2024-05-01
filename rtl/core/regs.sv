@@ -46,28 +46,27 @@ module regs
 
     // to jtag
     output logic [RegBus - 1:0] jtag_data_o  // 读寄存器数据
-
 );
 
     logic [RegBus - 1:0] regs[RegNum];
 
     // 写寄存器
     always_ff @(posedge clk_i) begin
-        if (rst_ni == RstDisable) begin
+        if (rst_ni == ~RstEnable) begin
             // 优先ex模块写操作
-            if ((we_i == WriteEnable) && (waddr_i != ZeroReg)) begin
+            if ((we_i == WriteEnable) && (waddr_i != '0)) begin
                 regs[waddr_i] <= wdata_i;
             end
-            else if ((jtag_we_i == WriteEnable) && (jtag_addr_i != ZeroReg)) begin
+            else if ((jtag_we_i == WriteEnable) && (jtag_addr_i != '0)) begin
                 regs[jtag_addr_i] <= jtag_data_i;
             end
         end
     end
 
     // 读寄存器1
-    always @(*) begin
-        if (raddr1_i == ZeroReg) begin
-            rdata1_o = ZeroWord;
+    always_comb begin
+        if (raddr1_i == '0) begin
+            rdata1_o = '0;
             // 如果读地址等于写地址，并且正在写操作，则直接返回写数据
         end
         else if (raddr1_i == waddr_i && we_i == WriteEnable) begin
@@ -79,9 +78,9 @@ module regs
     end
 
     // 读寄存器2
-    always @(*) begin
-        if (raddr2_i == ZeroReg) begin
-            rdata2_o = ZeroWord;
+    always_comb begin
+        if (raddr2_i == '0) begin
+            rdata2_o = '0;
             // 如果读地址等于写地址，并且正在写操作，则直接返回写数据
         end
         else if (raddr2_i == waddr_i && we_i == WriteEnable) begin
@@ -93,9 +92,9 @@ module regs
     end
 
     // jtag读寄存器
-    always @(*) begin
-        if (jtag_addr_i == ZeroReg) begin
-            jtag_data_o = ZeroWord;
+    always_comb begin
+        if (jtag_addr_i == '0) begin
+            jtag_data_o = '0;
         end
         else begin
             jtag_data_o = regs[jtag_addr_i];

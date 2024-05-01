@@ -27,7 +27,7 @@ module if_id
 
     input [Hold_Flag_Bus - 1:0] hold_flag_i,  // 流水线暂停标志
 
-    input  wire [INT_BUS - 1:0] int_flag_i,  // 外设中断输入信号
+    input [INT_BUS - 1:0] int_flag_i,  // 外设中断输入信号
     output logic [INT_BUS - 1:0] int_flag_o,
 
     output logic [    InstBus - 1:0] inst_o,      // 指令内容
@@ -53,7 +53,7 @@ module if_id
         clk_i,
         rst_ni,
         hold_en,
-        ZeroWord,
+        '0,
         inst_addr_i,
         inst_addr
     );

@@ -36,7 +36,7 @@ module clint
     input [InstAddrBus - 1:0] jump_addr_i,
     input                     div_started_i,
 
-    // from control_tr
+    // from ctrl
     input [Hold_Flag_Bus - 1:0] hold_flag_i,  // 流水线暂停标志
 
     // from csr_reg
@@ -47,7 +47,7 @@ module clint
 
     input global_int_en_i,  // 全局中断使能标志
 
-    // to control_tr
+    // to ctrl
     output logic hold_flag_o,  // 流水线暂停标志
 
     // to csr_reg
@@ -116,8 +116,8 @@ module clint
     always_ff @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
             csr_state <= S_CSR_IDLE;
-            cause     <= ZeroWord;
-            inst_addr <= ZeroWord;
+            cause     <= '0;
+            inst_addr <= '0;
         end
         else begin
             case (csr_state)
@@ -187,9 +187,9 @@ module clint
     // 发出中断信号前，先写几个CSR寄存器
     always_ff @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
-            we_o    <= WriteDisable;
-            waddr_o <= ZeroWord;
-            data_o  <= ZeroWord;
+            we_o    <= ~WriteEnable;
+            waddr_o <= '0;
+            data_o  <= '0;
         end
         else begin
             case (csr_state)
@@ -218,9 +218,9 @@ module clint
                     data_o  <= {csr_mstatus[31:4], csr_mstatus[7], csr_mstatus[2:0]};
                 end
                 default: begin
-                    we_o    <= WriteDisable;
-                    waddr_o <= ZeroWord;
-                    data_o  <= ZeroWord;
+                    we_o    <= ~WriteEnable;
+                    waddr_o <= '0;
+                    data_o  <= '0;
                 end
             endcase
         end
@@ -230,7 +230,7 @@ module clint
     always_ff @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
             int_assert_o <= INT_DEASSERT;
-            int_addr_o   <= ZeroWord;
+            int_addr_o   <= '0;
         end
         else begin
             case (csr_state)
@@ -246,7 +246,7 @@ module clint
                 end
                 default: begin
                     int_assert_o <= INT_DEASSERT;
-                    int_addr_o   <= ZeroWord;
+                    int_addr_o   <= '0;
                 end
             endcase
         end

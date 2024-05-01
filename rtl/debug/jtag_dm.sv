@@ -63,25 +63,25 @@ module jtag_dm #(
     localparam SHIFT_REG_BITS = DTM_REQ_BITS;
 
     // 输入输出信号
-    input wire clk_i;
-    input wire rst_n;
-    output wire dm_ack_o;
-    input wire dtm_req_valid_i;
-    input wire [DTM_REQ_BITS-1:0] dtm_req_data_i;
-    input wire dtm_ack_i;
-    output wire [DM_RESP_BITS-1:0] dm_resp_data_o;
-    output wire dm_resp_valid_o;
-    output wire dm_reg_we_o;
-    output wire [4:0] dm_reg_addr_o;
-    output wire [31:0] dm_reg_wdata_o;
-    input wire [31:0] dm_reg_rdata_i;
-    output wire dm_mem_we_o;
-    output wire [31:0] dm_mem_addr_o;
-    output wire [31:0] dm_mem_wdata_o;
-    input wire [31:0] dm_mem_rdata_i;
-    output wire dm_op_req_o;
-    output wire dm_halt_req_o;
-    output wire dm_reset_req_o;
+    input clk_i;
+    input rst_n;
+    output logic dm_ack_o;
+    input dtm_req_valid_i;
+    input [DTM_REQ_BITS-1:0] dtm_req_data_i;
+    input dtm_ack_i;
+    output logic [DM_RESP_BITS-1:0] dm_resp_data_o;
+    output logic dm_resp_valid_o;
+    output logic dm_reg_we_o;
+    output logic [4:0] dm_reg_addr_o;
+    output logic [31:0] dm_reg_wdata_o;
+    input [31:0] dm_reg_rdata_i;
+    output logic dm_mem_we_o;
+    output logic [31:0] dm_mem_addr_o;
+    output logic [31:0] dm_mem_wdata_o;
+    input [31:0] dm_mem_rdata_i;
+    output logic dm_op_req_o;
+    output logic dm_halt_req_o;
+    output logic dm_reset_req_o;
 
     // DM模块寄存器
     logic [31:0] dcsr;

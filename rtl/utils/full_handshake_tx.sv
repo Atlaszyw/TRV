@@ -24,8 +24,8 @@ module full_handshake_tx #(
     parameter DW = 32
 ) (  // TX要发送数据的位宽
 
-    input clk_i,   // TX端时钟信号
-    input rst_n, // TX端复位信号
+    input clk_i,  // TX端时钟信号
+    input rst_n,  // TX端复位信号
 
     // from rx
     input ack_i,  // RX端应答信号

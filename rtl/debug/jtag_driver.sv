@@ -57,17 +57,17 @@ module jtag_driver #(
     localparam SHIFT_REG_BITS = DTM_REQ_BITS;
 
     // input and output
-    input wire rst_n;
-    input wire jtag_TCK;
-    input wire jtag_TDI;
-    input wire jtag_TMS;
+    input rst_n;
+    input jtag_TCK;
+    input jtag_TDI;
+    input jtag_TMS;
     output reg jtag_TDO;
-    input wire dm_resp_i;
-    input wire [DM_RESP_BITS - 1:0] dm_resp_data_i;
-    output wire dtm_ack_o;
-    input wire dm_ack_i;
-    output wire dtm_req_valid_o;
-    output wire [DTM_REQ_BITS - 1:0] dtm_req_data_o;
+    input dm_resp_i;
+    input [DM_RESP_BITS - 1:0] dm_resp_data_i;
+    output logic dtm_ack_o;
+    input dm_ack_i;
+    output logic dtm_req_valid_o;
+    output logic [DTM_REQ_BITS - 1:0] dtm_req_data_o;
 
     // JTAG StateMachine
     localparam TEST_LOGIC_RESET = 4'h0;

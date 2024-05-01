@@ -43,16 +43,16 @@
 // 串口更新固件模块
 module uart_debug (
 
-    input wire clk_i,  // 时钟信号
-    input wire rst_ni,  // 复位信号
+    input clk_i,  // 时钟信号
+    input rst_ni,  // 复位信号
 
-    input wire debug_en_i,  // 模块使能信号
+    input debug_en_i,  // 模块使能信号
 
-    output wire        req_o,
+    output logic        req_o,
     output reg         mem_we_o,
     output reg  [31:0] mem_addr_o,
     output reg  [31:0] mem_wdata_o,
-    input  wire [31:0] mem_rdata_i
+    input [31:0] mem_rdata_i
 
 );
 

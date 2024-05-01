@@ -30,8 +30,7 @@ module rom
 
 );
 
-    logic [MemBus - 1:0] _rom[RomNum];
-
+    (* ram_style="block" *) logic [MemBus - 1:0] _rom[RomNum];
 
     always @(posedge clk_i) begin
         if (we_i == WriteEnable) begin
@@ -41,18 +40,19 @@ module rom
 
     always_comb begin
         if (rst_ni == RstEnable) begin
-            data_o = ZeroWord;
+            data_o = '0;
         end
         else begin
             data_o = _rom[addr_i[31:2]];
         end
     end
 
+`ifdef FPGA
     initial begin
         if (MemInitFile != "") begin : gen_meminit
             $display("Initializing memory %m from file '%s'.", MemInitFile);
             $readmemh(MemInitFile, _rom);
         end
     end
-
+`endif
 endmodule

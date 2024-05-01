@@ -11,9 +11,10 @@ description = "~"
     inc_dirs = [
     ]
     roms = [
-        "$PRJ_ROOT/tb/gpio.mem",
+        "$PRJ_ROOT/tb/gpio.mif",
     ]
     macros = [
+        "FPGA"
     ]
 
     depend = [

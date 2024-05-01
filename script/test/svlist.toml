@@ -5,7 +5,7 @@ sv = [
     "$PRJ_ROOT/rtl/utils/gen_dff.sv",
     "$PRJ_ROOT/rtl/core/tinyriscv_pkg.sv",
     "$PRJ_ROOT/rtl/core/clint.sv",
-    "$PRJ_ROOT/rtl/core/control_tr.sv",
+    "$PRJ_ROOT/rtl/core/ctrl.sv",
     "$PRJ_ROOT/rtl/core/id.sv",
     "$PRJ_ROOT/rtl/core/rib.sv",
     "$PRJ_ROOT/rtl/core/tinyriscv.sv",

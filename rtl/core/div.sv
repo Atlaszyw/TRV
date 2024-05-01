@@ -71,18 +71,18 @@ module div
     always_ff @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
             state         <= STATE_IDLE;
-            ready_o       <= DivResultNotReady;
-            result_o      <= ZeroWord;
-            div_result    <= ZeroWord;
-            div_remain    <= ZeroWord;
+            ready_o       <= ~DivResultReady;
+            result_o      <= '0;
+            div_result    <= '0;
+            div_remain    <= '0;
             op_r          <= 3'h0;
-            reg_waddr_o   <= ZeroWord;
-            dividend_r    <= ZeroWord;
-            divisor_r     <= ZeroWord;
-            minuend       <= ZeroWord;
+            reg_waddr_o   <= '0;
+            dividend_r    <= '0;
+            divisor_r     <= '0;
+            minuend       <= '0;
             invert_result <= 1'b0;
             busy_o        <= False;
-            count         <= ZeroWord;
+            count         <= '0;
         end
         else begin
             case (state)
@@ -97,11 +97,11 @@ module div
                     end
                     else begin
                         op_r        <= 3'h0;
-                        reg_waddr_o <= ZeroWord;
-                        dividend_r  <= ZeroWord;
-                        divisor_r   <= ZeroWord;
-                        ready_o     <= DivResultNotReady;
-                        result_o    <= ZeroWord;
+                        reg_waddr_o <= '0;
+                        dividend_r  <= '0;
+                        divisor_r   <= '0;
+                        ready_o     <= ~DivResultReady;
+                        result_o    <= '0;
                         busy_o      <= False;
                     end
                 end
@@ -109,7 +109,7 @@ module div
                 STATE_START: begin
                     if (start_i == DivStart) begin
                         // 除数为0
-                        if (divisor_r == ZeroWord) begin
+                        if (divisor_r == '0) begin
                             if (op_div | op_divu) begin
                                 result_o <= 32'hffffffff;
                             end
@@ -125,8 +125,8 @@ module div
                             busy_o     <= True;
                             count      <= 32'h40000000;
                             state      <= STATE_CALC;
-                            div_result <= ZeroWord;
-                            div_remain <= ZeroWord;
+                            div_result <= '0;
+                            div_remain <= '0;
 
                             // DIV和REM这两条指令是有符号数运算指令
                             if (op_div | op_rem) begin
@@ -159,8 +159,8 @@ module div
                     end
                     else begin
                         state    <= STATE_IDLE;
-                        result_o <= ZeroWord;
-                        ready_o  <= DivResultNotReady;
+                        result_o <= '0;
+                        ready_o  <= ~DivResultReady;
                         busy_o   <= False;
                     end
                 end
@@ -185,8 +185,8 @@ module div
                     end
                     else begin
                         state    <= STATE_IDLE;
-                        result_o <= ZeroWord;
-                        ready_o  <= DivResultNotReady;
+                        result_o <= '0;
+                        ready_o  <= ~DivResultReady;
                         busy_o   <= False;
                     end
                 end
@@ -215,8 +215,8 @@ module div
                     end
                     else begin
                         state    <= STATE_IDLE;
-                        result_o <= ZeroWord;
-                        ready_o  <= DivResultNotReady;
+                        result_o <= '0;
+                        ready_o  <= ~DivResultReady;
                         busy_o   <= False;
                     end
                 end

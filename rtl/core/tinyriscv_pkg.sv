@@ -1,22 +1,13 @@
 package tinyriscv_pkg;
-
     localparam int unsigned CpuResetAddr = 32'h0;
 
     localparam bit RstEnable = 1'b0;
-    localparam bit RstDisable = 1'b1;
-    localparam int unsigned ZeroWord = 32'h0;
-    localparam int unsigned ZeroReg = 5'h0;
     localparam bit WriteEnable = 1'b1;
-    localparam bit WriteDisable = 1'b0;
     localparam bit ReadEnable = 1'b1;
-    localparam bit ReadDisable = 1'b0;
     localparam bit True = 1'b1;
     localparam bit False = 1'b0;
     localparam bit ChipEnable = 1'b1;
-    localparam bit ChipDisable = 1'b0;
     localparam bit JumpEnable = 1'b1;
-    localparam bit JumpDisable = 1'b0;
-    localparam bit DivResultNotReady = 1'b0;
     localparam bit DivResultReady = 1'b1;
     localparam bit DivStart = 1'b1;
     localparam bit DivStop = 1'b0;
@@ -41,7 +32,7 @@ package tinyriscv_pkg;
     localparam int unsigned Hold_None = 3'b000;
     localparam int unsigned Hold_Pc = 3'b001;
     localparam int unsigned Hold_If = 3'b010;
-    localparam int unsigned Hold_Id = 3'b011;
+    localparam int unsigned Hold_Id = 3'b100;
 
     // I type inst
     localparam int unsigned INST_TYPE_I = 7'b0010011;

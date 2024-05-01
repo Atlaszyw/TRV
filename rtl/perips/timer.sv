@@ -56,17 +56,17 @@ module timer
     // counter
     always_ff @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
-            timer_count <= ZeroWord;
+            timer_count <= '0;
         end
         else begin
             if (timer_ctrl[0] == 1'b1) begin
                 timer_count <= timer_count + 1'b1;
                 if (timer_count >= timer_value) begin
-                    timer_count <= ZeroWord;
+                    timer_count <= '0;
                 end
             end
             else begin
-                timer_count <= ZeroWord;
+                timer_count <= '0;
             end
         end
     end
@@ -74,8 +74,8 @@ module timer
     // write regs
     always_ff @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
-            timer_ctrl  <= ZeroWord;
-            timer_value <= ZeroWord;
+            timer_ctrl  <= '0;
+            timer_value <= '0;
         end
         else begin
             if (we_i == WriteEnable) begin
@@ -98,9 +98,9 @@ module timer
     end
 
     // read regs
-    always @(*) begin
+    always_comb begin
         if (rst_ni == RstEnable) begin
-            data_o = ZeroWord;
+            data_o = '0;
         end
         else begin
             case (addr_i[3:0])
@@ -114,7 +114,7 @@ module timer
                     data_o = timer_count;
                 end
                 default: begin
-                    data_o = ZeroWord;
+                    data_o = '0;
                 end
             endcase
         end
