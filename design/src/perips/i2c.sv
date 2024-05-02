@@ -39,17 +39,26 @@ module i2c
         if (~rst_ni) reg_addr <= '0;
         else if (we_i && addr_i[16 +: 4] == 4'h1) reg_addr <= data_i;
     end
-    always_ff @(posedge clk_i or negedge rst_ni) begin : regAfile
+    always_ff @(posedge clk_i or negedge rst_ni) begin : reg_write_ctl
         if (~rst_ni) reg_addr <= '0;
         else if (we_i && addr_i[16 +: 4] == 4'h2) reg_write_data <= data_i;
     end
-    always_ff @(posedge clk_i or negedge rst_ni) begin : regAfile
+    always_ff @(posedge clk_i or negedge rst_ni) begin : reg_read_ctl
         if (~rst_ni) reg_addr <= '0;
         else if (we_i && addr_i[16 +: 4] == 4'h3) reg_read_data <= data_i;
     end
-    always_ff @(posedge clk_i or negedge rst_ni) begin : regAfile
+    always_ff @(posedge clk_i or negedge rst_ni) begin : reg_ctl
         if (~rst_ni) reg_addr <= '0;
         else if (we_i && addr_i[16 +: 4] == 4'h4) reg_conf <= data_i;
+    end
+
+    always_comb begin : read
+        if (~rst_ni | ~we_i) data_o = '0;
+        else if ()
+        case (addr_i[16 +: 4])
+            :
+            default:
+        endcase
     end
 
     // 内部时钟，计数满时内部时钟翻转一次，scl sda状态的切换基于此时钟进行工作

@@ -105,9 +105,11 @@ module rib
     localparam [3:0] slave_3 = 4'b0011;
     localparam [3:0] slave_4 = 4'b0100;
     localparam [3:0] slave_5 = 4'b0101;
+    localparam [3:0] slave_6 = 4'b0110;
+    localparam [3:0] slave_7 = 4'b0111;
 
-    wire [3:0] req;
-    wire req_t;
+    logic [3:0] req;
+    logic req_t;
 
     // 主设备请求信号
     assign req   = {m3_req_i, m0_req_i, m2_req_i, m1_req_i};
@@ -218,6 +220,18 @@ module rib
                 s5_addr_o = addr_t;
                 s5_data_o = s_data_t;
                 m_data_t  = s5_data_i;
+            end
+            slave_6: begin
+                s6_we_o   = we_t;
+                s6_addr_o = addr_t;
+                s6_data_o = s_data_t;
+                m_data_t  = s6_data_i;
+            end
+            slave_7: begin
+                s7_we_o   = we_t;
+                s7_addr_o = addr_t;
+                s7_data_o = s_data_t;
+                m_data_t  = s7_data_i;
             end
             default: begin
 

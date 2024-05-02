@@ -63,7 +63,7 @@ module full_handshake_tx #(
         end
     end
 
-    always @(*) begin
+    always_comb begin
         case (state)
             STATE_IDLE: begin
                 if (req_i == 1'b1) begin

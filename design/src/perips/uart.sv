@@ -51,7 +51,7 @@ module uart (
 
     logic        rx_q0;
     logic        rx_q1;
-    wire         rx_negedge;
+    logic        rx_negedge;
     logic        rx_start;  // RX使能
     logic [ 3:0] rx_clk_edge_cnt;  // clk时钟沿的个数
     logic        rx_clk_edge_level;  // clk沿电平

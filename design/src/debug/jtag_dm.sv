@@ -121,6 +121,7 @@ module jtag_dm #(
     logic dm_reset_req;
     logic need_resp;
     logic is_read_reg;
+
     wire rx_valid;
     wire [DTM_REQ_BITS-1:0] rx_data;
 

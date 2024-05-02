@@ -241,7 +241,7 @@ module spi (
     end
 
     // read reg
-    always @(*) begin
+    always_comb begin
         if (rst_ni == 1'b0) begin
             data_o = 32'h0;
         end

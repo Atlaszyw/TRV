@@ -30,15 +30,15 @@ module tinyriscv_soc_top
     input uart_debug_pin,  // 串口下载使能引脚
 
     output logic       uart_tx_pin,  // UART发送引脚
-    input        uart_rx_pin,  // UART接收引脚
+    input              uart_rx_pin,  // UART接收引脚
     inout  wire  [1:0] gpio,         // GPIO引脚
 
-    input  jtag_TCK,  // JTAG TCK引脚
-    input  jtag_TMS,  // JTAG TMS引脚
-    input  jtag_TDI,  // JTAG TDI引脚
+    input        jtag_TCK,  // JTAG TCK引脚
+    input        jtag_TMS,  // JTAG TMS引脚
+    input        jtag_TDI,  // JTAG TDI引脚
     output logic jtag_TDO,  // JTAG TDO引脚
 
-    input  spi_miso,  // SPI MISO引脚
+    input        spi_miso,  // SPI MISO引脚
     output logic spi_mosi,  // SPI MOSI引脚
     output logic spi_ss,    // SPI SS引脚
     output logic spi_clk    // SPI CLK引脚
