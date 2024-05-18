@@ -30,6 +30,7 @@ module rib
     output logic [    MemBus - 1:0] m1_data_o,  // 主设备1读取到的数据
     input                           m1_req_i,   // 主设备1访问请求标志
     input                           m1_we_i,    // 主设备1写标志
+    output logic                    m1_valid_o,
 
     // master 2 interface
     input        [MemAddrBus - 1:0] m2_addr_i,  // 主设备2读、写地址
@@ -85,12 +86,16 @@ module rib
     output logic [    MemBus - 1:0] s6_data_o,  // 从设备6写数据
     input        [    MemBus - 1:0] s6_data_i,  // 从设备6读取到的数据
     output logic                    s6_we_o,    // 从设备6写标志
+    output logic                    s6_req_o,   // 从设备6请求
 
     // slave 7 interface
     output logic [MemAddrBus - 1:0] s7_addr_o,  // 从设备7读、写地址
     output logic [    MemBus - 1:0] s7_data_o,  // 从设备7写数据
     input        [    MemBus - 1:0] s7_data_i,  // 从设备7读取到的数据
     output logic                    s7_we_o,    // 从设备7写标志
+    output logic                    s7_req_o,   // 从设备6请求
+    input  logic                    s7_busy_i,
+
 
     output logic hold_flag_o  // 暂停流水线标志
 
@@ -118,41 +123,46 @@ module rib
     logic [MemAddrBus - 1:0] addr_t;
     logic [MemBus - 1:0] s_data_t;
     logic we_t;
+    logic valid_t;
     logic [MemBus - 1:0] m_data_t;
+
+    assign hold_flag_o = (m3_req_i | m0_req_i | m2_req_i | s7_busy_i) ? HoldEnable : HoldDisable;
 
     always_comb begin
         m0_data_o = '0;
         m1_data_o = INST_NOP;
         m2_data_o = '0;
         m3_data_o = '0;
+
         casex (req)
             4'b1xxx: begin
-                hold_flag_o = HoldEnable;
-                addr_t      = m3_addr_i;
-                s_data_t    = m3_data_i;
-                we_t        = m3_we_i;
-                m3_data_o   = m_data_t;
+
+                addr_t    = m3_addr_i;
+                s_data_t  = m3_data_i;
+                we_t      = m3_we_i;
+                m3_data_o = m_data_t;
             end
             4'b01xx: begin
-                hold_flag_o = HoldEnable;
-                addr_t      = m0_addr_i;
-                s_data_t    = m0_data_i;
-                we_t        = m0_we_i;
-                m0_data_o   = m_data_t;
+
+                addr_t    = m0_addr_i;
+                s_data_t  = m0_data_i;
+                we_t      = m0_we_i;
+                m0_data_o = m_data_t;
             end
             4'b001x: begin
-                hold_flag_o = HoldEnable;
-                addr_t      = m2_addr_i;
-                s_data_t    = m2_data_i;
-                we_t        = m2_we_i;
-                m2_data_o   = m_data_t;
+
+                addr_t    = m2_addr_i;
+                s_data_t  = m2_data_i;
+                we_t      = m2_we_i;
+                m2_data_o = m_data_t;
             end
             default: begin
-                hold_flag_o = HoldDisable;
-                addr_t      = m1_addr_i;
-                s_data_t    = m1_data_i;
-                we_t        = m1_we_i;
-                m1_data_o   = m_data_t;
+
+                addr_t     = m1_addr_i;
+                s_data_t   = m1_data_i;
+                we_t       = m1_we_i;
+                m1_data_o  = m_data_t;
+                m1_valid_o = valid_t;
             end
         endcase
     end
@@ -184,54 +194,65 @@ module rib
         s6_we_o   = '0;
         s7_we_o   = '0;
         m_data_t  = '0;
+        s6_req_o  = '0;
+        s7_req_o  = '0;
+        valid_t   = '0;
         case (addr_t[28 +: 4])
             slave_0: begin
                 s0_we_o   = we_t;
                 s0_addr_o = addr_t;
                 s0_data_o = s_data_t;
                 m_data_t  = s0_data_i;
+                valid_t   = '1;
             end
             slave_1: begin
                 s1_we_o   = we_t;
                 s1_addr_o = addr_t;
                 s1_data_o = s_data_t;
                 m_data_t  = s1_data_i;
+                valid_t   = '1;
             end
             slave_2: begin
                 s2_we_o   = we_t;
                 s2_addr_o = addr_t;
                 s2_data_o = s_data_t;
                 m_data_t  = s2_data_i;
+                valid_t   = '1;
             end
             slave_3: begin
                 s3_we_o   = we_t;
                 s3_addr_o = addr_t;
                 s3_data_o = s_data_t;
                 m_data_t  = s3_data_i;
+                valid_t   = '1;
             end
             slave_4: begin
                 s4_we_o   = we_t;
                 s4_addr_o = addr_t;
                 s4_data_o = s_data_t;
                 m_data_t  = s4_data_i;
+                valid_t   = '1;
             end
             slave_5: begin
                 s5_we_o   = we_t;
                 s5_addr_o = addr_t;
                 s5_data_o = s_data_t;
                 m_data_t  = s5_data_i;
+                valid_t   = '1;
             end
             slave_6: begin
                 s6_we_o   = we_t;
                 s6_addr_o = addr_t;
                 s6_data_o = s_data_t;
                 m_data_t  = s6_data_i;
+                s6_req_o  = req_t;
             end
             slave_7: begin
                 s7_we_o   = we_t;
                 s7_addr_o = addr_t;
                 s7_data_o = s_data_t;
                 m_data_t  = s7_data_i;
+                s7_req_o  = req_t;
             end
             default: begin
 

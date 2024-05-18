@@ -3,9 +3,9 @@ import os
 
 
 def bin_to_mem(infile, outfile):
-    binfile = open(infile, 'rb')
+    binfile = open(infile, "rb")
     binfile_content = binfile.read(os.path.getsize(infile))
-    datafile = open(outfile, 'w')
+    datafile = open(outfile, "w")
 
     index = 0
     b0 = 0
@@ -13,7 +13,7 @@ def bin_to_mem(infile, outfile):
     b2 = 0
     b3 = 0
 
-    for b in  binfile_content:
+    for b in binfile_content:
         if index == 0:
             b0 = b
             index = index + 1
@@ -31,14 +31,14 @@ def bin_to_mem(infile, outfile):
             array.append(b2)
             array.append(b1)
             array.append(b0)
-            datafile.write(bytearray(array).hex() + '\n')
+            datafile.write(bytearray(array).hex() + "\n")
 
     binfile.close()
     datafile.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) == 3:
         bin_to_mem(sys.argv[1], sys.argv[2])
     else:
-        print('Usage: %s binfile datafile' % sys.argv[0], sys.argv[1], sys.argv[2])
+        print("Usage: %s binfile datafile" % sys.argv[0], sys.argv[1], sys.argv[2])

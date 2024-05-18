@@ -204,7 +204,6 @@ module id
                     end
                     default: begin
                         reg1_raddr_o = '0;
-                        reg2_raddr_o = '0;
                         reg_we_o     = ~WriteEnable;
                         reg_waddr_o  = '0;
                     end

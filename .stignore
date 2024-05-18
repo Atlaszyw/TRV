@@ -17,3 +17,8 @@ novas.conf
 
 sim
 .git
+
+vcs_compile_lib
+*.daidir
+64
+csrc

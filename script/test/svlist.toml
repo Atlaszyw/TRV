@@ -3,7 +3,7 @@ sv = [
     "$PRJ_ROOT/design/src/utils/full_handshake_rx.sv",
     "$PRJ_ROOT/design/src/utils/full_handshake_tx.sv",
     "$PRJ_ROOT/design/src/utils/gen_dff.sv",
-    "$PRJ_ROOT/design/src/core/tinyriscv_pkg.sv",
+    "$PRJ_ROOT/design/src/pkg/tinyriscv_pkg.sv",
     "$PRJ_ROOT/design/src/core/clint.sv",
     "$PRJ_ROOT/design/src/core/ctrl.sv",
     "$PRJ_ROOT/design/src/core/id.sv",

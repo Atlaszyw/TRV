@@ -1,3 +1,19 @@
 {
-    "verilog.linting.slang.arguments": "--std 1800-2023 -j 12 -I${workspaceFolder}/rtl/... -y /home/main/Projects/tinyriscv/rtl/... --Y sv --Y v"
+    "verilog.linting.slang.arguments": "--std 1800-2023 -j 12 -I${workspaceFolder}/rtl/... -y /home/main/Projects/tinyriscv/design/... --Y sv --Y v",
+    "clangd.arguments": [
+        "--all-scopes-completion",
+        "--background-index=true",
+        "--clang-tidy",
+        "--compile-commands-dir=.vscode",
+        "--completion-style=detailed",
+        "--fallback-style=llvm",
+        "--header-insertion=iwyu",
+        "--pch-storage=memory",
+        "--query-driver=/home/main/Tools/riscv_llvm/bin/clang",
+        "-j=16",
+        "-log=info"
+    ],
+    "clangd.fallbackFlags": [
+        "-I/home/main/Projects/tinyriscv/tests/example/include"
+    ]
 }

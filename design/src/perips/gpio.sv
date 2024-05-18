@@ -27,7 +27,7 @@ module gpio (
 
     output logic [31:0] data_o,
 
-    input  [ 1:0] io_pin_i,
+    input        [ 1:0] io_pin_i,
     output logic [31:0] reg_ctrl,
     output logic [31:0] reg_data
 

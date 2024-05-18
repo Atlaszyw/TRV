@@ -1,0 +1,340 @@
+Not enough permission to place log file at /var/log/archinstall/install.log, creating it in /home/main/Projects/tinyriscv/install.log instead
+Hardware model detected: Micro Computer(HK) Tech Limited Venus series; UEFI mode: True
+Processor model detected: 12th Gen Intel(R) Core(TM) i9-12900HK
+Memory statistics: 64434308 available out of 65621884 total installed
+Could not detect virtual system: ['/usr/bin/systemd-detect-virt'] exited with abnormal exit code [1]: none
+
+System is not running in a VM: ['/usr/bin/systemd-detect-virt'] exited with abnormal exit code [1]: none
+
+Virtualization detected: None; is VM: False
+Graphics devices detected: dict_keys(['Intel Corporation Alder Lake-P GT2 [Iris Xe Graphics] (rev 0c)'])
+Disk states before installing: [
+    {
+        "children": [
+            {
+                "children": [],
+                "fsavail": null,
+                "fsroots": [],
+                "fstype": "vfat",
+                "fsuse_percentage": null,
+                "fsver": "FAT32",
+                "log_sec": 512,
+                "mountpoint": null,
+                "mountpoints": [],
+                "name": "sda1",
+                "partn": 1,
+                "parttype": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+                "partuuid": "57a9746b-bb28-4d36-89ad-047fd4a5ca53",
+                "path": "/dev/sda1",
+                "pkname": "sda",
+                "pttype": "gpt",
+                "ptuuid": "18215858-985e-46d7-b932-c984053c4591",
+                "rota": true,
+                "size": "30593 MiB",
+                "tran": null,
+                "type": "part",
+                "uuid": "1EF9-3473"
+            }
+        ],
+        "fsavail": null,
+        "fsroots": [],
+        "fstype": null,
+        "fsuse_percentage": null,
+        "fsver": null,
+        "log_sec": 512,
+        "mountpoint": null,
+        "mountpoints": [],
+        "name": "sda",
+        "partn": null,
+        "parttype": null,
+        "partuuid": null,
+        "path": "/dev/sda",
+        "pkname": null,
+        "pttype": "gpt",
+        "ptuuid": "18215858-985e-46d7-b932-c984053c4591",
+        "rota": true,
+        "size": "30594 MiB",
+        "tran": "usb",
+        "type": "disk",
+        "uuid": null
+    },
+    {
+        "children": [
+            {
+                "children": [],
+                "fsavail": 429973504,
+                "fsroots": [
+                    "."
+                ],
+                "fstype": "vfat",
+                "fsuse_percentage": "16%",
+                "fsver": "FAT32",
+                "log_sec": 512,
+                "mountpoint": "/boot",
+                "mountpoints": [
+                    "/boot"
+                ],
+                "name": "nvme0n1p1",
+                "partn": 1,
+                "parttype": "c12a7328-f81f-11d2-ba4b-00a0c93ec93b",
+                "partuuid": "f7598040-9772-41f4-861e-4979b0cc7587",
+                "path": "/dev/nvme0n1p1",
+                "pkname": "nvme0n1",
+                "pttype": "gpt",
+                "ptuuid": "b5e75ea8-ec1e-41e0-8f35-3297b03bce0f",
+                "rota": false,
+                "size": "487 MiB",
+                "tran": "nvme",
+                "type": "part",
+                "uuid": "F106-1328"
+            },
+            {
+                "children": [],
+                "fsavail": 274885304320,
+                "fsroots": [
+                    "."
+                ],
+                "fstype": "ext4",
+                "fsuse_percentage": "1%",
+                "fsver": "1.0",
+                "log_sec": 512,
+                "mountpoint": "/",
+                "mountpoints": [
+                    "/"
+                ],
+                "name": "nvme0n1p2",
+                "partn": 2,
+                "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4",
+                "partuuid": "6dc08099-f408-4e82-a4d2-1acd0a3e9646",
+                "path": "/dev/nvme0n1p2",
+                "pkname": "nvme0n1",
+                "pttype": "gpt",
+                "ptuuid": "b5e75ea8-ec1e-41e0-8f35-3297b03bce0f",
+                "rota": false,
+                "size": "285614 MiB",
+                "tran": "nvme",
+                "type": "part",
+                "uuid": "cae16c2a-b12e-43fa-8808-b47dea9ccfea"
+            },
+            {
+                "children": [],
+                "fsavail": 173441007616,
+                "fsroots": [
+                    "."
+                ],
+                "fstype": "ext4",
+                "fsuse_percentage": "1%",
+                "fsver": "1.0",
+                "log_sec": 512,
+                "mountpoint": "/home",
+                "mountpoints": [
+                    "/home"
+                ],
+                "name": "nvme0n1p3",
+                "partn": 3,
+                "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4",
+                "partuuid": "504ad20a-059c-4a55-9d78-7024587a4b72",
+                "path": "/dev/nvme0n1p3",
+                "pkname": "nvme0n1",
+                "pttype": "gpt",
+                "ptuuid": "b5e75ea8-ec1e-41e0-8f35-3297b03bce0f",
+                "rota": false,
+                "size": "180109 MiB",
+                "tran": "nvme",
+                "type": "part",
+                "uuid": "be3b86b9-87f6-4096-95a3-94f43fcf2340"
+            }
+        ],
+        "fsavail": null,
+        "fsroots": [],
+        "fstype": null,
+        "fsuse_percentage": null,
+        "fsver": null,
+        "log_sec": 512,
+        "mountpoint": null,
+        "mountpoints": [],
+        "name": "nvme0n1",
+        "partn": null,
+        "parttype": null,
+        "partuuid": null,
+        "path": "/dev/nvme0n1",
+        "pkname": null,
+        "pttype": "gpt",
+        "ptuuid": "b5e75ea8-ec1e-41e0-8f35-3297b03bce0f",
+        "rota": false,
+        "size": "488386 MiB",
+        "tran": "nvme",
+        "type": "disk",
+        "uuid": null
+    }
+]
+Not enough permission to place log file at /var/log/archinstall/install.log, creating it in /home/main/Projects/tinyriscv/install.log instead
+Hardware model detected: Micro Computer(HK) Tech Limited Venus series; UEFI mode: True
+Processor model detected: 12th Gen Intel(R) Core(TM) i9-12900HK
+Memory statistics: 64440192 available out of 65621884 total installed
+Could not detect virtual system: ['/usr/bin/systemd-detect-virt'] exited with abnormal exit code [1]: none
+
+System is not running in a VM: ['/usr/bin/systemd-detect-virt'] exited with abnormal exit code [1]: none
+
+Virtualization detected: None; is VM: False
+Graphics devices detected: dict_keys(['Intel Corporation Alder Lake-P GT2 [Iris Xe Graphics] (rev 0c)'])
+Disk states before installing: [
+    {
+        "children": [
+            {
+                "children": [],
+                "fsavail": null,
+                "fsroots": [],
+                "fstype": "vfat",
+                "fsuse_percentage": null,
+                "fsver": "FAT32",
+                "log_sec": 512,
+                "mountpoint": null,
+                "mountpoints": [],
+                "name": "sda1",
+                "partn": 1,
+                "parttype": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+                "partuuid": "57a9746b-bb28-4d36-89ad-047fd4a5ca53",
+                "path": "/dev/sda1",
+                "pkname": "sda",
+                "pttype": "gpt",
+                "ptuuid": "18215858-985e-46d7-b932-c984053c4591",
+                "rota": true,
+                "size": "30593 MiB",
+                "tran": null,
+                "type": "part",
+                "uuid": "1EF9-3473"
+            }
+        ],
+        "fsavail": null,
+        "fsroots": [],
+        "fstype": null,
+        "fsuse_percentage": null,
+        "fsver": null,
+        "log_sec": 512,
+        "mountpoint": null,
+        "mountpoints": [],
+        "name": "sda",
+        "partn": null,
+        "parttype": null,
+        "partuuid": null,
+        "path": "/dev/sda",
+        "pkname": null,
+        "pttype": "gpt",
+        "ptuuid": "18215858-985e-46d7-b932-c984053c4591",
+        "rota": true,
+        "size": "30594 MiB",
+        "tran": "usb",
+        "type": "disk",
+        "uuid": null
+    },
+    {
+        "children": [
+            {
+                "children": [],
+                "fsavail": 429973504,
+                "fsroots": [
+                    "."
+                ],
+                "fstype": "vfat",
+                "fsuse_percentage": "16%",
+                "fsver": "FAT32",
+                "log_sec": 512,
+                "mountpoint": "/boot",
+                "mountpoints": [
+                    "/boot"
+                ],
+                "name": "nvme0n1p1",
+                "partn": 1,
+                "parttype": "c12a7328-f81f-11d2-ba4b-00a0c93ec93b",
+                "partuuid": "f7598040-9772-41f4-861e-4979b0cc7587",
+                "path": "/dev/nvme0n1p1",
+                "pkname": "nvme0n1",
+                "pttype": "gpt",
+                "ptuuid": "b5e75ea8-ec1e-41e0-8f35-3297b03bce0f",
+                "rota": false,
+                "size": "487 MiB",
+                "tran": "nvme",
+                "type": "part",
+                "uuid": "F106-1328"
+            },
+            {
+                "children": [],
+                "fsavail": 274885304320,
+                "fsroots": [
+                    "."
+                ],
+                "fstype": "ext4",
+                "fsuse_percentage": "1%",
+                "fsver": "1.0",
+                "log_sec": 512,
+                "mountpoint": "/",
+                "mountpoints": [
+                    "/"
+                ],
+                "name": "nvme0n1p2",
+                "partn": 2,
+                "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4",
+                "partuuid": "6dc08099-f408-4e82-a4d2-1acd0a3e9646",
+                "path": "/dev/nvme0n1p2",
+                "pkname": "nvme0n1",
+                "pttype": "gpt",
+                "ptuuid": "b5e75ea8-ec1e-41e0-8f35-3297b03bce0f",
+                "rota": false,
+                "size": "285614 MiB",
+                "tran": "nvme",
+                "type": "part",
+                "uuid": "cae16c2a-b12e-43fa-8808-b47dea9ccfea"
+            },
+            {
+                "children": [],
+                "fsavail": 173441003520,
+                "fsroots": [
+                    "."
+                ],
+                "fstype": "ext4",
+                "fsuse_percentage": "1%",
+                "fsver": "1.0",
+                "log_sec": 512,
+                "mountpoint": "/home",
+                "mountpoints": [
+                    "/home"
+                ],
+                "name": "nvme0n1p3",
+                "partn": 3,
+                "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4",
+                "partuuid": "504ad20a-059c-4a55-9d78-7024587a4b72",
+                "path": "/dev/nvme0n1p3",
+                "pkname": "nvme0n1",
+                "pttype": "gpt",
+                "ptuuid": "b5e75ea8-ec1e-41e0-8f35-3297b03bce0f",
+                "rota": false,
+                "size": "180109 MiB",
+                "tran": "nvme",
+                "type": "part",
+                "uuid": "be3b86b9-87f6-4096-95a3-94f43fcf2340"
+            }
+        ],
+        "fsavail": null,
+        "fsroots": [],
+        "fstype": null,
+        "fsuse_percentage": null,
+        "fsver": null,
+        "log_sec": 512,
+        "mountpoint": null,
+        "mountpoints": [],
+        "name": "nvme0n1",
+        "partn": null,
+        "parttype": null,
+        "partuuid": null,
+        "path": "/dev/nvme0n1",
+        "pkname": null,
+        "pttype": "gpt",
+        "ptuuid": "b5e75ea8-ec1e-41e0-8f35-3297b03bce0f",
+        "rota": false,
+        "size": "488386 MiB",
+        "tran": "nvme",
+        "type": "disk",
+        "uuid": null
+    }
+]

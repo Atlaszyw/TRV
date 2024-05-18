@@ -61,7 +61,7 @@ module id_ex
         clk_i,
         rst_ni,
         hold_en,
-        INST_NOP,
+         INST_NOP,
         inst_i,
         inst
     );

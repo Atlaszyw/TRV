@@ -1,12 +1,12 @@
-#include <stdint.h>
 #include "../include/utils.h"
+#include <stdint.h>
 
 
 int mul = 3;
 int div = 3;
 
 
-int main()
+int main( )
 {
     int i;
     int sum;
@@ -15,12 +15,10 @@ int main()
     sum = 0;
 
     // sum = 5050
-    for (i = 0; i <= 100; i++)
-        sum += i;
+    for ( i = 0; i <= 100; i++ ) sum += i;
 
     // sum = 3775
-    for (i = 0; i <= 50; i++)
-        sum -= i;
+    for ( i = 0; i <= 50; i++ ) sum -= i;
 
     // sum = 22650
     sum = sum * mul;
@@ -28,10 +26,10 @@ int main()
     // sum = 7550
     sum = sum / div;
 
-    if (sum == 7550)
-        set_test_pass();
+    if ( sum == 7550 )
+        set_test_pass( );
     else
-        set_test_fail();
+        set_test_fail( );
 
     return 0;
 }

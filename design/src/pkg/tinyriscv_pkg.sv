@@ -123,9 +123,9 @@ package tinyriscv_pkg;
     localparam int unsigned CSR_MSTATUS = 12'h300;
     localparam int unsigned CSR_MSCRATCH = 12'h340;
 
-    localparam int unsigned RomNum = 4096;  // rom depth(how many words)
+    localparam int unsigned RomNum = 256;  // rom depth(how many words)
 
-    localparam int unsigned MemNum = 4096;  // memory depth(how many words)
+    localparam int unsigned MemNum = 16;  // memory depth(how many words)
     localparam int unsigned MemBus = 32;
     localparam int unsigned MemAddrBus = 32;
 
@@ -139,6 +139,5 @@ package tinyriscv_pkg;
     localparam int unsigned RegWidth = 32;
     localparam int unsigned RegNum = 32;  // logic num
     localparam int unsigned RegNumLog2 = 5;
-
 
 endpackage

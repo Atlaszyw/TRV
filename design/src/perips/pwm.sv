@@ -24,43 +24,39 @@ module pwm
     genvar i;
     generate
         for (i = 0; i < channel; i = i + 1) begin
-            always_ff @(posedge clk_i or negedge rst_ni) begin : regAfile
+            always_ff @(posedge clk_i) begin : regAfile
                 if (~rst_ni) reg_A[i] <= '0;
                 else if (we_i && addr_inner[4 +: 4] == 4'h0 && addr_inner[0 +: 4] == i) reg_A[i] <= data_i;
-            end
-        end
-    endgenerate
-    generate
-        for (i = 0; i < channel; i = i + 1) begin
-            always_ff @(posedge clk_i or negedge rst_ni) begin : regBfile
+            end : regAfile
+            always_ff @(posedge clk_i) begin : regBfile
                 if (~rst_ni) reg_B[i] <= '0;
                 else if (we_i && addr_inner[4 +: 4] == 4'h1 && addr_inner[0 +: 4] == i) reg_B[i] <= data_i;
-            end
+            end : regBfile
         end
     endgenerate
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : reg_en_ctl
+    always_ff @(posedge clk_i) begin : reg_en_ctl
         if (~rst_ni) reg_en <= '0;
         else if (we_i && addr_inner[4 +: 4] == 4'h2) reg_en <= data_i;
-    end
+    end : reg_en_ctl
 
     logic [31:0] cnt[channel];
     generate
         for (i = 0; i < channel; i = i + 1) begin
-            always_ff @(posedge clk_i or negedge rst_ni) begin : cnt_ctl
-                if (~rst_ni | ~reg_en[i]) cnt[i] <= reg_A[i];
+            always_ff @(posedge clk_i) begin : cnt_ctl
+                if (~reg_en[i]) cnt[i] <= reg_A[i];
                 else if (reg_en[i]) begin
                     if (|cnt[i]) cnt[i] <= cnt[i] - 1'b1;
                     else cnt[i] <= reg_A[i];
                 end
-            end
-            always_ff @(posedge clk_i or negedge rst_ni) begin : channel_ctl
-                if (~rst_ni | ~reg_en[i]) pwm_o[i] <= '0;
+            end : cnt_ctl
+            always_ff @(posedge clk_i) begin : channel_ctl
+                if (~reg_en[i]) pwm_o[i] <= '0;
                 else if (reg_en[i]) begin
                     if (cnt[i] >= reg_B[i]) pwm_o[i] <= '0;
                     else pwm_o[i] <= '1;
                 end
-            end
+            end : channel_ctl
         end
     endgenerate
 endmodule
