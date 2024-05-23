@@ -61,8 +61,9 @@ module tinyriscv_soc_top
     // master 1 interface
     logic [  MemAddrBus - 1:0] m1_addr;
     logic [      MemBus - 1:0] m1_data_i;
-    logic [      MemBus - 1:0] m1_data_o;
+    logic [      MemBus - 1:0] m1_data;
     logic                      m1_we;
+    logic                      m1_ready;
 
     // master 2 interface
     logic [  MemAddrBus - 1:0] m2_addr;
@@ -181,8 +182,9 @@ module tinyriscv_soc_top
         .rib_ex_we_o   (m0_we),
         .rib_ex_ready_i(m0_ready),
 
-        .rib_pc_addr_o(m1_addr),
-        .rib_pc_data_i(m1_data_i),
+        .rib_pc_addr_o (m1_addr),
+        .rib_pc_data_i (m1_data),
+        .rib_pc_ready_i(m1_ready),
 
         .jtag_reg_addr_i(jtag_reg_addr_o),
         .jtag_reg_data_i(jtag_reg_data_o),
@@ -214,8 +216,8 @@ module tinyriscv_soc_top
         .rst_ni(rst_ni),
         .we_i  (s0_we),
         .addr_i(s0_addr),
-        .data_i(s0_data_i),
-        .data_o(s0_data_o)
+        .data_i(s0_data_o),
+        .data_o(s0_data_i)
     );
 
     // ram模块例化
@@ -315,11 +317,13 @@ module tinyriscv_soc_top
         .m0_we_i   (m0_we),
         .m0_ready_o(m0_ready),
 
-        .m1_addr_i(m1_addr),
-        .m1_data_i('0),
-        .m1_data_o(m1_data_i),
-        .m1_req_i ('1),
-        .m1_we_i  ('0),
+        // master 1 interface
+        .m1_addr_i (m1_addr),
+        .m1_data_i ('0),
+        .m1_data_o (m1_data),
+        .m1_req_i  (RIB_REQ),
+        .m1_we_i   (~WriteEnable),
+        .m1_ready_o(m1_ready),
 
         // master 2 interface
         .m2_addr_i(m2_addr),
@@ -327,17 +331,18 @@ module tinyriscv_soc_top
         .m2_data_o(m2_data_o),
         .m2_req_i (m2_req),
         .m2_we_i  (m2_we),
-        // master 2 interface
+
+        // master 3 interface
         .m3_addr_i(m3_addr),
         .m3_data_i(m3_data_i),
         .m3_data_o(m3_data_o),
         .m3_req_i (m3_req),
         .m3_we_i  (m3_we),
 
-        // slave 1 interface
+        // slave 0 interface
         .s0_addr_o(s0_addr),
-        .s0_data_o(s0_data_i),
-        .s0_data_i(s0_data_o),
+        .s0_data_o(s0_data_o),
+        .s0_data_i(s0_data_i),
         .s0_we_o  (s0_we),
 
         // slave 1 interface
@@ -357,7 +362,6 @@ module tinyriscv_soc_top
         .s3_data_o(s3_data_o),
         .s3_data_i(s3_data_i),
         .s3_we_o  (s3_we),
-        .s3_req_o (s3_req),
 
         // slave 4 interface
         .s4_addr_o(s4_addr),

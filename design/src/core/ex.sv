@@ -59,7 +59,7 @@ module ex
     output logic [MemAddrBus - 1:0] csr_waddr_o,  // 写CSR寄存器地址
 
     // to ctrl
-    output logic                     hold_flag_o,  // 是否暂停标志
+    output logic                     ready_o,  // 是否暂停标志
     output logic                     jump_flag_o,  // 是否跳转标志
     output logic [InstAddrBus - 1:0] jump_addr_o   // 跳转目的地址
 
@@ -134,7 +134,7 @@ module ex
         // 响应中断时不向总线请求访问内存
         mem_req_o       = (int_assert_i == INT_ASSERT) ? RIB_NREQ : mem_req;
 
-        hold_flag_o     = div_hold | mem_hold;
+        ready_o     = ~(div_hold | mem_hold);
         jump_flag_o     = jump_flag || ((int_assert_i == INT_ASSERT) ? JumpEnable : ~JumpEnable);
         jump_addr_o     = (int_assert_i == INT_ASSERT) ? int_addr_i : jump_addr;
 
@@ -186,7 +186,7 @@ module ex
     end
 
     always_comb begin
-        mem_hold = RIB_REQ;
+        mem_hold = mem_req ^ mem_ready_i;
     end
 
     // 单周期代码
@@ -440,8 +440,8 @@ module ex
         .clk_i,
         .rst_ni,
         .valid_i   (div_valid),
-        .dividend_i(reg1_rdata_i),
-        .divisor_i (reg2_rdata_i),
+        .dividend_i(op1_i),
+        .divisor_i (op2_i),
         .op_i      (funct3),
         .data_o    (div_data),
         .ready_o   (div_ready),

@@ -22,6 +22,8 @@ module if_id
     input clk_i,
     input rst_ni,
 
+    input ready_from_id_ex_i,
+
     input [    InstBus - 1:0] inst_i,           // 指令内容
     input [InstAddrBus - 1:0] inst_addr_i,      // 指令地址
     input [InstAddrBus - 1:0] inst_addr_next_i, // 下一指令地址
@@ -33,13 +35,24 @@ module if_id
 
     output logic [    InstBus - 1:0] inst_o,           // 指令内容
     output logic [InstAddrBus - 1:0] inst_addr_o,      // 指令地址
-    output logic [InstAddrBus - 1:0] inst_addr_next_o  // 下一指令地址
+    output logic [InstAddrBus - 1:0] inst_addr_next_o, // 下一指令地址
+
+    output logic instr_req_o,
+    input        instr_ready_i,
+    output logic valid_to_id_ex_o
 );
 
     logic en;
     logic clear;
-    assign clear = hold_flag_i == Pipe_Clear;
-    assign en    = (hold_flag_i == Pipe_Flow);
+    assign clear       = hold_flag_i == Pipe_Clear || ~instr_ready_i & instr_req_o;
+    assign en          = (instr_req_o & instr_ready_i);
+
+    assign instr_req_o = ~valid_to_id_ex_o | valid_to_id_ex_o & ready_from_id_ex_i;
+
+    always_ff @(posedge clk_i) begin : valid_to_id_ex_ctrl
+        if (~rst_ni) valid_to_id_ex_o <= '0;
+        else valid_to_id_ex_o <= en;
+    end : valid_to_id_ex_ctrl
 
     logic [InstBus - 1:0] inst;
     gen_en_dff #(32, INST_NOP) inst_ff (

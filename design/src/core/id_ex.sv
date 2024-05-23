@@ -22,6 +22,9 @@ module id_ex
     input clk_i,
     input rst_ni,
 
+    input ready_ex_i,
+    input valid_if_id_i,
+
     input [    InstBus - 1:0] inst_i,            // 指令内容
     input [InstAddrBus - 1:0] inst_addr_i,       // 指令地址
     input [InstAddrBus - 1:0] inst_addr_next_i,  // 指令地址
@@ -47,14 +50,17 @@ module id_ex
     output logic                     csr_we_o,          // 写CSR寄存器标志
     output logic [ MemAddrBus - 1:0] csr_waddr_o,       // 写CSR寄存器地址
     output logic [     RegBus - 1:0] csr_rdata_o,       // CSR寄存器读数据
-    output       [              2:0] compare_o,
-    output       [     RegBus - 1:0] store_data_o
+    output logic [              2:0] compare_o,
+    output logic [     RegBus - 1:0] store_data_o,
+
+    output logic ready_id_ex_o
 );
 
     logic en;
     logic clear;
-    assign clear = hold_flag_i == Pipe_Clear;
-    assign en    = (hold_flag_i == Pipe_Flow);
+    assign clear         = hold_flag_i == Pipe_Clear || ready_ex_i & ~valid_if_id_i;
+    assign en            = (ready_ex_i & valid_if_id_i);
+    assign ready_id_ex_o = ready_ex_i;
 
     logic [InstBus - 1:0] inst;
     gen_en_dff #(32, INST_NOP) inst_ff (
