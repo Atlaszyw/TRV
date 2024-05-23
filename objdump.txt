@@ -1,0 +1,18 @@
+
+test.o:	file format elf32-littleriscv
+
+Disassembly of section .text:
+
+00000000 <.text>:
+       0: 13 05 43 01  	addi	x10, x6, 20
+       4: 93 05 43 01  	addi	x11, x6, 20
+       8: 13 05 43 01  	addi	x10, x6, 20
+       c: 13 05 43 01  	addi	x10, x6, 20
+      10: 63 00 b5 00  	beq	x10, x11, 0x10 <.text+0x10>
+      14: 13 06 43 01  	addi	x12, x6, 20
+      18: 13 06 43 01  	addi	x12, x6, 20
+
+0000001c <label>:
+      1c: 13 06 43 01  	addi	x12, x6, 20
+      20: 13 06 43 01  	addi	x12, x6, 20
+      24: 13 06 43 01  	addi	x12, x6, 20

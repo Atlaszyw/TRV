@@ -16,7 +16,7 @@
 module rom
     import tinyriscv_pkg::*;
 #(
-    parameter MemInitFile = "gpio.mif"
+    parameter MemInitFile = "test.mif"
 ) (
 
     input clk_i,

@@ -134,7 +134,7 @@ module jtag_dm #(
 
     wire read_dmstatus = (op == `DTM_OP_READ) & (address == DMSTATUS);
 
-    always @(posedge clk_i or negedge rst_n) begin
+    always @(posedge clk_i) begin
         if (!rst_n) begin
             dm_mem_we    <= 1'b0;
             dm_reg_we    <= 1'b0;

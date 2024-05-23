@@ -30,7 +30,7 @@ module tb_top ();
     wire uart_debug_pin;
     wire uart_tx_pin;
     wire uart_rx_pin;
-    wire [1:0] gpio;
+    wire [15:0] gpio;
     wire jtag_TCK;
     wire jtag_TMS;
     wire jtag_TDI;
@@ -67,7 +67,7 @@ module tb_top ();
         #1000 gpiodriver = ~gpiodriver;
         $finish();
     end
-    assign gpio[1] = gpiodriver;
+    assign gpio[1]        = gpiodriver;
     assign uart_debug_pin = '1;
     tinyriscv_soc_top i_tinyriscv_soc_top (
 

@@ -12,9 +12,11 @@ description = "~"
     ]
     roms = [
         "$PRJ_ROOT/tb/gpio.mif",
+        # "$PRJ_ROOT/tests/isa/generated/rv32um-p-div.mif",
+        # "$PRJ_ROOT/tests/debug/test.mif",
     ]
     macros = [
-        "FPGA"
+        "FPGA",
     ]
 
     depend = [

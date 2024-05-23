@@ -153,7 +153,8 @@ def compile(options, design_lib: list[str], log_file: Path):
 
     roms = path_parse(options["design"]["roms"])
     for rom in roms:
-        source_rom_path = Path.cwd() / rom.name
+        # source_rom_path = Path.cwd() / rom.name
+        source_rom_path = Path.cwd() / "test.mif"
         if source_rom_path.exists() or source_rom_path.is_symlink():
             source_rom_path.unlink(missing_ok=True)
         source_rom_path.symlink_to(rom)

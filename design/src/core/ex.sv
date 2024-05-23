@@ -18,34 +18,27 @@
 module ex
     import tinyriscv_pkg::*;
 (
-
+    input clk_i,
     input rst_ni,
 
     // from id
-    input [    InstBus - 1:0] inst_i,        // 指令内容
-    input [InstAddrBus - 1:0] inst_addr_i,   // 指令地址
-    input                     reg_we_i,      // 是否写通用寄存器
-    input [ RegAddrBus - 1:0] reg_waddr_i,   // 写通用寄存器地址
-    input [     RegBus - 1:0] reg1_rdata_i,  // 通用寄存器1输入数据
-    input [     RegBus - 1:0] reg2_rdata_i,  // 通用寄存器2输入数据
-    input                     csr_we_i,      // 是否写CSR寄存器
-    input [ MemAddrBus - 1:0] csr_waddr_i,   // 写CSR寄存器地址
-    input [     RegBus - 1:0] csr_rdata_i,   // CSR寄存器输入数据
-    input                     int_assert_i,  // 中断发生标志
-    input [InstAddrBus - 1:0] int_addr_i,    // 中断跳转地址
+    input [    InstBus - 1:0] inst_i,            // 指令内容
+    input [InstAddrBus - 1:0] inst_addr_i,       // 指令地址
+    input [InstAddrBus - 1:0] inst_addr_next_i,
+    input                     reg_we_i,          // 是否写通用寄存器
+    input [ RegAddrBus - 1:0] reg_waddr_i,       // 写通用寄存器地址
+    input                     csr_we_i,          // 是否写CSR寄存器
+    input [ MemAddrBus - 1:0] csr_waddr_i,       // 写CSR寄存器地址
+    input [     RegBus - 1:0] csr_rdata_i,       // CSR寄存器输入数据
+    input                     int_assert_i,      // 中断发生标志
+    input [InstAddrBus - 1:0] int_addr_i,        // 中断跳转地址
     input [ MemAddrBus - 1:0] op1_i,
     input [ MemAddrBus - 1:0] op2_i,
-    input [ MemAddrBus - 1:0] op1_jump_i,
-    input [ MemAddrBus - 1:0] op2_jump_i,
+    input [              2:0] compare_i,
+    input [     RegBus - 1:0] store_data_i,
 
     // from mem
     input [MemBus - 1:0] mem_rdata_i,  // 内存输入数据
-
-    // from div
-    input                    div_ready_i,     // 除法运算完成标志
-    input [    RegBus - 1:0] div_result_i,    // 除法运算结果
-    input                    div_busy_i,      // 除法运算忙标志
-    input [RegAddrBus - 1:0] div_reg_waddr_i, // 除法运算结束后要写的寄存器地址
 
     // to mem
     output logic [    MemBus - 1:0] mem_wdata_o,  // 写内存数据
@@ -53,6 +46,7 @@ module ex
     output logic [MemAddrBus - 1:0] mem_waddr_o,  // 写内存地址
     output logic                    mem_we_o,     // 是否要写内存
     output logic                    mem_req_o,    // 请求访问内存标志
+    input  logic                    mem_ready_i,
 
     // to regs
     output logic [    RegBus - 1:0] reg_wdata_o,  // 写寄存器数据
@@ -64,13 +58,6 @@ module ex
     output logic                    csr_we_o,     // 是否要写CSR寄存器
     output logic [MemAddrBus - 1:0] csr_waddr_o,  // 写CSR寄存器地址
 
-    // to div
-    output logic                    div_start_o,     // 开始除法运算标志
-    output logic [    RegBus - 1:0] div_dividend_o,  // 被除数
-    output logic [    RegBus - 1:0] div_divisor_o,   // 除数
-    output logic [             2:0] div_op_o,        // 具体是哪一条除法指令
-    output logic [RegAddrBus - 1:0] div_reg_waddr_o, // 除法运算结束后要写的寄存器地址
-
     // to ctrl
     output logic                     hold_flag_o,  // 是否暂停标志
     output logic                     jump_flag_o,  // 是否跳转标志
@@ -78,775 +65,357 @@ module ex
 
 );
 
-    wire [1:0] mem_raddr_index;
-    wire [1:0] mem_waddr_index;
-    wire [DoubleRegBus - 1:0] mul_temp;
-    wire [DoubleRegBus - 1:0] mul_temp_invert;
-    wire [31:0] sr_shift;
-    wire [31:0] sri_shift;
-    wire [31:0] sr_shift_mask;
-    wire [31:0] sri_shift_mask;
-    wire [31:0] op1_add_op2_res;
-    wire [31:0] op1_jump_add_op2_jump_res;
-    wire [31:0] reg1_data_invert;
-    wire [31:0] reg2_data_invert;
-    wire op1_ge_op2_signed;
-    wire op1_ge_op2_unsigned;
-    wire op1_eq_op2;
+    logic [1:0] mem_raddr_index;
+    logic [1:0] mem_waddr_index;
+    logic [DoubleRegBus - 1:0] mul_temp;
+    logic [DoubleRegBus - 1:0] mul_temp_invert;
+    logic [31:0] sr_shift;
+    logic [31:0] sri_shift;
+    logic [31:0] sr_shift_mask;
+    logic [31:0] sri_shift_mask;
+    logic [31:0] op1_add_op2_res;
+    logic [31:0] mul_op1_invert;
+    logic [31:0] mul_op2_invert;
+
     logic [RegBus - 1:0] mul_op1;
     logic [RegBus - 1:0] mul_op2;
-    wire [6:0] opcode;
-    wire [2:0] funct3;
-    wire [6:0] funct7;
-    wire [4:0] rd;
-    wire [4:0] uimm;
+    logic [6:0] opcode;
+    logic [2:0] funct3;
+    logic [6:0] funct7;
+    logic [4:0] rd;
+    logic [4:0] uimm;
     logic [RegBus - 1:0] reg_wdata;
     logic reg_we;
     logic [RegAddrBus - 1:0] reg_waddr;
-    logic [RegBus - 1:0] div_wdata;
-    logic div_we;
-    logic [RegAddrBus - 1:0] div_waddr;
-    logic div_hold_flag;
-    logic div_jump_flag;
-    logic [InstAddrBus - 1:0] div_jump_addr;
     logic hold_flag;
     logic jump_flag;
     logic [InstAddrBus - 1:0] jump_addr;
+
+
     logic mem_we;
     logic mem_req;
-    logic div_start;
+    logic mem_hold;
 
-    assign opcode                    = inst_i[6:0];
-    assign funct3                    = inst_i[14:12];
-    assign funct7                    = inst_i[31:25];
-    assign rd                        = inst_i[11:7];
-    assign uimm                      = inst_i[19:15];
+    logic [RegBus - 1:0] div_data;
+    logic div_valid, div_ready;
+    logic div_hold, div_error;
 
-    assign sr_shift                  = reg1_rdata_i >> reg2_rdata_i[4:0];
-    assign sri_shift                 = reg1_rdata_i >> inst_i[24:20];
-    assign sr_shift_mask             = 32'hffffffff >> reg2_rdata_i[4:0];
-    assign sri_shift_mask            = 32'hffffffff >> inst_i[24:20];
+    always_comb begin
+        opcode          = inst_i[6:0];
+        funct3          = inst_i[14:12];
+        funct7          = inst_i[31:25];
+        rd              = inst_i[11:7];
+        uimm            = inst_i[19:15];
 
-    assign op1_add_op2_res           = op1_i + op2_i;
-    assign op1_jump_add_op2_jump_res = op1_jump_i + op2_jump_i;
+        sr_shift        = op1_i >> op2_i[4:0];
+        sri_shift       = op1_i >> inst_i[24:20];
+        sr_shift_mask   = 32'hffffffff >> op2_i[4:0];
+        sri_shift_mask  = 32'hffffffff >> inst_i[24:20];
 
-    assign reg1_data_invert          = ~reg1_rdata_i + 1;
-    assign reg2_data_invert          = ~reg2_rdata_i + 1;
+        op1_add_op2_res = op1_i + op2_i;
 
-    // 有符号数比较
-    assign op1_ge_op2_signed         = $signed(op1_i) >= $signed(op2_i);
-    // 无符号数比较
-    assign op1_ge_op2_unsigned       = op1_i >= op2_i;
-    assign op1_eq_op2                = (op1_i == op2_i);
+        mul_op1_invert  = ~op1_i + 1;
+        mul_op2_invert  = ~op2_i + 1;
 
-    assign mul_temp                  = mul_op1 * mul_op2;
-    assign mul_temp_invert           = ~mul_temp + 1;
+        mul_temp        = mul_op1 * mul_op2;
+        mul_temp_invert = ~mul_temp + 1;
 
-    assign mem_raddr_index           = (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 2'b11;
-    assign mem_waddr_index           = (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]}) & 2'b11;
+        mem_raddr_index = op1_add_op2_res[1:0] & 2'b11;
+        mem_waddr_index = op1_add_op2_res[1:0] & 2'b11;
 
-    assign div_start_o               = (int_assert_i == INT_ASSERT) ? DivStop : div_start;
+        reg_wdata_o     = reg_wdata;
+        // 响应中断时不写通用寄存器
+        reg_we_o        = (int_assert_i == INT_ASSERT) ? ~WriteEnable : reg_we;
+        reg_waddr_o     = reg_waddr;
 
-    assign reg_wdata_o               = reg_wdata | div_wdata;
-    // 响应中断时不写通用寄存器
-    assign reg_we_o                  = (int_assert_i == INT_ASSERT) ? ~WriteEnable : (reg_we || div_we);
-    assign reg_waddr_o               = reg_waddr | div_waddr;
+        // 响应中断时不写内存
+        mem_we_o        = (int_assert_i == INT_ASSERT) ? ~WriteEnable : mem_we;
 
-    // 响应中断时不写内存
-    assign mem_we_o                  = (int_assert_i == INT_ASSERT) ? ~WriteEnable : mem_we;
+        // 响应中断时不向总线请求访问内存
+        mem_req_o       = (int_assert_i == INT_ASSERT) ? RIB_NREQ : mem_req;
 
-    // 响应中断时不向总线请求访问内存
-    assign mem_req_o                 = (int_assert_i == INT_ASSERT) ? RIB_NREQ : mem_req;
+        hold_flag_o     = div_hold | mem_hold;
+        jump_flag_o     = jump_flag || ((int_assert_i == INT_ASSERT) ? JumpEnable : ~JumpEnable);
+        jump_addr_o     = (int_assert_i == INT_ASSERT) ? int_addr_i : jump_addr;
 
-    assign hold_flag_o               = hold_flag || div_hold_flag;
-    assign jump_flag_o               = jump_flag || div_jump_flag || ((int_assert_i == INT_ASSERT) ? JumpEnable : ~JumpEnable);
-    assign jump_addr_o               = (int_assert_i == INT_ASSERT) ? int_addr_i : (jump_addr | div_jump_addr);
-
-    // 响应中断时不写CSR寄存器
-    assign csr_we_o                  = (int_assert_i == INT_ASSERT) ? ~WriteEnable : csr_we_i;
-    assign csr_waddr_o               = csr_waddr_i;
-
+        // 响应中断时不写CSR寄存器
+        csr_we_o        = (int_assert_i == INT_ASSERT) ? ~WriteEnable : csr_we_i;
+        csr_waddr_o     = csr_waddr_i;
+    end
 
     // 处理乘法指令
     always_comb begin
         if ((opcode == INST_TYPE_R_M) && (funct7 == 7'b0000001)) begin
             case (funct3)
                 INST_MUL, INST_MULHU: begin
-                    mul_op1 = reg1_rdata_i;
-                    mul_op2 = reg2_rdata_i;
+                    mul_op1 = op1_i;
+                    mul_op2 = op2_i;
                 end
                 INST_MULHSU: begin
-                    mul_op1 = (reg1_rdata_i[31] == 1'b1) ? (reg1_data_invert) : reg1_rdata_i;
-                    mul_op2 = reg2_rdata_i;
+                    mul_op1 = (op1_i[31] == 1'b1) ? (mul_op1_invert) : op1_i;
+                    mul_op2 = op2_i;
                 end
                 INST_MULH: begin
-                    mul_op1 = (reg1_rdata_i[31] == 1'b1) ? (reg1_data_invert) : reg1_rdata_i;
-                    mul_op2 = (reg2_rdata_i[31] == 1'b1) ? (reg2_data_invert) : reg2_rdata_i;
+                    mul_op1 = (op1_i[31] == 1'b1) ? (mul_op1_invert) : op1_i;
+                    mul_op2 = (op2_i[31] == 1'b1) ? (mul_op2_invert) : op2_i;
                 end
                 default: begin
-                    mul_op1 = reg1_rdata_i;
-                    mul_op2 = reg2_rdata_i;
+                    mul_op1 = op1_i;
+                    mul_op2 = op2_i;
                 end
             endcase
         end
         else begin
-            mul_op1 = reg1_rdata_i;
-            mul_op2 = reg2_rdata_i;
+            mul_op1 = op1_i;
+            mul_op2 = op2_i;
         end
     end
 
     // 处理除法指令
     always_comb begin
-        div_dividend_o  = reg1_rdata_i;
-        div_divisor_o   = reg2_rdata_i;
-        div_op_o        = funct3;
-        div_reg_waddr_o = reg_waddr_i;
+        div_valid = '0;
+        div_hold  = '0;
         if ((opcode == INST_TYPE_R_M) && (funct7 == 7'b0000001)) begin
-            div_we    = ~WriteEnable;
-            div_wdata = '0;
-            div_waddr = '0;
             case (funct3)
                 INST_DIV, INST_DIVU, INST_REM, INST_REMU: begin
-                    div_start     = DivStart;
-                    div_jump_flag = JumpEnable;
-                    div_hold_flag = HoldEnable;
-                    div_jump_addr = op1_jump_add_op2_jump_res;
-                end
-                default: begin
-                    div_start     = DivStop;
-                    div_jump_flag = ~JumpEnable;
-                    div_hold_flag = HoldDisable;
-                    div_jump_addr = '0;
+                    div_valid = (int_assert_i == INT_ASSERT) ? '0 : '1;
+                    div_hold  = div_valid ^ div_ready;
                 end
             endcase
         end
-        else begin
-            div_jump_flag = ~JumpEnable;
-            div_jump_addr = '0;
-            if (div_busy_i == True) begin
-                div_start     = DivStart;
-                div_we        = ~WriteEnable;
-                div_wdata     = '0;
-                div_waddr     = '0;
-                div_hold_flag = HoldEnable;
-            end
-            else begin
-                div_start     = DivStop;
-                div_hold_flag = HoldDisable;
-                if (div_ready_i == DivResultReady) begin
-                    div_wdata = div_result_i;
-                    div_waddr = div_reg_waddr_i;
-                    div_we    = WriteEnable;
-                end
-                else begin
-                    div_we    = ~WriteEnable;
-                    div_wdata = '0;
-                    div_waddr = '0;
-                end
-            end
-        end
     end
 
-    // 执行
+    always_comb begin
+        mem_hold = RIB_REQ;
+    end
+
+    // 单周期代码
     always_comb begin
         reg_we      = reg_we_i;
         reg_waddr   = reg_waddr_i;
         mem_req     = RIB_NREQ;
         csr_wdata_o = '0;
 
+        jump_flag   = ~JumpEnable;
+        jump_addr   = '0;
+        mem_wdata_o = '0;
+        mem_raddr_o = '0;
+        mem_waddr_o = '0;
+        mem_we      = ~WriteEnable;
+        reg_wdata   = '0;
+
         case (opcode)
+            INST_ID_OPCODE: begin
+                if (funct3 == INST_ID_FUN3) begin
+                    mem_we      = WriteEnable;
+                    mem_req     = RIB_REQ;
+                    mem_waddr_o = 32'h30000014;
+                    mem_raddr_o = 32'h30000014;
+                    mem_wdata_o = '0;
+                end
+                if (funct3 == INST_TEMP_FUN3) begin
+                    mem_req     = RIB_REQ;
+                    mem_raddr_o = 32'h70020000;
+                    reg_wdata   = mem_rdata_i;
+                end
+                if (funct3 == INST_INFI_FUN3) begin
+                    jump_flag = ~JumpEnable;
+                    jump_addr = '0;
+                    if (~|inst_i[31:20]) begin
+                        if (compare_i[1]) begin
+                            reg_wdata   = '0;
+                            mem_wdata_o = {24'b0, op1_i[7:0]};
+                            mem_waddr_o = 32'h3000000c;
+                            mem_we      = WriteEnable;
+                            mem_req     = RIB_REQ;
+                            mem_raddr_o = 32'h3000000c;
+                        end
+                        else reg_wdata = op1_i;
+                    end
+                    else begin
+                        reg_wdata = op1_add_op2_res;
+                    end
+                end
+            end
             INST_TYPE_I: begin
                 case (funct3)
-                    INST_ADDI: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = op1_add_op2_res;
-                    end
-                    INST_SLTI: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = {32{(~op1_ge_op2_signed)}} & 32'h1;
-                    end
-                    INST_SLTIU: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = {32{(~op1_ge_op2_unsigned)}} & 32'h1;
-                    end
-                    INST_XORI: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = op1_i ^ op2_i;
-                    end
-                    INST_ORI: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = op1_i | op2_i;
-                    end
-                    INST_ANDI: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = op1_i & op2_i;
-                    end
-                    INST_SLLI: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = reg1_rdata_i << inst_i[24:20];
-                    end
+                    INST_ADDI:  reg_wdata = op1_add_op2_res;
+                    INST_SLTI:  reg_wdata = {32{(~compare_i[2])}} & 32'h1;
+                    INST_SLTIU: reg_wdata = {32{(~compare_i[1])}} & 32'h1;
+                    INST_XORI:  reg_wdata = op1_i ^ op2_i;
+                    INST_ORI:   reg_wdata = op1_i | op2_i;
+                    INST_ANDI:  reg_wdata = op1_i & op2_i;
+                    INST_SLLI:  reg_wdata = op1_i << inst_i[24:20];
                     INST_SRI: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        if (inst_i[30] == 1'b1) begin
-                            reg_wdata = (sri_shift & sri_shift_mask) | ({32{reg1_rdata_i[31]}} & (~sri_shift_mask));
-                        end
-                        else begin
-                            reg_wdata = reg1_rdata_i >> inst_i[24:20];
-                        end
+                        if (inst_i[30] == 1'b1)
+                            reg_wdata = (sri_shift & sri_shift_mask) | ({32{op1_i[31]}} & (~sri_shift_mask));
+                        else reg_wdata = op1_i >> inst_i[24:20];
                     end
-                    default: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                    end
+                    default:    reg_wdata = '0;
                 endcase
             end
             INST_TYPE_R_M: begin
+                // I
                 if ((funct7 == 7'b0000000) || (funct7 == 7'b0100000)) begin
                     case (funct3)
                         INST_ADD_SUB: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            if (inst_i[30] == 1'b0) begin
-                                reg_wdata = op1_add_op2_res;
-                            end
-                            else begin
-                                reg_wdata = op1_i - op2_i;
-                            end
+                            if (inst_i[30] == 1'b0) reg_wdata = op1_add_op2_res;
+                            else reg_wdata = op1_i - op2_i;
                         end
-                        INST_SLL: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = op1_i << op2_i[4:0];
-                        end
-                        INST_SLT: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = {32{(~op1_ge_op2_signed)}} & 32'h1;
-                        end
-                        INST_SLTU: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = {32{(~op1_ge_op2_unsigned)}} & 32'h1;
-                        end
-                        INST_XOR: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = op1_i ^ op2_i;
-                        end
+                        INST_SLL:  reg_wdata = op1_i << op2_i[4:0];
+                        INST_SLT:  reg_wdata = {32{(~compare_i[2])}} & 32'h1;
+                        INST_SLTU: reg_wdata = {32{(~compare_i[1])}} & 32'h1;
+                        INST_XOR:  reg_wdata = op1_i ^ op2_i;
                         INST_SR: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            if (inst_i[30] == 1'b1) begin
-                                reg_wdata = (sr_shift & sr_shift_mask) | ({32{reg1_rdata_i[31]}} & (~sr_shift_mask));
-                            end
-                            else begin
-                                reg_wdata = reg1_rdata_i >> reg2_rdata_i[4:0];
-                            end
+                            if (inst_i[30] == 1'b1)
+                                reg_wdata = (sr_shift & sr_shift_mask) | ({32{op1_i[31]}} & (~sr_shift_mask));
+                            else reg_wdata = op1_i >> op2_i[4:0];
                         end
-                        INST_OR: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = op1_i | op2_i;
-                        end
-                        INST_AND: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = op1_i & op2_i;
-                        end
+                        INST_OR:   reg_wdata = op1_i | op2_i;
+                        INST_AND:  reg_wdata = op1_i & op2_i;
                         default: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = '0;
+                            reg_wdata = '0;
                         end
                     endcase
                 end
+                // M
                 else if (funct7 == 7'b0000001) begin
                     case (funct3)
-                        INST_MUL: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = mul_temp[31:0];
-                        end
-                        INST_MULHU: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = mul_temp[63:32];
-                        end
+                        INST_MUL:   reg_wdata = mul_temp[31:0];
+                        INST_MULHU: reg_wdata = mul_temp[63:32];
                         INST_MULH: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
                             case ({
-                                reg1_rdata_i[31], reg2_rdata_i[31]
+                                op1_i[31], op2_i[31]
                             })
-                                2'b00: begin
-                                    reg_wdata = mul_temp[63:32];
-                                end
-                                2'b11: begin
-                                    reg_wdata = mul_temp[63:32];
-                                end
-                                2'b10: begin
-                                    reg_wdata = mul_temp_invert[63:32];
-                                end
-                                default: begin
-                                    reg_wdata = mul_temp_invert[63:32];
-                                end
+                                2'b00:   reg_wdata = mul_temp[63:32];
+                                2'b11:   reg_wdata = mul_temp[63:32];
+                                2'b10:   reg_wdata = mul_temp_invert[63:32];
+                                default: reg_wdata = mul_temp_invert[63:32];
                             endcase
                         end
                         INST_MULHSU: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            if (reg1_rdata_i[31] == 1'b1) begin
-                                reg_wdata = mul_temp_invert[63:32];
-                            end
-                            else begin
-                                reg_wdata = mul_temp[63:32];
-                            end
+                            if (op1_i[31] == 1'b1) reg_wdata = mul_temp_invert[63:32];
+                            else reg_wdata = mul_temp[63:32];
                         end
-                        default: begin
-                            jump_flag   = ~JumpEnable;
-                            hold_flag   = HoldDisable;
-                            jump_addr   = '0;
-                            mem_wdata_o = '0;
-                            mem_raddr_o = '0;
-                            mem_waddr_o = '0;
-                            mem_we      = ~WriteEnable;
-                            reg_wdata   = '0;
+                        INST_DIV, INST_DIVU, INST_REM, INST_REMU: begin
+                            reg_we    = div_ready & div_valid;
+                            reg_wdata = div_data;
                         end
+                        default:    reg_wdata = '0;
                     endcase
-                end
-                else begin
-                    jump_flag   = ~JumpEnable;
-                    hold_flag   = HoldDisable;
-                    jump_addr   = '0;
-                    mem_wdata_o = '0;
-                    mem_raddr_o = '0;
-                    mem_waddr_o = '0;
-                    mem_we      = ~WriteEnable;
-                    reg_wdata   = '0;
                 end
             end
             INST_TYPE_L: begin
+                mem_req     = RIB_REQ;
+                mem_raddr_o = op1_add_op2_res;
                 case (funct3)
                     INST_LB: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        mem_req     = RIB_REQ;
-                        mem_raddr_o = op1_add_op2_res;
                         case (mem_raddr_index)
-                            2'b00: begin
-                                reg_wdata = {{24{mem_rdata_i[7]}}, mem_rdata_i[7:0]};
-                            end
-                            2'b01: begin
-                                reg_wdata = {{24{mem_rdata_i[15]}}, mem_rdata_i[15:8]};
-                            end
-                            2'b10: begin
-                                reg_wdata = {{24{mem_rdata_i[23]}}, mem_rdata_i[23:16]};
-                            end
-                            default: begin
-                                reg_wdata = {{24{mem_rdata_i[31]}}, mem_rdata_i[31:24]};
-                            end
+                            2'b00:   reg_wdata = {{24{mem_rdata_i[7]}}, mem_rdata_i[7:0]};
+                            2'b01:   reg_wdata = {{24{mem_rdata_i[15]}}, mem_rdata_i[15:8]};
+                            2'b10:   reg_wdata = {{24{mem_rdata_i[23]}}, mem_rdata_i[23:16]};
+                            default: reg_wdata = {{24{mem_rdata_i[31]}}, mem_rdata_i[31:24]};
                         endcase
                     end
                     INST_LH: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        mem_req     = RIB_REQ;
-                        mem_raddr_o = op1_add_op2_res;
-                        if (mem_raddr_index == 2'b0) begin
-                            reg_wdata = {{16{mem_rdata_i[15]}}, mem_rdata_i[15:0]};
-                        end
-                        else begin
-                            reg_wdata = {{16{mem_rdata_i[31]}}, mem_rdata_i[31:16]};
-                        end
+                        if (mem_raddr_index == 2'b0) reg_wdata = {{16{mem_rdata_i[15]}}, mem_rdata_i[15:0]};
+                        else reg_wdata = {{16{mem_rdata_i[31]}}, mem_rdata_i[31:16]};
                     end
-                    INST_LW: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        mem_req     = RIB_REQ;
-                        mem_raddr_o = op1_add_op2_res;
-                        reg_wdata   = mem_rdata_i;
-                    end
+                    INST_LW: reg_wdata = mem_rdata_i;
                     INST_LBU: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        mem_req     = RIB_REQ;
-                        mem_raddr_o = op1_add_op2_res;
                         case (mem_raddr_index)
-                            2'b00: begin
-                                reg_wdata = {24'h0, mem_rdata_i[7:0]};
-                            end
-                            2'b01: begin
-                                reg_wdata = {24'h0, mem_rdata_i[15:8]};
-                            end
-                            2'b10: begin
-                                reg_wdata = {24'h0, mem_rdata_i[23:16]};
-                            end
-                            default: begin
-                                reg_wdata = {24'h0, mem_rdata_i[31:24]};
-                            end
+                            2'b00:   reg_wdata = {24'h0, mem_rdata_i[7:0]};
+                            2'b01:   reg_wdata = {24'h0, mem_rdata_i[15:8]};
+                            2'b10:   reg_wdata = {24'h0, mem_rdata_i[23:16]};
+                            default: reg_wdata = {24'h0, mem_rdata_i[31:24]};
                         endcase
                     end
                     INST_LHU: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        mem_req     = RIB_REQ;
-                        mem_raddr_o = op1_add_op2_res;
-                        if (mem_raddr_index == 2'b0) begin
-                            reg_wdata = {16'h0, mem_rdata_i[15:0]};
-                        end
-                        else begin
-                            reg_wdata = {16'h0, mem_rdata_i[31:16]};
-                        end
-                    end
-                    default: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
+                        if (mem_raddr_index == 2'b0) reg_wdata = {16'h0, mem_rdata_i[15:0]};
+                        else reg_wdata = {16'h0, mem_rdata_i[31:16]};
                     end
                 endcase
             end
             INST_TYPE_S: begin
+                mem_req     = RIB_REQ;
+                mem_we      = WriteEnable;
+                mem_waddr_o = op1_add_op2_res;
+                mem_raddr_o = op1_add_op2_res;
                 case (funct3)
                     INST_SB: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        reg_wdata   = '0;
-                        mem_we      = WriteEnable;
-                        mem_req     = RIB_REQ;
-                        mem_waddr_o = op1_add_op2_res;
-                        mem_raddr_o = op1_add_op2_res;
                         case (mem_waddr_index)
-                            2'b00: begin
-                                mem_wdata_o = {mem_rdata_i[31:8], reg2_rdata_i[7:0]};
-                            end
-                            2'b01: begin
-                                mem_wdata_o = {mem_rdata_i[31:16], reg2_rdata_i[7:0], mem_rdata_i[7:0]};
-                            end
-                            2'b10: begin
-                                mem_wdata_o = {mem_rdata_i[31:24], reg2_rdata_i[7:0], mem_rdata_i[15:0]};
-                            end
-                            default: begin
-                                mem_wdata_o = {reg2_rdata_i[7:0], mem_rdata_i[23:0]};
-                            end
+                            2'b00:   mem_wdata_o = {mem_rdata_i[31:8], store_data_i[7:0]};
+                            2'b01:   mem_wdata_o = {mem_rdata_i[31:16], store_data_i[7:0], mem_rdata_i[7:0]};
+                            2'b10:   mem_wdata_o = {mem_rdata_i[31:24], store_data_i[7:0], mem_rdata_i[15:0]};
+                            default: mem_wdata_o = {store_data_i[7:0], mem_rdata_i[23:0]};
                         endcase
                     end
                     INST_SH: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        reg_wdata   = '0;
-                        mem_we      = WriteEnable;
-                        mem_req     = RIB_REQ;
-                        mem_waddr_o = op1_add_op2_res;
-                        mem_raddr_o = op1_add_op2_res;
-                        if (mem_waddr_index == 2'b00) begin
-                            mem_wdata_o = {mem_rdata_i[31:16], reg2_rdata_i[15:0]};
-                        end
-                        else begin
-                            mem_wdata_o = {reg2_rdata_i[15:0], mem_rdata_i[15:0]};
-                        end
+                        if (mem_waddr_index == 2'b00) mem_wdata_o = {mem_rdata_i[31:16], store_data_i[15:0]};
+                        else mem_wdata_o = {store_data_i[15:0], mem_rdata_i[15:0]};
                     end
-                    INST_SW: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        reg_wdata   = '0;
-                        mem_we      = WriteEnable;
-                        mem_req     = RIB_REQ;
-                        mem_waddr_o = op1_add_op2_res;
-                        mem_raddr_o = op1_add_op2_res;
-                        mem_wdata_o = reg2_rdata_i;
-                    end
-                    default: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                    end
+                    INST_SW: mem_wdata_o = store_data_i;
                 endcase
             end
             INST_TYPE_B: begin
                 case (funct3)
                     INST_BEQ: begin
-                        hold_flag   = HoldDisable;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                        jump_flag   = op1_eq_op2 & JumpEnable;
-                        jump_addr   = {32{op1_eq_op2}} & op1_jump_add_op2_jump_res;
+                        jump_flag = compare_i[0] & JumpEnable;
+                        jump_addr = {32{compare_i[0]}} & op1_add_op2_res;
                     end
                     INST_BNE: begin
-                        hold_flag   = HoldDisable;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                        jump_flag   = (~op1_eq_op2) & JumpEnable;
-                        jump_addr   = {32{(~op1_eq_op2)}} & op1_jump_add_op2_jump_res;
+                        jump_flag = (~compare_i[0]) & JumpEnable;
+                        jump_addr = {32{(~compare_i[0])}} & op1_add_op2_res;
                     end
                     INST_BLT: begin
-                        hold_flag   = HoldDisable;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                        jump_flag   = (~op1_ge_op2_signed) & JumpEnable;
-                        jump_addr   = {32{(~op1_ge_op2_signed)}} & op1_jump_add_op2_jump_res;
+                        jump_flag = (~compare_i[2]) & JumpEnable;
+                        jump_addr = {32{(~compare_i[2])}} & op1_add_op2_res;
                     end
                     INST_BGE: begin
-                        hold_flag   = HoldDisable;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                        jump_flag   = (op1_ge_op2_signed) & JumpEnable;
-                        jump_addr   = {32{(op1_ge_op2_signed)}} & op1_jump_add_op2_jump_res;
+                        jump_flag = (compare_i[2]) & JumpEnable;
+                        jump_addr = {32{(compare_i[2])}} & op1_add_op2_res;
                     end
                     INST_BLTU: begin
-                        hold_flag   = HoldDisable;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                        jump_flag   = (~op1_ge_op2_unsigned) & JumpEnable;
-                        jump_addr   = {32{(~op1_ge_op2_unsigned)}} & op1_jump_add_op2_jump_res;
+                        jump_flag = (~compare_i[1]) & JumpEnable;
+                        jump_addr = {32{(~compare_i[1])}} & op1_add_op2_res;
                     end
                     INST_BGEU: begin
-                        hold_flag   = HoldDisable;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                        jump_flag   = (op1_ge_op2_unsigned) & JumpEnable;
-                        jump_addr   = {32{(op1_ge_op2_unsigned)}} & op1_jump_add_op2_jump_res;
+                        jump_flag = (compare_i[1]) & JumpEnable;
+                        jump_addr = {32{(compare_i[1])}} & op1_add_op2_res;
                     end
                     default: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
+                        jump_flag = ~JumpEnable;
+                        jump_addr = '0;
                     end
                 endcase
             end
             INST_JAL, INST_JALR: begin
-                hold_flag   = HoldDisable;
-                mem_wdata_o = '0;
-                mem_raddr_o = '0;
-                mem_waddr_o = '0;
-                mem_we      = ~WriteEnable;
-                jump_flag   = JumpEnable;
-                jump_addr   = op1_jump_add_op2_jump_res;
-                reg_wdata   = op1_add_op2_res;
+                jump_flag = JumpEnable;
+                jump_addr = op1_add_op2_res;
+                reg_wdata = inst_addr_next_i;
             end
             INST_LUI, INST_AUIPC: begin
-                hold_flag   = HoldDisable;
-                mem_wdata_o = '0;
-                mem_raddr_o = '0;
-                mem_waddr_o = '0;
-                mem_we      = ~WriteEnable;
-                jump_addr   = '0;
-                jump_flag   = ~JumpEnable;
-                reg_wdata   = op1_add_op2_res;
+                reg_wdata = op1_add_op2_res;
             end
             INST_NOP_OP: begin
-                jump_flag   = ~JumpEnable;
-                hold_flag   = HoldDisable;
-                jump_addr   = '0;
-                mem_wdata_o = '0;
-                mem_raddr_o = '0;
-                mem_waddr_o = '0;
-                mem_we      = ~WriteEnable;
-                reg_wdata   = '0;
+                //   pass
             end
             INST_FENCE: begin
-                hold_flag   = HoldDisable;
-                mem_wdata_o = '0;
-                mem_raddr_o = '0;
-                mem_waddr_o = '0;
-                mem_we      = ~WriteEnable;
-                reg_wdata   = '0;
-                jump_flag   = JumpEnable;
-                jump_addr   = op1_jump_add_op2_jump_res;
+                jump_flag = JumpEnable;
+                jump_addr = inst_addr_next_i;
             end
             INST_CSR: begin
-                jump_flag   = ~JumpEnable;
-                hold_flag   = HoldDisable;
-                jump_addr   = '0;
-                mem_wdata_o = '0;
-                mem_raddr_o = '0;
-                mem_waddr_o = '0;
-                mem_we      = ~WriteEnable;
                 case (funct3)
                     INST_CSRRW: begin
-                        csr_wdata_o = reg1_rdata_i;
+                        csr_wdata_o = op1_i;
                         reg_wdata   = csr_rdata_i;
                     end
                     INST_CSRRS: begin
-                        csr_wdata_o = reg1_rdata_i | csr_rdata_i;
+                        csr_wdata_o = op1_i | csr_rdata_i;
                         reg_wdata   = csr_rdata_i;
                     end
                     INST_CSRRC: begin
-                        csr_wdata_o = csr_rdata_i & (~reg1_rdata_i);
+                        csr_wdata_o = csr_rdata_i & (~op1_i);
                         reg_wdata   = csr_rdata_i;
                     end
                     INST_CSRRWI: begin
@@ -861,29 +430,21 @@ module ex
                         csr_wdata_o = (~{27'h0, uimm}) & csr_rdata_i;
                         reg_wdata   = csr_rdata_i;
                     end
-                    default: begin
-                        jump_flag   = ~JumpEnable;
-                        hold_flag   = HoldDisable;
-                        jump_addr   = '0;
-                        mem_wdata_o = '0;
-                        mem_raddr_o = '0;
-                        mem_waddr_o = '0;
-                        mem_we      = ~WriteEnable;
-                        reg_wdata   = '0;
-                    end
                 endcase
-            end
-            default: begin
-                jump_flag   = ~JumpEnable;
-                hold_flag   = HoldDisable;
-                jump_addr   = '0;
-                mem_wdata_o = '0;
-                mem_raddr_o = '0;
-                mem_waddr_o = '0;
-                mem_we      = ~WriteEnable;
-                reg_wdata   = '0;
             end
         endcase
     end
 
+
+    div i_div (
+        .clk_i,
+        .rst_ni,
+        .valid_i   (div_valid),
+        .dividend_i(reg1_rdata_i),
+        .divisor_i (reg2_rdata_i),
+        .op_i      (funct3),
+        .data_o    (div_data),
+        .ready_o   (div_ready),
+        .error_o   (div_error)
+    );
 endmodule

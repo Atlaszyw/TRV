@@ -79,7 +79,7 @@ module uart #(
         regi_s_d = regi_s_q;
         unique case (regi_s_q)
             NUM_IDLE:
-            if (req_i && we_i && addr_i[0 +: 8] == 8'h00 && data_i[2]) begin
+            if (req_i && we_i && addr_i[0 +: 8] == 8'h14 && data_i[2]) begin
                 if (uart_status[0]) regi_s_d = NUM_WAITING;
                 else regi_s_d = NUM_EMITTING;
             end

@@ -247,7 +247,7 @@ module uart #(
         end
     end : rx_bit_cnt_ctrl
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : rx_check_bit_ctl
+    always_ff @(posedge clk_i) begin : rx_check_bit_ctl
         if (~rst_ni) rx_check_bit <= '0;
         else rx_check_bit <= rx_check_bit << 1 | rx_pin;
     end : rx_check_bit_ctl
@@ -256,7 +256,7 @@ module uart #(
     assign rx_stop_bit_check  = rx_cnt_done && &rx_check_bit;
     assign rx_data_check      = rx_cnt_done && (&rx_check_bit | ~|rx_check_bit);
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : rx_data_pick
+    always_ff @(posedge clk_i) begin : rx_data_pick
         if (~rst_ni) begin
             rx_buffer <= '0;
         end
@@ -265,7 +265,7 @@ module uart #(
         end
     end : rx_data_pick
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : rx_data_reg_ctrl
+    always_ff @(posedge clk_i) begin : rx_data_reg_ctrl
         if (~rst_ni) begin
             uart_status[1] <= '0;
             rx_data        <= '0;

@@ -18,9 +18,6 @@
 module id
     import tinyriscv_pkg::*;
 (
-
-    input rst_ni,
-
     // from if_id
     input [    InstBus - 1:0] inst_i,      // 指令内容
     input [InstAddrBus - 1:0] inst_addr_i, // 指令地址
@@ -45,17 +42,15 @@ module id
     // to ex
     output logic [ MemAddrBus - 1:0] op1_o,
     output logic [ MemAddrBus - 1:0] op2_o,
-    output logic [ MemAddrBus - 1:0] op1_jump_o,
-    output logic [ MemAddrBus - 1:0] op2_jump_o,
-    output logic [    InstBus - 1:0] inst_o,        // 指令内容
-    output logic [InstAddrBus - 1:0] inst_addr_o,   // 指令地址
-    output logic [     RegBus - 1:0] reg1_rdata_o,  // 通用寄存器1数据
-    output logic [     RegBus - 1:0] reg2_rdata_o,  // 通用寄存器2数据
-    output logic                     reg_we_o,      // 写通用寄存器标志
-    output logic [ RegAddrBus - 1:0] reg_waddr_o,   // 写通用寄存器地址
-    output logic                     csr_we_o,      // 写CSR寄存器标志
-    output logic [     RegBus - 1:0] csr_rdata_o,   // CSR寄存器数据
-    output logic [ MemAddrBus - 1:0] csr_waddr_o    // 写CSR寄存器地址
+    output logic [    InstBus - 1:0] inst_o,       // 指令内容
+    output logic [InstAddrBus - 1:0] inst_addr_o,  // 指令地址
+    output logic                     reg_we_o,     // 写通用寄存器标志
+    output logic [ RegAddrBus - 1:0] reg_waddr_o,  // 写通用寄存器地址
+    output logic                     csr_we_o,     // 写CSR寄存器标志
+    output logic [     RegBus - 1:0] csr_rdata_o,  // CSR寄存器数据
+    output logic [ MemAddrBus - 1:0] csr_waddr_o,  // 写CSR寄存器地址
+    output logic [              2:0] compare_o,    // [2] signed ge [1] unsigned ge [0] unsigned eq
+    output logic [     RegBus - 1:0] store_data_o
 
 );
 
@@ -66,37 +61,59 @@ module id
     wire [4:0] rs1 = inst_i[19:15];
     wire [4:0] rs2 = inst_i[24:20];
 
+    always_comb begin : compare_logic
+        compare_o[2] = $signed(reg1_rdata_i) >= $signed(reg2_rdata_i);
+        compare_o[1] = reg1_rdata_i >= reg2_rdata_i;
+        compare_o[0] = reg1_rdata_i == reg2_rdata_i;
+    end : compare_logic
+
 
     always_comb begin
         inst_o       = inst_i;
         inst_addr_o  = inst_addr_i;
-        reg1_rdata_o = reg1_rdata_i;
-        reg2_rdata_o = reg2_rdata_i;
+
         csr_rdata_o  = csr_rdata_i;
         csr_raddr_o  = '0;
         csr_waddr_o  = '0;
         csr_we_o     = ~WriteEnable;
+
         op1_o        = '0;
         op2_o        = '0;
-        op1_jump_o   = '0;
-        op2_jump_o   = '0;
+
+        reg_we_o     = ~WriteEnable;
+        reg_waddr_o  = '0;
+        reg1_raddr_o = '0;
+        reg2_raddr_o = '0;
+
+        store_data_o = '0;
 
         case (opcode)
+            INST_ID_OPCODE: begin
+                if (funct3 == INST_ID_FUN3) begin
+                    // PASS
+                end
+                else if (funct3 == INST_TEMP_FUN3) begin
+                    reg_we_o    = WriteEnable;
+                    reg_waddr_o = rd;
+                end
+                else if (funct3 == INST_INFI_FUN3) begin
+                    reg_we_o     = WriteEnable;
+                    reg_waddr_o  = rd;
+                    reg1_raddr_o = rs1;
+                    reg2_raddr_o = 5'd31;
+                    op1_o        = reg1_rdata_i;
+                    if (~|inst_i[31:20]) op2_o = reg2_rdata_i;
+                    else op2_o = {{20{inst_i[31]}}, inst_i[31:20]};
+                end
+            end
             INST_TYPE_I: begin
                 case (funct3)
                     INST_ADDI, INST_SLTI, INST_SLTIU, INST_XORI, INST_ORI, INST_ANDI, INST_SLLI, INST_SRI: begin
                         reg_we_o     = WriteEnable;
                         reg_waddr_o  = rd;
                         reg1_raddr_o = rs1;
-                        reg2_raddr_o = '0;
                         op1_o        = reg1_rdata_i;
                         op2_o        = {{20{inst_i[31]}}, inst_i[31:20]};
-                    end
-                    default: begin
-                        reg_we_o     = ~WriteEnable;
-                        reg_waddr_o  = '0;
-                        reg1_raddr_o = '0;
-                        reg2_raddr_o = '0;
                     end
                 endcase
             end
@@ -111,17 +128,11 @@ module id
                             op1_o        = reg1_rdata_i;
                             op2_o        = reg2_rdata_i;
                         end
-                        default: begin
-                            reg_we_o     = ~WriteEnable;
-                            reg_waddr_o  = '0;
-                            reg1_raddr_o = '0;
-                            reg2_raddr_o = '0;
-                        end
                     endcase
                 end
                 else if (funct7 == 7'b0000001) begin
                     case (funct3)
-                        INST_MUL, INST_MULHU, INST_MULH, INST_MULHSU: begin
+                        INST_MUL, INST_MULHU, INST_MULH, INST_MULHSU, INST_DIV, INST_DIVU, INST_REM, INST_REMU: begin
                             reg_we_o     = WriteEnable;
                             reg_waddr_o  = rd;
                             reg1_raddr_o = rs1;
@@ -129,46 +140,17 @@ module id
                             op1_o        = reg1_rdata_i;
                             op2_o        = reg2_rdata_i;
                         end
-                        INST_DIV, INST_DIVU, INST_REM, INST_REMU: begin
-                            reg_we_o     = ~WriteEnable;
-                            reg_waddr_o  = rd;
-                            reg1_raddr_o = rs1;
-                            reg2_raddr_o = rs2;
-                            op1_o        = reg1_rdata_i;
-                            op2_o        = reg2_rdata_i;
-                            op1_jump_o   = inst_addr_i;
-                            op2_jump_o   = 32'h4;
-                        end
-                        default: begin
-                            reg_we_o     = ~WriteEnable;
-                            reg_waddr_o  = '0;
-                            reg1_raddr_o = '0;
-                            reg2_raddr_o = '0;
-                        end
                     endcase
-                end
-                else begin
-                    reg_we_o     = ~WriteEnable;
-                    reg_waddr_o  = '0;
-                    reg1_raddr_o = '0;
-                    reg2_raddr_o = '0;
                 end
             end
             INST_TYPE_L: begin
                 case (funct3)
                     INST_LB, INST_LH, INST_LW, INST_LBU, INST_LHU: begin
                         reg1_raddr_o = rs1;
-                        reg2_raddr_o = '0;
                         reg_we_o     = WriteEnable;
                         reg_waddr_o  = rd;
                         op1_o        = reg1_rdata_i;
                         op2_o        = {{20{inst_i[31]}}, inst_i[31:20]};
-                    end
-                    default: begin
-                        reg1_raddr_o = '0;
-                        reg2_raddr_o = '0;
-                        reg_we_o     = ~WriteEnable;
-                        reg_waddr_o  = '0;
                     end
                 endcase
             end
@@ -177,16 +159,9 @@ module id
                     INST_SB, INST_SW, INST_SH: begin
                         reg1_raddr_o = rs1;
                         reg2_raddr_o = rs2;
-                        reg_we_o     = ~WriteEnable;
-                        reg_waddr_o  = '0;
                         op1_o        = reg1_rdata_i;
                         op2_o        = {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
-                    end
-                    default: begin
-                        reg1_raddr_o = '0;
-                        reg2_raddr_o = '0;
-                        reg_we_o     = ~WriteEnable;
-                        reg_waddr_o  = '0;
+                        store_data_o = reg2_rdata_i;
                     end
                 endcase
             end
@@ -195,106 +170,58 @@ module id
                     INST_BEQ, INST_BNE, INST_BLT, INST_BGE, INST_BLTU, INST_BGEU: begin
                         reg1_raddr_o = rs1;
                         reg2_raddr_o = rs2;
-                        reg_we_o     = ~WriteEnable;
-                        reg_waddr_o  = '0;
-                        op1_o        = reg1_rdata_i;
-                        op2_o        = reg2_rdata_i;
-                        op1_jump_o   = inst_addr_i;
-                        op2_jump_o   = {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
-                    end
-                    default: begin
-                        reg1_raddr_o = '0;
-                        reg_we_o     = ~WriteEnable;
-                        reg_waddr_o  = '0;
+                        op1_o        = inst_addr_i;
+                        op2_o        = {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                     end
                 endcase
             end
             INST_JAL: begin
-                reg_we_o     = WriteEnable;
-                reg_waddr_o  = rd;
-                reg1_raddr_o = '0;
-                reg2_raddr_o = '0;
-                op1_o        = inst_addr_i;
-                op2_o        = 32'h4;
-                op1_jump_o   = inst_addr_i;
-                op2_jump_o   = {{12{inst_i[31]}}, inst_i[19:12], inst_i[20], inst_i[30:21], 1'b0};
+                reg_we_o    = WriteEnable;
+                reg_waddr_o = rd;
+                op1_o       = inst_addr_i;
+                op2_o       = {{12{inst_i[31]}}, inst_i[19:12], inst_i[20], inst_i[30:21], 1'b0};
             end
             INST_JALR: begin
                 reg_we_o     = WriteEnable;
                 reg1_raddr_o = rs1;
-                reg2_raddr_o = '0;
                 reg_waddr_o  = rd;
-                op1_o        = inst_addr_i;
-                op2_o        = 32'h4;
-                op1_jump_o   = reg1_rdata_i;
-                op2_jump_o   = {{20{inst_i[31]}}, inst_i[31:20]};
+                op1_o        = reg1_rdata_i;
+                op2_o        = {{20{inst_i[31]}}, inst_i[31:20]};
             end
             INST_LUI: begin
-                reg_we_o     = WriteEnable;
-                reg_waddr_o  = rd;
-                reg1_raddr_o = '0;
-                reg2_raddr_o = '0;
-                op1_o        = {inst_i[31:12], 12'b0};
-                op2_o        = '0;
+                reg_we_o    = WriteEnable;
+                reg_waddr_o = rd;
+                op1_o       = {inst_i[31:12], 12'b0};
             end
             INST_AUIPC: begin
-                reg_we_o     = WriteEnable;
-                reg_waddr_o  = rd;
-                reg1_raddr_o = '0;
-                reg2_raddr_o = '0;
-                op1_o        = inst_addr_i;
-                op2_o        = {inst_i[31:12], 12'b0};
+                reg_we_o    = WriteEnable;
+                reg_waddr_o = rd;
+                op1_o       = inst_addr_i;
+                op2_o       = {inst_i[31:12], 12'b0};
             end
             INST_NOP_OP: begin
-                reg_we_o     = ~WriteEnable;
-                reg_waddr_o  = '0;
-                reg1_raddr_o = '0;
-                reg2_raddr_o = '0;
+                // Pass
             end
             INST_FENCE: begin
-                reg_we_o     = ~WriteEnable;
-                reg_waddr_o  = '0;
-                reg1_raddr_o = '0;
-                reg2_raddr_o = '0;
-                op1_jump_o   = inst_addr_i;
-                op2_jump_o   = 32'h4;
+                // Pass
             end
             INST_CSR: begin
-                reg_we_o     = ~WriteEnable;
-                reg_waddr_o  = '0;
-                reg1_raddr_o = '0;
-                reg2_raddr_o = '0;
-                csr_raddr_o  = {20'h0, inst_i[31:20]};
-                csr_waddr_o  = {20'h0, inst_i[31:20]};
+                csr_raddr_o = {20'h0, inst_i[31:20]};
+                csr_waddr_o = {20'h0, inst_i[31:20]};
                 case (funct3)
                     INST_CSRRW, INST_CSRRS, INST_CSRRC: begin
                         reg1_raddr_o = rs1;
-                        reg2_raddr_o = '0;
+                        op1_o        = reg1_rdata_i;
                         reg_we_o     = WriteEnable;
                         reg_waddr_o  = rd;
                         csr_we_o     = WriteEnable;
                     end
                     INST_CSRRWI, INST_CSRRSI, INST_CSRRCI: begin
-                        reg1_raddr_o = '0;
-                        reg2_raddr_o = '0;
-                        reg_we_o     = WriteEnable;
-                        reg_waddr_o  = rd;
-                        csr_we_o     = WriteEnable;
-                    end
-                    default: begin
-                        reg_we_o     = ~WriteEnable;
-                        reg_waddr_o  = '0;
-                        reg1_raddr_o = '0;
-                        reg2_raddr_o = '0;
-                        csr_we_o     = ~WriteEnable;
+                        reg_we_o    = WriteEnable;
+                        reg_waddr_o = rd;
+                        csr_we_o    = WriteEnable;
                     end
                 endcase
-            end
-            default: begin
-                reg_we_o     = ~WriteEnable;
-                reg_waddr_o  = '0;
-                reg1_raddr_o = '0;
-                reg2_raddr_o = '0;
             end
         endcase
     end

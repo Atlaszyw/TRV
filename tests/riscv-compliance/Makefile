@@ -3,7 +3,7 @@
 SHELL=cmd
 
 export RISCV_TARGET       ?= tinyriscv
-export RISCV_PREFIX       ?= ../../../../tools/gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64/bin/riscv-none-embed-
+export RISCV_PREFIX       ?= /home/main/Tools/riscv_llvm/bin/riscv32-unknown-elf-
 
 CURDIR = $(shell echo %cd%)
 
@@ -25,4 +25,3 @@ clean:
 	clean -C $(ROOTDIR)/riscv-test-suite/rv32im
 	clean -C $(ROOTDIR)/riscv-test-suite/rv32Zicsr
 	clean -C $(ROOTDIR)/riscv-test-suite/rv32Zifencei
-

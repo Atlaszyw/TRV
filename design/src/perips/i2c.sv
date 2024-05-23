@@ -1,5 +1,3 @@
-
-
 module i2c
     import tinyriscv_pkg::*;
 #(
@@ -41,29 +39,28 @@ module i2c
     logic [7:0] waddr;
     logic [3:0] bit_cnt;
     logic phase_cnt_done;
-    logic clk_s;
     logic cnt_done;
     logic [7:0] tempreture_buffer;
 
 
-    logic [RegBus - 1:0] reg_addr, reg_read_data, reg_write_data, reg_status;
+    logic [RegBus - 1:0] reg_addr, reg_read_data, reg_write_data;
 
     // -----------------------------------reg----------------------------------
 
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : reg_addr_ctl
+    always_ff @(posedge clk_i) begin : reg_addr_ctl
         if (~rst_ni) reg_addr <= ADDR_75;
         else if (req_i && we_i && addr_i[16 +: 4] == 4'h1) reg_addr <= data_i;
     end : reg_addr_ctl
 
     assign waddr = {reg_addr[6:0], 1'b1};
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : reg_write_ctl
+    always_ff @(posedge clk_i) begin : reg_write_ctl
         if (~rst_ni) reg_write_data <= '0;
         else if (req_i && we_i && addr_i[16 +: 4] == 4'h2) reg_write_data <= data_i;
     end : reg_write_ctl
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : reg_read_ctl
+    always_ff @(posedge clk_i) begin : reg_read_ctl
         if (~rst_ni) reg_read_data <= '0;
         else if (i2c_s_q == STOP && i2c_s_d == IDLE) reg_read_data <= tempreture_buffer;
     end : reg_read_ctl
@@ -81,7 +78,7 @@ module i2c
     end : read_reg_out
 
     // ------------------------------fsm------------------------------------
-    always_ff @(posedge clk_i or negedge rst_ni) begin : i2c_d2q
+    always_ff @(posedge clk_i) begin : i2c_d2q
         if (~rst_ni) i2c_s_q <= IDLE;
         else i2c_s_q <= i2c_s_d;
     end : i2c_d2q
@@ -89,7 +86,7 @@ module i2c
     always_comb begin : i2c_ns
         i2c_s_d = i2c_s_q;
         unique case (i2c_s_q)
-            IDLE:   if (req_i && we_i && addr_i[16 +: 4] == 4'h3) i2c_s_d = START;
+            IDLE:   if (req_i && ~we_i && addr_i[16 +: 4] == 4'h3) i2c_s_d = START;
             START:  if (~|clk_s_cnt && cnt_done) i2c_s_d = WADDR;
             WADDR:  if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = RDACK;
             RDACK:  if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = RDNACK;
@@ -99,7 +96,7 @@ module i2c
     end : i2c_ns
 
     // --------------------------------cnt-------------------------------------
-    always_ff @(posedge clk_i or negedge rst_ni) begin : cnt_ctrl
+    always_ff @(posedge clk_i) begin : cnt_ctrl
         if (~rst_ni) cnt <= CNT_MAX;
         else if (i2c_s_q != IDLE) begin
             if (|cnt) cnt <= cnt - 1;
@@ -121,7 +118,7 @@ module i2c
         endcase
     end : clk_s_rst_ctrl
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : clk_s_cnt_ctrl
+    always_ff @(posedge clk_i) begin : clk_s_cnt_ctrl
         if (~rst_ni) clk_s_cnt <= 3'd1;
         else if (i2c_s_d != i2c_s_q)  // 状态切换
             clk_s_cnt <= clk_s_rst;
@@ -132,7 +129,7 @@ module i2c
     end : clk_s_cnt_ctrl
 
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : sda_scl_ctrl
+    always_ff @(posedge clk_i) begin : sda_scl_ctrl
         if (~rst_ni) begin
             sda_o   <= '1;
             sda_t_o <= '0;
@@ -193,7 +190,7 @@ module i2c
     end : sda_scl_ctrl
 
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : bit_cnt_ctrl
+    always_ff @(posedge clk_i) begin : bit_cnt_ctrl
         if (~rst_ni) bit_cnt <= 4'd8;
         else
             case (i2c_s_q)
@@ -202,20 +199,24 @@ module i2c
                     else bit_cnt <= bit_cnt;
                 end
                 WADDR: begin
-                    if (phase_cnt_done) bit_cnt <= bit_cnt - 1;
-                    else if (i2c_s_d == RDACK) bit_cnt <= 4'd8;
+                    if (i2c_s_d == RDACK) bit_cnt <= 4'd8;
+                    else if (phase_cnt_done) bit_cnt <= bit_cnt - 1;
                     else bit_cnt <= bit_cnt;
                 end
                 RDACK: begin
+                    if (i2c_s_d == RDNACK) bit_cnt <= 4'd8;
+                    else if (phase_cnt_done) bit_cnt <= bit_cnt - 1;
+                    else bit_cnt <= bit_cnt;
+                end
+                RDNACK: begin
                     if (phase_cnt_done) bit_cnt <= bit_cnt - 1;
-                    else if (i2c_s_d == RDNACK) bit_cnt <= 4'd8;
                     else bit_cnt <= bit_cnt;
                 end
                 default: bit_cnt <= bit_cnt;
             endcase
     end : bit_cnt_ctrl
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin : temp_buffer_ctrl
+    always_ff @(posedge clk_i) begin : temp_buffer_ctrl
         if (~rst_ni) tempreture_buffer <= '0;
         else if (i2c_s_q == RDACK) begin
             if (bit_cnt < 8 && bit_cnt > 0 && ^clk_s_cnt) tempreture_buffer[bit_cnt] <= sda_i;

@@ -140,7 +140,7 @@ module csr_reg
 
     // read reg
     // ex模块读CSR寄存器
-    always @(*) begin
+    always_comb begin
         if ((waddr_i[11:0] == raddr_i[11:0]) && (we_i == WriteEnable)) begin
             data_o = data_i;
         end
@@ -179,7 +179,7 @@ module csr_reg
 
     // read reg
     // clint模块读CSR寄存器
-    always @(*) begin
+    always_comb begin
         if ((clint_waddr_i[11:0] == clint_raddr_i[11:0]) && (clint_we_i == WriteEnable)) begin
             clint_data_o = clint_data_i;
         end

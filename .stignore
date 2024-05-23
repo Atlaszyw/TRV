@@ -5,7 +5,7 @@
 
 /fpga_prj
 /fpga
-generated
+
 *.bin
 *.elf
 *.objdump
@@ -22,3 +22,5 @@ vcs_compile_lib
 *.daidir
 64
 csrc
+*.verilog
+*.dump

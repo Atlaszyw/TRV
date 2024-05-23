@@ -22,51 +22,62 @@ module if_id
     input clk_i,
     input rst_ni,
 
-    input [    InstBus - 1:0] inst_i,      // 指令内容
-    input [InstAddrBus - 1:0] inst_addr_i, // 指令地址
+    input [    InstBus - 1:0] inst_i,           // 指令内容
+    input [InstAddrBus - 1:0] inst_addr_i,      // 指令地址
+    input [InstAddrBus - 1:0] inst_addr_next_i, // 下一指令地址
 
     input [Hold_Flag_Bus - 1:0] hold_flag_i,  // 流水线暂停标志
 
-    input [INT_BUS - 1:0] int_flag_i,  // 外设中断输入信号
+    input        [INT_BUS - 1:0] int_flag_i,  // 外设中断输入信号
     output logic [INT_BUS - 1:0] int_flag_o,
 
-    output logic [    InstBus - 1:0] inst_o,      // 指令内容
-    output logic [InstAddrBus - 1:0] inst_addr_o  // 指令地址
-
+    output logic [    InstBus - 1:0] inst_o,           // 指令内容
+    output logic [InstAddrBus - 1:0] inst_addr_o,      // 指令地址
+    output logic [InstAddrBus - 1:0] inst_addr_next_o  // 下一指令地址
 );
 
-    wire hold_en = (hold_flag_i >= Hold_If);
+    logic en;
+    logic clear;
+    assign clear = hold_flag_i == Pipe_Clear;
+    assign en    = (hold_flag_i == Pipe_Flow);
 
-    wire [InstBus - 1:0] inst;
-    gen_pipe_dff #(32) inst_ff (
-        clk_i,
-        rst_ni,
-        hold_en,
-        INST_NOP,
-        inst_i,
-        inst
+    logic [InstBus - 1:0] inst;
+    gen_en_dff #(32, INST_NOP) inst_ff (
+        .clk_i,
+        .rst_ni(~clear & rst_ni),
+        .en,
+        .din   (inst_i),
+        .qout  (inst)
     );
     assign inst_o = inst;
 
-    wire [InstAddrBus - 1:0] inst_addr;
-    gen_pipe_dff #(32) inst_addr_ff (
-        clk_i,
-        rst_ni,
-        hold_en,
-        '0,
-        inst_addr_i,
-        inst_addr
+    logic [InstAddrBus - 1:0] inst_addr;
+    gen_en_dff #(32, 0) inst_addr_ff (
+        .clk_i,
+        .rst_ni(~clear & rst_ni),
+        .en,
+        .din   (inst_addr_i),
+        .qout  (inst_addr)
     );
     assign inst_addr_o = inst_addr;
 
-    wire [INT_BUS - 1:0] int_flag;
-    gen_pipe_dff #(8) int_ff (
-        clk_i,
-        rst_ni,
-        hold_en,
-        INT_NONE,
-        int_flag_i,
-        int_flag
+    logic [InstAddrBus - 1:0] inst_addr_next;
+    gen_en_dff #(32, 0) inst_addr_next_ff (
+        .clk_i,
+        .rst_ni(~clear & rst_ni),
+        .en,
+        .din   (inst_addr_next_i),
+        .qout  (inst_addr_next)
+    );
+    assign inst_addr_next_o = inst_addr_next;
+
+    logic [INT_BUS - 1:0] int_flag;
+    gen_en_dff #(8, 0) int_ff (
+        .clk_i,
+        .rst_ni(~clear & rst_ni),
+        .en,
+        .din   (int_flag_i),
+        .qout  (int_flag)
     );
     assign int_flag_o = int_flag;
 

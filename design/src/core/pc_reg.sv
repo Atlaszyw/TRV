@@ -26,15 +26,16 @@ module pc_reg
     input [Hold_Flag_Bus - 1:0] hold_flag_i,       // 流水线暂停标志
     input                       jtag_reset_flag_i, // 复位标志
 
-    output logic [InstAddrBus - 1:0] pc_o  // PC指针
-
+    output logic [InstAddrBus - 1:0] pc_o,      // PC指针
+    output logic [InstAddrBus - 1:0] pc_next_o
 );
 
+    assign pc_next_o = pc_o + 32'h4;
 
     always_ff @(posedge clk_i)
         if (rst_ni == RstEnable || jtag_reset_flag_i == 1'b1) pc_o <= CpuResetAddr;  // 复位
         else if (jump_flag_i == JumpEnable) pc_o <= jump_addr_i;  // 跳转
-        else if (hold_flag_i >= Hold_Pc) pc_o <= pc_o;  // 暂停
-        else pc_o <= pc_o + 4'h4;  // 地址加4
+        else if (hold_flag_i == Pipe_Pause) pc_o <= pc_o;  // 暂停
+        else pc_o <= pc_next_o;  // 地址加4
 
 endmodule

@@ -54,7 +54,7 @@ module full_handshake_tx #(
     logic ack_d;
     logic ack;
 
-    always @(posedge clk_i or negedge rst_n) begin
+    always @(posedge clk_i) begin
         if (!rst_n) begin
             state <= STATE_IDLE;
         end
@@ -99,7 +99,7 @@ module full_handshake_tx #(
 
 
     // 将应答信号打两拍进行同步
-    always @(posedge clk_i or negedge rst_n) begin
+    always @(posedge clk_i) begin
         if (!rst_n) begin
             ack_d <= 1'b0;
             ack   <= 1'b0;
@@ -114,7 +114,7 @@ module full_handshake_tx #(
     logic [DW-1:0] req_data;
     logic idle;
 
-    always @(posedge clk_i or negedge rst_n) begin
+    always @(posedge clk_i) begin
         if (!rst_n) begin
             idle     <= 1'b1;
             req      <= 1'b0;

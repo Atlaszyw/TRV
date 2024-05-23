@@ -128,32 +128,3 @@ module gen_rst_def_dff #(
     assign qout = qout_r;
 
 endmodule
-
-// 带使能端、复位后输出为0的触发器
-module gen_en_dff #(
-    parameter int unsigned DW = 32
-) (
-
-    input clk_i,
-    input rst_ni,
-
-    input                 en,
-    input        [DW-1:0] din,
-    output logic [DW-1:0] qout
-
-);
-
-    logic [DW-1:0] qout_r;
-
-    always_ff @(posedge clk_i) begin
-        if (!rst_ni) begin
-            qout_r <= {DW{1'b0}};
-        end
-        else if (en == 1'b1) begin
-            qout_r <= din;
-        end
-    end
-
-    assign qout = qout_r;
-
-endmodule

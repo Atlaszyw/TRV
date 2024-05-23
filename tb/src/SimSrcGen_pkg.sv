@@ -10,7 +10,7 @@ package SimSrcGen_pkg;
         rst = 1'b1;
         repeat (start) @(posedge clk);
         rst = 1'b0;
-        repeat (duration) @(posedge clk);
+        repeat (duration) @(negedge clk);
         rst = 1'b1;
     endtask
 

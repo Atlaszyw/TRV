@@ -1,5 +1,3 @@
-
-
 module i2c
     import tinyriscv_pkg::*;
 #(
@@ -74,8 +72,8 @@ module i2c
         if (req_i && ~we_i)
             case (addr_i[16 +: 4])
                 4'h1:    data_o = reg_addr;
-                4'h2:    data_o = reg_write_data;
-                4'h3:    data_o = reg_read_data;
+                4'h2:    data_o = reg_read_data;
+                4'h3:    data_o = reg_write_data;
                 default: data_o = '0;
             endcase
     end : read_reg_out

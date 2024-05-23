@@ -16,4 +16,6 @@ verdiLog
 novas.conf
 
 sim
+*.bak
+
 verilate

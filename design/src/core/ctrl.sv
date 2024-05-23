@@ -49,22 +49,22 @@ module ctrl
         jump_addr_o = jump_addr_i;
         jump_flag_o = jump_flag_i;
         // 默认不暂停
-        hold_flag_o = Hold_None;
+        hold_flag_o = Pipe_Flow;
         // 按优先级处理不同模块的请求
-        if (jump_flag_i == JumpEnable || hold_flag_ex_i == HoldEnable || hold_flag_clint_i == HoldEnable) begin
-            // 暂停整条流水线
-            hold_flag_o = Hold_Id;
+        if (jump_flag_i == JumpEnable || hold_flag_clint_i == HoldEnable) begin
+            // 清空整条流水线
+            hold_flag_o = Pipe_Clear;
         end
-        else if (hold_flag_rib_i == HoldEnable) begin
-            // 暂停PC，即取指地址不变
-            hold_flag_o = Hold_Pc;
+        else if (hold_flag_rib_i == HoldEnable || hold_flag_ex_i == HoldEnable) begin
+            // 暂停整条流水线
+            hold_flag_o = Pipe_Pause;
         end
         else if (jtag_halt_flag_i == HoldEnable) begin
-            // 暂停整条流水线
-            hold_flag_o = Hold_Id;
+            // 清空整条流水线
+            hold_flag_o = Pipe_Clear;
         end
         else begin
-            hold_flag_o = Hold_None;
+            hold_flag_o = Pipe_Flow;
         end
     end
 

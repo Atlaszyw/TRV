@@ -15,7 +15,7 @@ default: all
 # Build rules
 #--------------------------------------------------------------------
 
-RISCV_PREFIX ?= ../../tools/gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64/bin/riscv-none-embed-
+RISCV_PREFIX ?= /home/main/Tools/riscv_llvm/bin/riscv32-unknown-elf-
 RISCV_GCC ?= $(RISCV_PREFIX)gcc
 RISCV_GCC_OPTS ?= -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles
 RISCV_OBJDUMP ?= $(RISCV_PREFIX)objdump --disassemble-all
@@ -27,11 +27,11 @@ vpath %.S $(src_dir)
 #------------------------------------------------------------
 # Build assembly tests
 
-%.dump: % 
+%.dump: %
 	$(RISCV_OBJDUMP) generated/$< > generated/$@
 	$(RISCV_OBJCOPY) -O verilog generated/$<   generated/$<.verilog
 	$(RISCV_OBJCOPY) -O binary generated/$<   generated/$<.bin
-
+	python ./convert.py --byte_swap --bytes_per_address 4 --address_per_line 8 --fill 0x00 generated/$<.bin generated/$<.mif
 
 define compile_template
 
@@ -64,4 +64,3 @@ all: $(tests_dump)
 
 clean:
 	rm -rf generated/*
-

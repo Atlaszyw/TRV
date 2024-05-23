@@ -135,7 +135,7 @@ module jtag_driver #(
     assign dmi_stat = is_busy ? 2'b01 : 2'b00;
 
     // state switch
-    always @(posedge jtag_TCK or negedge rst_n) begin
+    always @(posedge jtag_TCK) begin
         if (!rst_n) begin
             jtag_state <= TEST_LOGIC_RESET;
         end
@@ -191,7 +191,7 @@ module jtag_driver #(
     end
 
     // start access DM module
-    always @(posedge jtag_TCK or negedge rst_n) begin
+    always @(posedge jtag_TCK) begin
         if (!rst_n) begin
             dtm_req_valid <= `DTM_REQ_INVALID;
             dtm_req_data  <= {DTM_REQ_BITS{1'b0}};
@@ -216,7 +216,7 @@ module jtag_driver #(
     assign tx_data  = dtm_req_data;
 
     // DTM reset
-    always @(posedge jtag_TCK or negedge rst_n) begin
+    always @(posedge jtag_TCK) begin
         if (!rst_n) begin
             sticky_busy <= 1'b0;
         end
@@ -235,7 +235,7 @@ module jtag_driver #(
     end
 
     // receive DM response data
-    always @(posedge jtag_TCK or negedge rst_n) begin
+    always @(posedge jtag_TCK) begin
         if (!rst_n) begin
             dm_resp_data <= {DM_RESP_BITS{1'b0}};
         end
@@ -247,7 +247,7 @@ module jtag_driver #(
     end
 
     // tx busy
-    always @(posedge jtag_TCK or negedge rst_n) begin
+    always @(posedge jtag_TCK) begin
         if (!rst_n) begin
             dm_is_busy <= 1'b0;
         end
