@@ -18,6 +18,22 @@
             "env": {
                 "PRJ_ROOT": "/home2/zhangyw/Projects/tinyriscv"
             }
-        }
+        },
+        {
+            "name": "Clean",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/script/src/main.py",
+            "cwd": "${workspaceFolder}/script",
+            "args": [
+                "process",
+                "--reset_all"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PRJ_ROOT": "/home2/zhangyw/Projects/tinyriscv"
+            }
+        },
     ]
 }
