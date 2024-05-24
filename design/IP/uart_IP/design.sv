@@ -9,6 +9,8 @@ module uart #(
     input [31:0] addr_i,
     input [31:0] data_i,
 
+    output logic ready_o,
+
     output logic [31:0] data_o,
     output logic        tx_pin,
     input               rx_pin
@@ -45,7 +47,9 @@ module uart #(
 
     // --------------------------------TX-----------------------------------------
     logic [7:0] rom0[10] = '{8'h32, 8'h30, 8'h32, 8'h33, 8'h32, 8'h31, 8'h31, 8'h30, 8'h36, 8'h31};
+
     logic [7:0] rom1[10] = '{8'h32, 8'h30, 8'h32, 8'h33, 8'h32, 8'h31, 8'h31, 8'h30, 8'h36, 8'h31};
+
     typedef enum logic [1:0] {
         TX_IDLE,
         TX_EMITTING,
@@ -69,6 +73,12 @@ module uart #(
     logic tx_done;
     assign tx_done = tx_s_q == TX_STOP && tx_s_d == TX_IDLE;
 
+    always_comb begin : ready_o_ctrl
+        ready_o = '1;
+
+        if (regi_s_q != NUM_IDLE || tx_s_q != TX_IDLE || regi_s_d != NUM_IDLE || tx_s_d != TX_IDLE) ready_o = '0;
+    end : ready_o_ctrl
+
     // reginum state
     always_ff @(posedge clk_i) begin : reginum_d2q
         if (~rst_ni) regi_s_q <= NUM_IDLE;
@@ -79,7 +89,7 @@ module uart #(
         regi_s_d = regi_s_q;
         unique case (regi_s_q)
             NUM_IDLE:
-            if (req_i && we_i && addr_i[0 +: 8] == 8'h14 && data_i[2]) begin
+            if (req_i && we_i && addr_i[0 +: 8] == 8'h14) begin
                 if (uart_status[0]) regi_s_d = NUM_WAITING;
                 else regi_s_d = NUM_EMITTING;
             end

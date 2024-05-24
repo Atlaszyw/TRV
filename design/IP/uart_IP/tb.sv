@@ -10,20 +10,22 @@ module tb;
     reg [31:0] addr_i;
     reg [31:0] data_i;
     wire [31:0] data_o;
+    wire ready_o;
     wire tx_pin;
     reg rx_pin;
 
     // Instantiate the UART module
     uart uut (
-        .clk_i (clk_i),
-        .rst_ni(rst_ni),
-        .we_i  (we_i),
-        .req_i (req_i),
-        .addr_i(addr_i),
-        .data_i(data_i),
-        .data_o(data_o),
-        .tx_pin(tx_pin),
-        .rx_pin(rx_pin)
+        .clk_i  (clk_i),
+        .rst_ni (rst_ni),
+        .we_i   (we_i),
+        .req_i  (req_i),
+        .addr_i (addr_i),
+        .data_i (data_i),
+        .data_o (data_o),
+        .ready_o(ready_o),
+        .tx_pin (tx_pin),
+        .rx_pin (rx_pin)
     );
 
     // Clock generation
@@ -113,8 +115,8 @@ module tb;
         #50;
         req_i  = 1;
         we_i   = 1;
-        addr_i = 32'h00;
-        data_i = 32'b111;  // Enable both TX and RX
+        addr_i = 32'h14;
+
         #20;
         req_i = 0;
         we_i  = 0;

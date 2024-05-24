@@ -102,6 +102,7 @@ module tinyriscv_soc_top
     logic [      MemBus - 1:0] s3_data_o;
     logic [      MemBus - 1:0] s3_data_i;
     logic                      s3_we;
+    logic                      s3_ready;
     logic                      s3_req;
 
     // slave 4 interface
@@ -126,6 +127,7 @@ module tinyriscv_soc_top
     logic [      MemBus - 1:0] s7_data_o;
     logic [      MemBus - 1:0] s7_data_i;
     logic                      s7_we;
+    logic                      s7_ready;
     logic                      s7_req;
 
     // rib
@@ -243,15 +245,16 @@ module tinyriscv_soc_top
 
     // uart模块例化
     uart uart_0 (
-        .clk_i (clk_i),
-        .rst_ni(rst_ni),
-        .we_i  (s3_we),
-        .req_i (s3_req),
-        .addr_i(s3_addr),
-        .data_i(s3_data_o),
-        .data_o(s3_data_i),
-        .tx_pin(uart_tx_pin),
-        .rx_pin(uart_rx_pin)
+        .clk_i  (clk_i),
+        .rst_ni (rst_ni),
+        .we_i   (s3_we),
+        .req_i  (s3_req),
+        .addr_i (s3_addr),
+        .data_i (s3_data_o),
+        .ready_o(s3_ready),
+        .data_o (s3_data_i),
+        .tx_pin (uart_tx_pin),
+        .rx_pin (uart_rx_pin)
     );
 
     i2c i_i2c (
@@ -262,12 +265,12 @@ module tinyriscv_soc_top
         .addr_i (s7_addr),
         .data_i (s7_data_o),
         .data_o (s7_data_i),
+        .ready_o(s7_ready),
         .scl_o  (scl_o),
         .sda_i  (sda_i),
         .sda_o  (sda_o),
         .sda_t_o(sda_t),
 
-        .hold_line()
     );
 
 
@@ -358,10 +361,11 @@ module tinyriscv_soc_top
         .s2_we_o  (s2_we),
 
         // slave 3 interface
-        .s3_addr_o(s3_addr),
-        .s3_data_o(s3_data_o),
-        .s3_data_i(s3_data_i),
-        .s3_we_o  (s3_we),
+        .s3_addr_o (s3_addr),
+        .s3_data_o (s3_data_o),
+        .s3_data_i (s3_data_i),
+        .s3_we_o   (s3_we),
+        .s3_ready_i(s3_ready),
 
         // slave 4 interface
         .s4_addr_o(s4_addr),
@@ -387,7 +391,7 @@ module tinyriscv_soc_top
         .s7_data_i (s7_data_i),
         .s7_we_o   (s7_we),
         .s7_req_o  (s7_req),
-        .s7_ready_i('1),
+        .s7_ready_i(s7_ready),
 
         .hold_flag_o(hold_flag_rib)
     );

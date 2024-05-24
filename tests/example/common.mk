@@ -44,7 +44,7 @@ CFLAGS += -mcmodel=$(RISCV_MCMODEL) -ffunction-sections -fdata-sections -fno-bui
 $(TARGET): $(LINK_OBJS) $(LINK_DEPS) Makefile
 	$(RISCV_GCC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)
 	$(RISCV_OBJCOPY) -O binary $@ $@.bin
-	python /home/main/Projects/tinyriscv/script/src/convert.py --byte_swap --offset 0x00000000 --bytes_per_address 4 --address_per_line 8 $@.bin targetfile $@.mif
+	python /home/main/Projects/tinyriscv/script/src/convert.py --byte_swap --offset 0x00000000 --bytes_per_address 4 --address_per_line 8 $@.bin $@.mif
 	$(RISCV_OBJDUMP) --disassemble-all $@ > $@.dump
 
 

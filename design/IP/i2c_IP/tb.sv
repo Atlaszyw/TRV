@@ -15,7 +15,7 @@ module tb;
 
     // Outputs
     wire [31:0] data_o;
-    wire hold_line;
+    wire ready_o;
     wire scl_o;
     wire sda_o;
     wire sda_t_o;
@@ -40,7 +40,7 @@ module tb;
         .we_i     (we_i),
         .req_i    (req_i),
         .data_o   (data_o),
-        .hold_line(hold_line),
+        .ready_o(ready_o),
         .scl_o    (scl_o),
         .sda_o    (sda_o),
         .sda_t_o  (sda_t_o),
@@ -68,12 +68,9 @@ module tb;
         rst_ni = 1;
 
         // Write address to reg_addr
-        addr_i = 32'h00030000;  // Address for reg_addr
+        addr_i = 32'h00020000;  // Address for reg_addr
         we_i   = 0;
         req_i  = 1;
-        #20;
-        req_i = 0;
-        we_i  = 0;
         #100;
 
         @(negedge sda_t_o) sda_i_reg = 0;
@@ -93,6 +90,7 @@ module tb;
         #1280 sda_i_reg = 1;
         #1280 sda_i_reg = 0;
         #1280 sda_i_reg = 1;
+        #10000 $finish();
     end
 
 

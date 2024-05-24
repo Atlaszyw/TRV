@@ -34,7 +34,7 @@ module rom
 
     always @(posedge clk_i) begin
         if (we_i == WriteEnable) begin
-            _rom[addr_i[31:2]] <= data_i;
+            _rom[addr_i[$clog2(RomNum) + 1:2]] <= data_i;
         end
     end
 
@@ -43,7 +43,7 @@ module rom
             data_o = '0;
         end
         else begin
-            data_o = _rom[addr_i[31:2]];
+            data_o = _rom[addr_i[$clog2(RomNum) + 1:2]];
         end
     end
 

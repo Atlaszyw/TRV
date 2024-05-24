@@ -35,7 +35,7 @@ module ram
 
     always_ff @(posedge clk_i) begin
         if (we_i == WriteEnable) begin
-            _ram[addr_i[31:2]] <= data_i;
+            _ram[addr_i[$clog2(MemNum) + 1:2]] <= data_i;
         end
     end
 
@@ -44,7 +44,7 @@ module ram
             data_o = '0;
         end
         else begin
-            data_o = _ram[addr_i[31:2]];
+            data_o = _ram[addr_i[$clog2(MemNum) + 1:2]];
         end
     end
 

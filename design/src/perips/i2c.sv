@@ -14,7 +14,7 @@ module i2c
     input        req_i,
 
     output logic [31:0] data_o,
-    output logic        hold_line,
+    output logic        ready_o,
 
     output logic scl_o,
     output logic sda_o,
@@ -28,7 +28,8 @@ module i2c
         WADDR,
         RDACK,
         RDNACK,
-        STOP
+        STOP,
+        DATAOUT
     } i2c_state_e;
     i2c_state_e i2c_s_q, i2c_s_d;
     // 内部时钟，计数满时内部时钟翻转一次，scl sda状态的切换基于此时钟进行工作
@@ -39,11 +40,12 @@ module i2c
     logic [7:0] waddr;
     logic [3:0] bit_cnt;
     logic phase_cnt_done;
+    logic clk_s;
     logic cnt_done;
     logic [7:0] tempreture_buffer;
 
 
-    logic [RegBus - 1:0] reg_addr, reg_read_data, reg_write_data;
+    logic [RegBus - 1:0] reg_addr, reg_read_data, reg_write_data, reg_status;
 
     // -----------------------------------reg----------------------------------
 
@@ -62,17 +64,21 @@ module i2c
 
     always_ff @(posedge clk_i) begin : reg_read_ctl
         if (~rst_ni) reg_read_data <= '0;
-        else if (i2c_s_q == STOP && i2c_s_d == IDLE) reg_read_data <= tempreture_buffer;
+        else if (i2c_s_q == STOP && i2c_s_d == DATAOUT) reg_read_data <= tempreture_buffer;
     end : reg_read_ctl
 
-    assign hold_line = i2c_s_q != IDLE;
+    always_comb begin : ready_o_ctrl
+        ready_o = '1;
+
+        if (i2c_s_q == IDLE && i2c_s_d == START || i2c_s_q != IDLE && i2c_s_q != DATAOUT) ready_o = '0;
+    end : ready_o_ctrl
 
     always_comb begin : read_reg_out
         if (req_i && ~we_i)
             case (addr_i[16 +: 4])
                 4'h1:    data_o = reg_addr;
-                4'h2:    data_o = reg_write_data;
-                4'h3:    data_o = reg_read_data;
+                4'h2:    data_o = reg_read_data;
+                4'h3:    data_o = reg_write_data;
                 default: data_o = '0;
             endcase
     end : read_reg_out
@@ -86,12 +92,13 @@ module i2c
     always_comb begin : i2c_ns
         i2c_s_d = i2c_s_q;
         unique case (i2c_s_q)
-            IDLE:   if (req_i && ~we_i && addr_i[16 +: 4] == 4'h3) i2c_s_d = START;
-            START:  if (~|clk_s_cnt && cnt_done) i2c_s_d = WADDR;
-            WADDR:  if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = RDACK;
-            RDACK:  if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = RDNACK;
-            RDNACK: if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = STOP;
-            STOP:   if (~|clk_s_cnt && cnt_done) i2c_s_d = IDLE;
+            IDLE:    if (req_i && ~we_i && addr_i[16 +: 4] == 4'h2) i2c_s_d = START;
+            START:   if (~|clk_s_cnt && cnt_done) i2c_s_d = WADDR;
+            WADDR:   if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = RDACK;
+            RDACK:   if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = RDNACK;
+            RDNACK:  if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = STOP;
+            STOP:    if (~|clk_s_cnt && cnt_done) i2c_s_d = DATAOUT;
+            DATAOUT: i2c_s_d = IDLE;
         endcase
     end : i2c_ns
 

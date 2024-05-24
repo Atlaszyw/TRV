@@ -11,7 +11,7 @@ description = "~"
     inc_dirs = [
     ]
     roms = [
-        "$PRJ_ROOT/tb/gpio.mif",
+        "$PRJ_ROOT/tests/example/gpio/gpio.mif",
         # "$PRJ_ROOT/tests/isa/generated/rv32um-p-div.mif",
         # "$PRJ_ROOT/tests/debug/test.mif",
     ]
