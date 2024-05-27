@@ -24,31 +24,45 @@ module tinyriscv_soc_top
     input clk_i,
     input rst_ni,
 
-    output logic over,  // 测试是否完成信号
-    output logic succ,  // 测试是否成功信号
-
-    output logic halted_ind,  // jtag是否已经halt住CPU信号
-
     input uart_debug_pin,  // 串口下载使能引脚
 
     output logic                  uart_tx_pin,  // UART发送引脚
     input                         uart_rx_pin,  // UART接收引脚
-    inout        [GPIO_NUM - 1:0] gpio,         // GPIO引脚
+    inout        [GPIO_NUM - 1:0] gpio_out,     // GPIO引脚
 
-    input        jtag_TCK,  // JTAG TCK引脚
-    input        jtag_TMS,  // JTAG TMS引脚
-    input        jtag_TDI,  // JTAG TDI引脚
-    output logic jtag_TDO,  // JTAG TDO引脚
+    // input        jtag_TCK,  // JTAG TCK引脚
+    // input        jtag_TMS,  // JTAG TMS引脚
+    // input        jtag_TDI,  // JTAG TDI引脚
+    // output logic jtag_TDO,  // JTAG TDO引脚
 
-    input        spi_miso,  // SPI MISO引脚
-    output logic spi_mosi,  // SPI MOSI引脚
-    output logic spi_ss,    // SPI SS引脚
-    output logic spi_clk,   // SPI CLK引脚
+    // input        spi_miso,  // SPI MISO引脚
+    // output logic spi_mosi,  // SPI MOSI引脚
+    // output logic spi_ss,    // SPI SS引脚
+    // output logic spi_clk,   // SPI CLK引脚
+
+    // output logic over,  // 测试是否完成信号
+    // output logic succ,  // 测试是否成功信号
+
+    output logic [2:0] pwm_o,
 
     output logic scl_o,
     inout        sda_io
 );
 
+    logic                      jtag_TCK;  // JTAG TCK引脚
+    logic                      jtag_TMS;  // JTAG TMS引脚
+    logic                      jtag_TDI;  // JTAG TDI引脚
+    logic                      jtag_TDO;  // JTAG TDO引脚
+
+    logic                      spi_miso;  // SPI MISO引脚
+    logic                      spi_mosi;  // SPI MOSI引脚
+    logic                      spi_ss;  // SPI SS引脚
+    logic                      spi_clk;  // SPI CLK引脚
+
+    logic                      over;  // 测试是否完成信号
+    logic                      succ;  // 测试是否成功信号
+
+    logic                      halted_ind;  // jtag是否已经halt住CPU信号
 
     // master 0 interface
     logic [  MemAddrBus - 1:0] m0_addr;
@@ -204,12 +218,12 @@ module tinyriscv_soc_top
     uart_debug u_uart_debug (
         .clk_i      (clk_i),
         .rst_ni     (rst_ni),
-        .debug_en_i (~uart_debug_pin),
+        .debug_en_i (uart_debug_pin),
         .req_o      (m3_req),
         .mem_we_o   (m3_we),
         .mem_addr_o (m3_addr),
-        .mem_wdata_o(m3_data_w),
-        .mem_rdata_i(m3_data_r)
+        .mem_wdata_o(m3_data_i),
+        .mem_rdata_i(m3_data_o)
     );
 
     // rom模块例化
@@ -248,9 +262,9 @@ module tinyriscv_soc_top
         .clk_i  (clk_i),
         .rst_ni (rst_ni),
         .we_i   (s3_we),
-        .req_i  (s3_req),
         .addr_i (s3_addr),
         .data_i (s3_data_o),
+        .req_i  (s3_req),
         .ready_o(s3_ready),
         .data_o (s3_data_i),
         .tx_pin (uart_tx_pin),
@@ -269,7 +283,7 @@ module tinyriscv_soc_top
         .scl_o  (scl_o),
         .sda_i  (sda_i),
         .sda_o  (sda_o),
-        .sda_t_o(sda_t),
+        .sda_t_o(sda_t)
 
     );
 
@@ -278,8 +292,8 @@ module tinyriscv_soc_top
     generate
         for (i = 0; i < 16; i = i + 1) begin
             // io_i
-            assign gpio[i]  = (gpio_ctrl[2*i +: 2] == 2'b01) ? gpio_data[i] : 1'bz;
-            assign io_in[i] = gpio[i];
+            assign gpio_out[i] = (gpio_ctrl[2*i +: 2] == 2'b01) ? gpio_data[i] : 1'bz;
+            assign io_in[i]    = gpio_out[i];
         end
     endgenerate
 
@@ -298,8 +312,8 @@ module tinyriscv_soc_top
 
     // spi模块例化
     spi spi_0 (
-        .clk_i   (clk_i),
-        .rst_ni  (rst_ni),
+        .clk_i,
+        .rst_ni,
         .data_i  (s5_data_o),
         .addr_i  (s5_addr),
         .we_i    (s5_we),
@@ -308,6 +322,20 @@ module tinyriscv_soc_top
         .spi_miso(spi_miso),
         .spi_ss  (spi_ss),
         .spi_clk (spi_clk)
+    );
+
+    pwm #(
+        .channel(3)
+    ) u_pwm (
+        .clk_i,
+        .rst_ni,
+
+        .data_i(s6_data_o),
+        .addr_i(s6_addr),
+        .we_i  (s6_we),
+        .data_o(s6_data_i),
+
+        .pwm_o
     );
 
     // rib模块例化
@@ -365,6 +393,7 @@ module tinyriscv_soc_top
         .s3_data_o (s3_data_o),
         .s3_data_i (s3_data_i),
         .s3_we_o   (s3_we),
+        .s3_req_o  (s3_req),
         .s3_ready_i(s3_ready),
 
         // slave 4 interface

@@ -53,14 +53,16 @@ module uart #(
     typedef enum logic [1:0] {
         TX_IDLE,
         TX_EMITTING,
-        TX_STOP
+        TX_STOP,
+        TX_DONE
     } tx_state_e;
     tx_state_e tx_s_d, tx_s_q;
 
     typedef enum logic [2:0] {
         NUM_IDLE,
         NUM_WAITING,
-        NUM_EMITTING
+        NUM_EMITTING,
+        NUM_DONE
     } reginum_state_e;
     reginum_state_e regi_s_d, regi_s_q;
 
@@ -71,12 +73,14 @@ module uart #(
     logic [31:0] tx_cnt;
 
     logic tx_done;
-    assign tx_done = tx_s_q == TX_STOP && tx_s_d == TX_IDLE;
+    assign tx_done = tx_s_q == TX_DONE && tx_s_d == TX_IDLE;
 
     always_comb begin : ready_o_ctrl
-        ready_o = '1;
-
-        if (regi_s_q != NUM_IDLE || tx_s_q != TX_IDLE || regi_s_d != NUM_IDLE || tx_s_d != TX_IDLE) ready_o = '0;
+        ready_o = '0;
+        if (regi_s_q == NUM_DONE) ready_o = '1;
+        else if (regi_s_q != NUM_EMITTING && tx_s_q == TX_DONE) ready_o = '1;
+        else if (req_i & ~we_i) ready_o = '1;
+        else if (req_i && we_i && (addr_i[0 +: 8] == 8'h00 || addr_i[0 +: 8] == 8'h08)) ready_o = '1;
     end : ready_o_ctrl
 
     // reginum state
@@ -94,7 +98,8 @@ module uart #(
                 else regi_s_d = NUM_EMITTING;
             end
             NUM_WAITING:  if (~uart_status[0]) regi_s_d = NUM_EMITTING;
-            NUM_EMITTING: if (tx_num_cnt == 4'd9 && (tx_done)) regi_s_d = NUM_IDLE;
+            NUM_EMITTING: if (tx_num_cnt == 4'd9 && (tx_done)) regi_s_d = NUM_DONE;
+            NUM_DONE:     regi_s_d = NUM_IDLE;
         endcase
     end : reginum_ns
 
@@ -114,7 +119,8 @@ module uart #(
             TX_EMITTING: begin
                 if (tx_bit_cnt == 4'd8 && ~|tx_cnt) tx_s_d = TX_STOP;
             end
-            TX_STOP: if (~|tx_cnt) tx_s_d = TX_IDLE;
+            TX_STOP: if (~|tx_cnt) tx_s_d = TX_DONE;
+            TX_DONE: tx_s_d = TX_IDLE;
         endcase
     end : tx_ns
 
@@ -174,12 +180,12 @@ module uart #(
     logic [8:0] tx_buffer;
     always_ff @(posedge clk_i) begin : tx_buffer_ctrl
         if (~rst_ni) tx_buffer <= '1;
-        else if (tx_s_q == TX_IDLE && tx_s_d == TX_EMITTING) tx_buffer <= {1'b0, tx_data};
-        else if (tx_s_q == TX_EMITTING && ~|tx_cnt) tx_buffer <= {tx_buffer[7:0], 1'b1};
+        else if (tx_s_q == TX_IDLE && tx_s_d == TX_EMITTING) tx_buffer <= {tx_data, 1'b0};
+        else if (tx_s_q == TX_EMITTING && ~|tx_cnt) tx_buffer <= {1'b1, tx_buffer[8:1]};
         else if (tx_s_q == TX_STOP && tx_s_q == TX_IDLE) tx_buffer <= '1;
     end : tx_buffer_ctrl
 
-    assign tx_pin         = tx_buffer[8];
+    assign tx_pin         = tx_buffer[0];
     assign uart_status[0] = tx_s_q == TX_EMITTING || tx_s_q == TX_STOP || regi_s_q == NUM_EMITTING;
 
     // -----------------------------------------rx-------------------------------------------------
@@ -271,7 +277,7 @@ module uart #(
             rx_buffer <= '0;
         end
         else if (rx_s_q == RX_DATA) begin
-            if (rx_data_check) rx_buffer <= rx_buffer << 1 | rx_check_bit[0];
+            if (rx_data_check) rx_buffer <= {rx_check_bit[0], rx_buffer[7:1]};
         end
     end : rx_data_pick
 
@@ -288,6 +294,9 @@ module uart #(
             rx_data        <= '0;
             uart_status[1] <= '0;
         end
+        else if (req_i && we_i && addr_i[0 +: 8] == 8'h04) begin
+            uart_status[1] <= data_i[1];
+        end
     end : rx_data_reg_ctrl
 
     always_comb begin : data_out_ctrl
@@ -299,4 +308,5 @@ module uart #(
                 default: data_o = '0;
             endcase
     end : data_out_ctrl
+
 endmodule

@@ -17,7 +17,7 @@
 */
 module tb_top ();
     import SimSrcGen_pkg::*;
-
+    localparam cycle = 10000;
     //-----------------------------------------------------//
     // Signal
     //-----------------------------------------------------//
@@ -31,16 +31,10 @@ module tb_top ();
     wire uart_tx_pin;
     wire uart_rx_pin;
     wire [15:0] gpio;
-    wire jtag_TCK;
-    wire jtag_TMS;
-    wire jtag_TDI;
-    wire jtag_TDO;
-
-    wire spi_miso;
-    wire spi_mosi;
-    wire spi_ss;
-    wire spi_clk;
-
+    wire [2:0] pwm_o;
+    wire scl_o;
+    wire sda_io;
+    logic sda_r;
     reg gpiodriver;
     initial begin
         GenClk(clk_i, 20, 20);
@@ -50,51 +44,79 @@ module tb_top ();
         GenRst(clk_i, rst_ni, 5, 3);
     end
 
+    // initial begin
+    //     #0 gpiodriver = '0;
+    //     #5000;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     #1000 gpiodriver = ~gpiodriver;
+    //     $finish();
+    // end
+    // assign gpio[1]        = gpiodriver;
+
+    assign sda_io = i_tinyriscv_soc_top.sda_t ? 1'bz : sda_r;
+
     initial begin
-        #0 gpiodriver = '0;
-        #5000;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        #1000 gpiodriver = ~gpiodriver;
-        $finish();
+        #50000;
+        @(negedge i_tinyriscv_soc_top.sda_t) sda_r = '0;
+        #cycle;
+        sda_r = '1;
+        #cycle;
+        sda_r = '0;
+        #cycle;
+        sda_r = '1;
+        #cycle;
+        sda_r = '0;
+        #cycle;
+        sda_r = '1;
+        #cycle;
+        sda_r = '0;
+        #cycle;
+        sda_r = '1;
+        #cycle;
+        sda_r = '0;
+        #cycle;
+        #cycle;
+        sda_r = '1;
+        #cycle;
+        sda_r = '0;
+        #cycle;
+        sda_r = '1;
+        #cycle;
+        sda_r = '0;
+        #cycle;
+        sda_r = '1;
+        #cycle;
+        sda_r = '0;
+        #cycle;
+        sda_r = '1;
+        #cycle;
+        sda_r = '0;
     end
-    assign gpio[1]        = gpiodriver;
-    assign uart_debug_pin = '1;
+    assign uart_debug_pin = '0;
     tinyriscv_soc_top i_tinyriscv_soc_top (
 
         .clk_i (clk_i),
         .rst_ni(rst_ni),
 
-        .over(over),  // 测试是否完成信号
-        .succ(succ),  // 测试是否成功信号
-
-        .halted_ind(halted_ind),  // jtag是否已经halt住CPU信号
-
         .uart_debug_pin(uart_debug_pin),  // 串口下载使能引脚
 
         .uart_tx_pin(uart_tx_pin),  // UART发送引脚
         .uart_rx_pin(uart_rx_pin),  // UART接收引脚
-        .gpio       (gpio),         // GPIO引脚
+        .gpio_out   (gpio),         // GPIO引脚
 
-        .jtag_TCK(jtag_TCK),  // JTAG TCK引脚
-        .jtag_TMS(jtag_TMS),  // JTAG TMS引脚
-        .jtag_TDI(jtag_TDI),  // JTAG TDI引脚
-        .jtag_TDO(jtag_TDO),  // JTAG TDO引脚
-
-        .spi_miso(spi_miso),  // SPI MISO引脚
-        .spi_mosi(spi_mosi),  // SPI MOSI引脚
-        .spi_ss  (spi_ss),    // SPI SS引脚
-        .spi_clk (spi_clk)    // SPI CLK引脚
-
+        .pwm_o (pwm_o),
+        .scl_o (scl_o),
+        .sda_io(sda_io)
     );
 
 endmodule

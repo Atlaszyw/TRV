@@ -2,7 +2,7 @@ Magic 271485
 Revision Verdi_P-2019.06-SP2
 
 ; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
-viewPort 0 39 3840 1122 590 89
+viewPort 0 39 3840 622 590 89
 
 ; File list:
 ; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
@@ -16,16 +16,16 @@ signalSpacing 5
 
 ; windowTimeUnit is used for zoom, cursor & marker
 ; waveform viewport range
-zoom 0.000000 1083425.257358
+zoom 0.000000 316018732.037126
 cursor 370000.000000
 marker 0.000000
 
 ; user define markers
 ; userMarker time_pos marker_name color linestyle
 ; visible top row signal index
-top 0
+top 21
 ; marker line index
-markerPos 13
+markerPos 33
 
 ; event list
 ; addEvent event_name event_expression
@@ -76,19 +76,11 @@ addGroup "G5"
 addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_id/reg1_rdata_i[31:0]
 addSignal -h 25 -holdScope reg2_rdata_i[31:0]
 addGroup "G6"
-addSignal -expanded -h 25 /tb_top/i_tinyriscv_soc_top/gpio[1:0]
-addSignal -h 25 -holdScope gpio[1]
-addSignal -h 25 -holdScope gpio[0]
+addSignal -h 25 /tb_top/i_tinyriscv_soc_top/i_i2c/scl_o
+addSignal -h 25 -holdScope sda_o
+addSignal -h 25 -holdScope sda_t_o
+addSignal -h 25 -holdScope sda_i
 addGroup "DIV"
-addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_div/dividend_i[31:0]
-addSignal -h 25 -holdScope divisor_i[31:0]
-addSignal -h 25 -holdScope start_i
-addSignal -h 25 -holdScope op_i[2:0]
-addSignal -h 25 -holdScope reg_waddr_i[4:0]
-addSignal -h 25 -holdScope result_o[31:0]
-addSignal -h 25 -holdScope ready_o
-addSignal -h 25 -holdScope busy_o
-addSignal -h 25 -holdScope reg_waddr_o[4:0]
 addGroup "G10"
 
 ; getSignalForm Scope Hierarchy Status

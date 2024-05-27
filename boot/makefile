@@ -10,26 +10,25 @@ RISCV_AR      := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-ar)
 RISCV_OBJCOPY := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-objcopy)
 RISCV_READELF := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-readelf)
 
+TARGET = boot
 .PHONY: all
 all: $(TARGET)
 
-ASM_SRCS += $(COMMON_DIR)/start.S
-ASM_SRCS += $(COMMON_DIR)/trap_entry.S
-C_SRCS += $(COMMON_DIR)/init.c
-C_SRCS += $(COMMON_DIR)/trap_handler.c
-C_SRCS += $(COMMON_DIR)/lib/utils.c
-C_SRCS += $(COMMON_DIR)/lib/xprintf.c
-C_SRCS += $(COMMON_DIR)/lib/uart.c
-C_SRCS += $(COMMON_DIR)/lib/flash_n25q.c
-C_SRCS += $(COMMON_DIR)/lib/spi.c
+ASM_SRCS += ./src/boot.s
+C_SRCS +=   ./src/main.c
 
-LINKER_SCRIPT := $(COMMON_DIR)/link.lds
 
-INCLUDES += -I$(COMMON_DIR)
+LINKER_SCRIPT := ./link.ld
+RISCV_ARCH := rv32im
+RISCV_ABI := ilp32
+RISCV_MCMODEL := medlow
+
+
+INCLUDES += -I./inc
 
 LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl,--gc-sections -Wl,--check-sections
 
-ASM_OBJS := $(ASM_SRCS:.S=.o)
+ASM_OBJS := $(ASM_SRCS:.s=.o)
 C_OBJS := $(C_SRCS:.c=.o)
 
 LINK_OBJS += $(ASM_OBJS) $(C_OBJS)
@@ -41,14 +40,14 @@ CFLAGS += -march=$(RISCV_ARCH)
 CFLAGS += -mabi=$(RISCV_ABI)
 CFLAGS += -mcmodel=$(RISCV_MCMODEL) -ffunction-sections -fdata-sections -fno-builtin-printf -fno-builtin-malloc
 
-$(TARGET): $(LINK_OBJS) $(LINK_DEPS) Makefile
+$(TARGET): $(LINK_OBJS) $(LINK_DEPS) makefile
 	$(RISCV_GCC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)
 	$(RISCV_OBJCOPY) -O binary $@ $@.bin
-	python /home/main/Projects/tinyriscv/script/src/convert.py --byte_swap --offset 0x00000000 --bytes_per_address 4 --address_per_line 1 $@.bin $@.mif
+	python /home/main/Projects/tinyriscv/script/src/convert.py --byte_swap --offset 0x00000000 --bytes_per_address 4 --address_per_line 8 $@.bin $@.mif
 	$(RISCV_OBJDUMP) --disassemble-all $@ > $@.dump
 
 
-$(ASM_OBJS): %.o: %.S
+$(ASM_OBJS): %.o: %.s
 	$(RISCV_GCC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 $(C_OBJS): %.o: %.c

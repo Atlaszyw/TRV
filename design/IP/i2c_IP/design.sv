@@ -2,7 +2,7 @@ module i2c
     import tinyriscv_pkg::*;
 #(
     parameter int unsigned       CLK_FREQ = 32'd50_000_000,
-    parameter int unsigned       SCL_FREQ = 32'd400_000,
+    parameter int unsigned       SCL_FREQ = 32'd100_000,
     parameter logic        [6:0] ADDR_75  = 7'b1001000
 ) (
     input clk_i,
@@ -33,7 +33,7 @@ module i2c
     } i2c_state_e;
     i2c_state_e i2c_s_q, i2c_s_d;
     // 内部时钟，计数满时内部时钟翻转一次，scl sda状态的切换基于此时钟进行工作
-    localparam int unsigned CNT_MAX = CLK_FREQ / (SCL_FREQ * 8);
+    localparam int unsigned CNT_MAX = CLK_FREQ / (SCL_FREQ * 4) - 1;
     logic [$clog2(CNT_MAX) - 1:0] cnt;
     logic [2:0] clk_s_cnt;
     logic [2:0] clk_s_rst;
@@ -51,7 +51,7 @@ module i2c
 
 
     always_ff @(posedge clk_i) begin : reg_addr_ctl
-        if (~rst_ni) reg_addr <= ADDR_75;
+        if (~rst_ni) reg_addr <= {1'b0, ADDR_75};
         else if (req_i && we_i && addr_i[16 +: 4] == 4'h1) reg_addr <= data_i;
     end : reg_addr_ctl
 
@@ -74,12 +74,12 @@ module i2c
     end : ready_o_ctrl
 
     always_comb begin : read_reg_out
+        data_o = '0;
         if (req_i && ~we_i)
             case (addr_i[16 +: 4])
-                4'h1:    data_o = reg_addr;
-                4'h2:    data_o = reg_read_data;
-                4'h3:    data_o = reg_write_data;
-                default: data_o = '0;
+                4'h1: data_o = reg_addr;
+                4'h2: data_o = reg_read_data;
+                4'h3: data_o = reg_write_data;
             endcase
     end : read_reg_out
 

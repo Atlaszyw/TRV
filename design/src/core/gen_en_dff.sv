@@ -3,7 +3,7 @@ module gen_en_dff
     import tinyriscv_pkg::*;
 #(
     parameter int unsigned            DW      = 32,
-    parameter logic        [DW - 1:0] DEFAULT
+    parameter logic        [DW - 1:0] DEFAULT = '0
 ) (
     input clk_i,
     input rst_ni,

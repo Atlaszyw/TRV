@@ -96,8 +96,7 @@ module tinyriscv
     wire ready_id_ex;
     // ex模块输出信号
     wire [MemBus - 1:0] ex_mem_wdata_o;
-    wire [MemAddrBus - 1:0] ex_mem_raddr_o;
-    wire [MemAddrBus - 1:0] ex_mem_waddr_o;
+    wire [MemAddrBus - 1:0] ex_mem_addr_o;
     wire ex_mem_we_o;
     wire ex_mem_req_o;
     wire ex_mem_ready_i;
@@ -150,7 +149,7 @@ module tinyriscv
     wire clint_hold_flag_o;
 
 
-    assign rib_ex_addr_o  = (ex_mem_we_o == WriteEnable) ? ex_mem_waddr_o : ex_mem_raddr_o;
+    assign rib_ex_addr_o  = ex_mem_addr_o;
     assign rib_ex_data_o  = ex_mem_wdata_o;
     assign rib_ex_req_o   = ex_mem_req_o;
     assign rib_ex_we_o    = ex_mem_we_o;
@@ -325,8 +324,7 @@ module tinyriscv
 
         .mem_rdata_i(rib_ex_data_i),
         .mem_wdata_o(ex_mem_wdata_o),
-        .mem_raddr_o(ex_mem_raddr_o),
-        .mem_waddr_o(ex_mem_waddr_o),
+        .mem_addr_o (ex_mem_addr_o),
         .mem_we_o   (ex_mem_we_o),
         .mem_req_o  (ex_mem_req_o),
         .mem_ready_i(ex_mem_ready_i),

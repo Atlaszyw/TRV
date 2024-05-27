@@ -70,6 +70,7 @@ module rib
     output logic [    MemBus - 1:0] s3_data_o,  // 从设备3写数据
     input        [    MemBus - 1:0] s3_data_i,  // 从设备3读取到的数据
     output logic                    s3_we_o,    // 从设备3写标志
+    output logic                    s3_req_o,
     input                           s3_ready_i,
 
     // slave 4 interface
@@ -197,6 +198,7 @@ module rib
         s6_we_o   = '0;
         s7_we_o   = '0;
         m_data_t  = '0;
+        s3_req_o  = '0;
         s6_req_o  = '0;
         s7_req_o  = '0;
         ready_t   = '0;
@@ -228,6 +230,7 @@ module rib
                 s3_data_o = s_data_t;
                 m_data_t  = s3_data_i;
                 ready_t   = s3_ready_i;
+                s3_req_o  = req_t;
             end
             slave_4: begin
                 s4_we_o   = we_t;

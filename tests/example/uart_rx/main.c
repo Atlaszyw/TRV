@@ -4,13 +4,13 @@
 #include "../include/xprintf.h"
 
 
-
-int main()
+int main( )
 {
-    uart_init();
+    uart_init( );
 
-    while (1) {
+    while ( 1 )
+    {
         // echo
-        xprintf("%c", uart_getc());
+        xprintf( "%c", uart_getc( ) );
     }
 }

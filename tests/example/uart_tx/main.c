@@ -4,12 +4,12 @@
 #include "../include/xprintf.h"
 
 
-
-int main()
+int main( )
 {
-    uart_init();
+    uart_init( );
 
-    xprintf("hello world\n");
+    xprintf( "hello world\n" );
 
-    while (1);
+    while ( 1 )
+        ;
 }

@@ -1,6 +1,7 @@
 sv = [
     "$PRJ_ROOT/design/src/pkg/tinyriscv_pkg.sv",
     "$PRJ_ROOT/design/src/utils/gen_buf.sv",
+    "$PRJ_ROOT/design/src/utils/fifo.sv",
     "$PRJ_ROOT/design/src/utils/full_handshake_rx.sv",
     "$PRJ_ROOT/design/src/utils/full_handshake_tx.sv",
     "$PRJ_ROOT/design/src/core/gen_en_dff.sv",

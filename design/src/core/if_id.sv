@@ -22,8 +22,6 @@ module if_id
     input clk_i,
     input rst_ni,
 
-    input ready_from_id_ex_i,
-
     input [    InstBus - 1:0] inst_i,           // 指令内容
     input [InstAddrBus - 1:0] inst_addr_i,      // 指令地址
     input [InstAddrBus - 1:0] inst_addr_next_i, // 下一指令地址
@@ -39,59 +37,38 @@ module if_id
 
     output logic instr_req_o,
     input        instr_ready_i,
+    input        ready_from_id_ex_i,
     output logic valid_to_id_ex_o
 );
 
-    logic en;
     logic clear;
-    assign clear       = hold_flag_i == Pipe_Clear || ~instr_ready_i & instr_req_o;
-    assign en          = (instr_req_o & instr_ready_i);
+    logic full;
+    logic empty;
 
-    assign instr_req_o = ~valid_to_id_ex_o | valid_to_id_ex_o & ready_from_id_ex_i;
+    assign clear            = hold_flag_i == Pipe_Clear;
+    assign instr_req_o      = ~full;
+    assign valid_to_id_ex_o = ~empty;
 
-    always_ff @(posedge clk_i) begin : valid_to_id_ex_ctrl
-        if (~rst_ni) valid_to_id_ex_o <= '0;
-        else valid_to_id_ex_o <= en;
-    end : valid_to_id_ex_ctrl
 
-    logic [InstBus - 1:0] inst;
-    gen_en_dff #(32, INST_NOP) inst_ff (
+    fifo_v3 #(
+        .FALL_THROUGH(1'b1),
+        .DATA_WIDTH  (104),
+        .DEPTH       (1)
+    ) if_id_fifo (
         .clk_i,
-        .rst_ni(~clear & rst_ni),
-        .en,
-        .din   (inst_i),
-        .qout  (inst)
-    );
-    assign inst_o = inst;
+        .rst_ni,
 
-    logic [InstAddrBus - 1:0] inst_addr;
-    gen_en_dff #(32, 0) inst_addr_ff (
-        .clk_i,
-        .rst_ni(~clear & rst_ni),
-        .en,
-        .din   (inst_addr_i),
-        .qout  (inst_addr)
-    );
-    assign inst_addr_o = inst_addr;
+        .flush_i   (clear),
+        .testmode_i(),
 
-    logic [InstAddrBus - 1:0] inst_addr_next;
-    gen_en_dff #(32, 0) inst_addr_next_ff (
-        .clk_i,
-        .rst_ni(~clear & rst_ni),
-        .en,
-        .din   (inst_addr_next_i),
-        .qout  (inst_addr_next)
-    );
-    assign inst_addr_next_o = inst_addr_next;
+        .full_o (full),
+        .empty_o(empty),
+        .usage_o(),
 
-    logic [INT_BUS - 1:0] int_flag;
-    gen_en_dff #(8, 0) int_ff (
-        .clk_i,
-        .rst_ni(~clear & rst_ni),
-        .en,
-        .din   (int_flag_i),
-        .qout  (int_flag)
-    );
-    assign int_flag_o = int_flag;
+        .data_i({inst_i, inst_addr_i, inst_addr_next_i, int_flag_i}),
+        .push_i(instr_req_o & instr_ready_i),
 
+        .data_o({inst_o, inst_addr_o, inst_addr_next_o, int_flag_o}),
+        .pop_i (ready_from_id_ex_i & valid_to_id_ex_o)
+    );
 endmodule

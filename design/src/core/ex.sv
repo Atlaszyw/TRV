@@ -42,8 +42,7 @@ module ex
 
     // to mem
     output logic [    MemBus - 1:0] mem_wdata_o,  // 写内存数据
-    output logic [MemAddrBus - 1:0] mem_raddr_o,  // 读内存地址
-    output logic [MemAddrBus - 1:0] mem_waddr_o,  // 写内存地址
+    output logic [MemAddrBus - 1:0] mem_addr_o,   // 读内存地址
     output logic                    mem_we_o,     // 是否要写内存
     output logic                    mem_req_o,    // 请求访问内存标志
     input  logic                    mem_ready_i,
@@ -59,14 +58,13 @@ module ex
     output logic [MemAddrBus - 1:0] csr_waddr_o,  // 写CSR寄存器地址
 
     // to ctrl
-    output logic                     ready_o,  // 是否暂停标志
+    output logic                     ready_o,      // 是否暂停标志
     output logic                     jump_flag_o,  // 是否跳转标志
     output logic [InstAddrBus - 1:0] jump_addr_o   // 跳转目的地址
 
 );
 
-    logic [1:0] mem_raddr_index;
-    logic [1:0] mem_waddr_index;
+    logic [1:0] mem_addr_index;
     logic [DoubleRegBus - 1:0] mul_temp;
     logic [DoubleRegBus - 1:0] mul_temp_invert;
     logic [31:0] sr_shift;
@@ -120,8 +118,7 @@ module ex
         mul_temp        = mul_op1 * mul_op2;
         mul_temp_invert = ~mul_temp + 1;
 
-        mem_raddr_index = op1_add_op2_res[1:0] & 2'b11;
-        mem_waddr_index = op1_add_op2_res[1:0] & 2'b11;
+        mem_addr_index  = op1_add_op2_res[1:0] & 2'b11;
 
         reg_wdata_o     = reg_wdata;
         // 响应中断时不写通用寄存器
@@ -134,7 +131,7 @@ module ex
         // 响应中断时不向总线请求访问内存
         mem_req_o       = (int_assert_i == INT_ASSERT) ? RIB_NREQ : mem_req;
 
-        ready_o     = ~(div_hold | mem_hold);
+        ready_o         = ~(div_hold | mem_hold);
         jump_flag_o     = jump_flag || ((int_assert_i == INT_ASSERT) ? JumpEnable : ~JumpEnable);
         jump_addr_o     = (int_assert_i == INT_ASSERT) ? int_addr_i : jump_addr;
 
@@ -198,9 +195,8 @@ module ex
 
         jump_flag   = ~JumpEnable;
         jump_addr   = '0;
+        mem_addr_o  = '0;
         mem_wdata_o = '0;
-        mem_raddr_o = '0;
-        mem_waddr_o = '0;
         mem_we      = ~WriteEnable;
         reg_wdata   = '0;
 
@@ -209,14 +205,13 @@ module ex
                 if (funct3 == INST_ID_FUN3) begin
                     mem_we      = WriteEnable;
                     mem_req     = RIB_REQ;
-                    mem_waddr_o = 32'h30000014;
-                    mem_raddr_o = 32'h30000014;
+                    mem_addr_o  = 32'h30000014;
                     mem_wdata_o = '0;
                 end
                 if (funct3 == INST_TEMP_FUN3) begin
-                    mem_req     = RIB_REQ;
-                    mem_raddr_o = 32'h70020000;
-                    reg_wdata   = mem_rdata_i;
+                    mem_req    = RIB_REQ;
+                    mem_addr_o = 32'h70020000;
+                    reg_wdata  = mem_rdata_i;
                 end
                 if (funct3 == INST_INFI_FUN3) begin
                     jump_flag = ~JumpEnable;
@@ -225,10 +220,9 @@ module ex
                         if (compare_i[1]) begin
                             reg_wdata   = '0;
                             mem_wdata_o = {24'b0, op1_i[7:0]};
-                            mem_waddr_o = 32'h3000000c;
+                            mem_addr_o  = 32'h3000000c;
                             mem_we      = WriteEnable;
                             mem_req     = RIB_REQ;
-                            mem_raddr_o = 32'h3000000c;
                         end
                         else reg_wdata = op1_i;
                     end
@@ -306,11 +300,11 @@ module ex
                 end
             end
             INST_TYPE_L: begin
-                mem_req     = RIB_REQ;
-                mem_raddr_o = op1_add_op2_res;
+                mem_req    = RIB_REQ;
+                mem_addr_o = op1_add_op2_res;
                 case (funct3)
                     INST_LB: begin
-                        case (mem_raddr_index)
+                        case (mem_addr_index)
                             2'b00:   reg_wdata = {{24{mem_rdata_i[7]}}, mem_rdata_i[7:0]};
                             2'b01:   reg_wdata = {{24{mem_rdata_i[15]}}, mem_rdata_i[15:8]};
                             2'b10:   reg_wdata = {{24{mem_rdata_i[23]}}, mem_rdata_i[23:16]};
@@ -318,12 +312,12 @@ module ex
                         endcase
                     end
                     INST_LH: begin
-                        if (mem_raddr_index == 2'b0) reg_wdata = {{16{mem_rdata_i[15]}}, mem_rdata_i[15:0]};
+                        if (mem_addr_index == 2'b0) reg_wdata = {{16{mem_rdata_i[15]}}, mem_rdata_i[15:0]};
                         else reg_wdata = {{16{mem_rdata_i[31]}}, mem_rdata_i[31:16]};
                     end
                     INST_LW: reg_wdata = mem_rdata_i;
                     INST_LBU: begin
-                        case (mem_raddr_index)
+                        case (mem_addr_index)
                             2'b00:   reg_wdata = {24'h0, mem_rdata_i[7:0]};
                             2'b01:   reg_wdata = {24'h0, mem_rdata_i[15:8]};
                             2'b10:   reg_wdata = {24'h0, mem_rdata_i[23:16]};
@@ -331,19 +325,18 @@ module ex
                         endcase
                     end
                     INST_LHU: begin
-                        if (mem_raddr_index == 2'b0) reg_wdata = {16'h0, mem_rdata_i[15:0]};
+                        if (mem_addr_index == 2'b0) reg_wdata = {16'h0, mem_rdata_i[15:0]};
                         else reg_wdata = {16'h0, mem_rdata_i[31:16]};
                     end
                 endcase
             end
             INST_TYPE_S: begin
-                mem_req     = RIB_REQ;
-                mem_we      = WriteEnable;
-                mem_waddr_o = op1_add_op2_res;
-                mem_raddr_o = op1_add_op2_res;
+                mem_req    = RIB_REQ;
+                mem_we     = WriteEnable;
+                mem_addr_o = op1_add_op2_res;
                 case (funct3)
                     INST_SB: begin
-                        case (mem_waddr_index)
+                        case (mem_addr_index)
                             2'b00:   mem_wdata_o = {mem_rdata_i[31:8], store_data_i[7:0]};
                             2'b01:   mem_wdata_o = {mem_rdata_i[31:16], store_data_i[7:0], mem_rdata_i[7:0]};
                             2'b10:   mem_wdata_o = {mem_rdata_i[31:24], store_data_i[7:0], mem_rdata_i[15:0]};
@@ -351,7 +344,7 @@ module ex
                         endcase
                     end
                     INST_SH: begin
-                        if (mem_waddr_index == 2'b00) mem_wdata_o = {mem_rdata_i[31:16], store_data_i[15:0]};
+                        if (mem_addr_index == 2'b00) mem_wdata_o = {mem_rdata_i[31:16], store_data_i[15:0]};
                         else mem_wdata_o = {store_data_i[15:0], mem_rdata_i[15:0]};
                     end
                     INST_SW: mem_wdata_o = store_data_i;
