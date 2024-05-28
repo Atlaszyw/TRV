@@ -42,6 +42,7 @@ module uart #(
     logic [31:0] uart_baud;
     always_ff @(posedge clk_i) begin : uart_baud_reg
         if (~rst_ni) uart_baud <= 32'h1B8;
+        else if (baud_s_q == BAUD_RECORD) uart_baud <= baud_cnt >> 3;
         else if (req_i && we_i && addr_i[0 +: 8] == 8'h08) uart_baud <= data_i;
     end : uart_baud_reg
 
@@ -182,10 +183,28 @@ module uart #(
     assign tx_pin         = tx_buffer[8];
     assign uart_status[0] = tx_s_q == TX_EMITTING || tx_s_q == TX_STOP || regi_s_q == NUM_EMITTING;
 
-    // -----------------------------------------rx-------------------------------------------------
+    //    =======================================edge detect======================================
 
     logic negedge_detect;
+    logic posedge_detect;
     logic rx_pin_q0, rx_pin_q1;
+    always_ff @(posedge clk_i) begin : rx_pin_negedge_detect
+        if (~rst_ni) begin
+            rx_pin_q0 <= '0;
+            rx_pin_q1 <= '0;
+        end
+        else begin
+            rx_pin_q0 <= rx_pin;
+            rx_pin_q1 <= rx_pin_q0;
+        end
+    end : rx_pin_negedge_detect
+
+    assign negedge_detect = rx_pin_q1 & ~rx_pin_q0;
+    assign posedge_detect = ~rx_pin_q1 & rx_pin_q0;
+
+    // -----------------------------------------rx-------------------------------------------------
+
+
     typedef enum logic [2:0] {
         RX_IDLE,
         RX_START_BIT,
@@ -203,18 +222,6 @@ module uart #(
     logic rx_cnt_done;
     assign rx_cnt_done = ~|rx_cnt;
 
-    always_ff @(posedge clk_i) begin : rx_pin_negedge_detect
-        if (~rst_ni) begin
-            rx_pin_q0 <= '0;
-            rx_pin_q1 <= '0;
-        end
-        else begin
-            rx_pin_q0 <= rx_pin;
-            rx_pin_q1 <= rx_pin_q0;
-        end
-    end : rx_pin_negedge_detect
-
-    assign negedge_detect = rx_pin_q1 & ~rx_pin_q0;
 
     always_ff @(posedge clk_i) begin : rx_d2q
         if (~rst_ni) rx_s_q <= RX_IDLE;
@@ -224,7 +231,10 @@ module uart #(
     always_comb begin : rx_ns
         rx_s_d = rx_s_q;
         unique case (rx_s_q)
-            RX_IDLE:      if (negedge_detect) rx_s_d = RX_START_BIT;
+            RX_IDLE: begin
+                if (baud_s_q != BAUD_IDLE) rx_s_d = RX_IDLE;
+                else if (negedge_detect) rx_s_d = RX_START_BIT;
+            end
             RX_START_BIT: if (rx_start_bit_check) rx_s_d = RX_DATA;
             RX_DATA:      if (rx_bit_cnt == 4'd0) rx_s_d = RX_STOP;
             RX_STOP:      if (rx_stop_bit_check) rx_s_d = RX_IDLE;
@@ -290,6 +300,8 @@ module uart #(
         end
     end : rx_data_reg_ctrl
 
+    // =======================================data out================================
+
     always_comb begin : data_out_ctrl
         data_o = '0;
         if (req_i & ~we_i)
@@ -299,4 +311,38 @@ module uart #(
                 default: data_o = '0;
             endcase
     end : data_out_ctrl
+
+    // ==================================baud rate=============================
+    typedef enum logic [2:0] {
+        BAUD_IDLE,
+        BAUD_WAIT,
+        BAUD_CALC,
+        BAUD_RECORD
+    } baud_state_e;
+
+    baud_state_e baud_s_q, baud_s_d;
+
+    logic [31:0] baud_cnt;
+
+    always_ff @(posedge clk_i or negedge rst_ni) begin : baud_d2q
+        if (~rst_ni) baud_s_q <= BAUD_IDLE;
+        else baud_s_q <= baud_s_d;
+    end : baud_d2q
+
+    always_comb begin : baud_s_ctrl
+        baud_s_d = baud_s_q;
+        case (baud_s_q)
+            BAUD_IDLE:   if (req && we_i && addr_i[0 +: 8] == 8'h18) baud_s_d = BAUD_WAIT;
+            BAUD_WAIT:   if (negedge_detect) baud_s_d = BAUD_CALC;
+            BAUD_CALC:   if (posedge_detect) baud_s_d = BAUD_RECORD;
+            BAUD_RECORD: baud_s_d = BAUD_IDLE;
+        endcase
+    end : baud_s_ctrl
+
+    always_ff @(posedge clk_i or negedge rst_ni) begin : baud_cnt_ctrl
+        if (~rst_ni || baud_s_q == BAUD_IDLE || baud_s_q == BAUD_WAIT) baud_cnt <= '0;
+        else if (baud_s_q == BAUD_CALC) baud_cnt <= baud_cnt + 1;
+        else if (baud_s_q == BAUD_RECORD) baud_cnt <= baud_cnt;
+    end : baud_cnt_ctrl
+
 endmodule
