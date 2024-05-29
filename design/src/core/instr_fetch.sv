@@ -21,7 +21,7 @@ module instr_fetch
     output logic [InstAddrBus - 1:0] pc_real,
     output logic [InstAddrBus - 1:0] pc_next_o
 );
-    logic en;
+    logic handshake;
 
     logic low_compressed, high_compressed;
     logic [31:0] cdecoder_i;
@@ -35,8 +35,8 @@ module instr_fetch
     } if_state_e;
     if_state_e if_s_q, if_s_d;
 
-    assign en            = instr_req_i & instr_ready_i;
     assign instr_valid_o = instr_ready_i && ~(if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE);
+    assign handshake     = instr_req_i & instr_valid_o;
 
     always_ff @(posedge clk_i) begin : state_d2q
         if (~rst_ni) if_s_q <= ALIGNED;
@@ -50,7 +50,7 @@ module instr_fetch
             if (jump_addr_i[1:0] == ALIGNED) if_s_d = ALIGNED;
             else if (jump_addr_i[1:0] == INIT_UNALIGNED) if_s_d = INIT_UNALIGNED;
         end
-        else if (en)
+        else if (instr_ready_i)
             unique case (if_s_q)
                 ALIGNED: begin
                     if (low_compressed && high_compressed) if_s_d = UNALIGNED;
@@ -72,8 +72,15 @@ module instr_fetch
     end : state_next
 
     always_comb begin : compressed_judge
-        low_compressed  = ~&instr_i[1:0];
-        high_compressed = ~&instr_i[17:16];
+        if (instr_ready_i) begin
+            low_compressed  = ~&instr_i[1:0];
+            high_compressed = ~&instr_i[17:16];
+        end
+        else begin
+            high_compressed = '0;
+            low_compressed  = '0;
+        end
+
     end : compressed_judge
 
     always_comb begin : pc_next_ctrl
@@ -84,24 +91,30 @@ module instr_fetch
     always_ff @(posedge clk_i) begin : pc_real_ctrl
         if (~rst_ni || jtag_reset_flag_i) pc_real <= '0;  // 复位
         else if (jump_flag_i) pc_real <= jump_addr_i;  // 跳转
-        else if (en) pc_real <= pc_next_o;  // 地址加
+        else if (handshake) pc_real <= pc_next_o;  // 地址加
         else pc_real <= pc_real;  // 暂停
     end : pc_real_ctrl
 
     always_ff @(posedge clk_i) begin : pc_o_ctrl
         if (~rst_ni) pc_o <= '0;
         else if (jump_flag_i) pc_o <= {jump_addr_i[31:2], 2'b00};
-        else if (en) begin
-            if (if_s_d == UNALIGNED) pc_o <= pc_o;
+        else if (handshake) begin
+            if (if_s_q == ALIGNED && if_s_d == UNALIGNED) pc_o <= pc_o;
+            else if (if_s_q == UNALIGNED_CONTINUE && if_s_d == UNALIGNED) pc_o <= pc_o;
             else pc_o <= pc_o + 4;
+        end
+        else if (~handshake) begin
+            if (if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE && instr_ready_i) pc_o <= pc_o + 4;
         end
     end : pc_o_ctrl
 
     always_ff @(posedge clk_i) begin : instr_buffer_ctrl
         if (~rst_ni || jtag_reset_flag_i) instr_buffer <= 16'd1;
-        else if (instr_ready_i)
-            if (if_s_d == UNALIGNED_CONTINUE) instr_buffer <= instr_i[31:16];
-            else instr_buffer <= 16'd1;
+        else if (instr_ready_i && if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE) instr_buffer <= instr_i[31:16];
+        else if (instr_ready_i && if_s_q == UNALIGNED_CONTINUE && if_s_d == UNALIGNED_CONTINUE && handshake)
+            instr_buffer <= instr_i[31:16];
+        else if (instr_ready_i && if_s_q == ALIGNED && if_s_d == UNALIGNED_CONTINUE && handshake)
+            instr_buffer <= instr_i[31:16];
     end : instr_buffer_ctrl
 
     always_comb begin : cdecoder_i_ctrl
