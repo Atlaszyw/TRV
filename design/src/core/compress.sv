@@ -11,15 +11,15 @@
  * assertions only.
  */
 
-`include "prim_assert.sv"
 
-module ibex_compressed_decoder (
+module compressed_decoder
+    import tinyriscv_pkg::*;
+(
     input  logic        clk_i,
     input  logic        rst_ni,
     input  logic        valid_i,
     input  logic [31:0] instr_i,
     output logic [31:0] instr_o,
-    output logic        is_compressed_o,
     output logic        illegal_instr_o
 );
 
@@ -55,7 +55,7 @@ module ibex_compressed_decoder (
                             3'b000,
                             2'b01,
                             instr_i[4:2],
-                            {OPCODE_OP_IMM}
+                            {INST_TYPE_I}
                         };
                         if (instr_i[12:5] == 8'b0) illegal_instr_o = 1'b1;
                     end
@@ -73,7 +73,7 @@ module ibex_compressed_decoder (
                             3'b010,
                             2'b01,
                             instr_i[4:2],
-                            {OPCODE_LOAD}
+                            {INST_TYPE_L}
                         };
                     end
 
@@ -91,7 +91,7 @@ module ibex_compressed_decoder (
                             instr_i[11:10],
                             instr_i[6],
                             2'b00,
-                            {OPCODE_STORE}
+                            {INST_TYPE_S}
                         };
                     end
 
@@ -116,7 +116,7 @@ module ibex_compressed_decoder (
                         // c.addi -> addi rd, rd, nzimm
                         // c.nop
                         instr_o = {
-                            {6{instr_i[12]}}, instr_i[12], instr_i[6:2], instr_i[11:7], 3'b0, instr_i[11:7], {OPCODE_OP_IMM}
+                            {6{instr_i[12]}}, instr_i[12], instr_i[6:2], instr_i[11:7], 3'b0, instr_i[11:7], {INST_TYPE_I}
                         };
                     end
 
@@ -135,20 +135,20 @@ module ibex_compressed_decoder (
                             {9{instr_i[12]}},
                             4'b0,
                             ~instr_i[15],
-                            {OPCODE_JAL}
+                            {INST_JAL}
                         };
                     end
 
                     3'b010: begin
                         // c.li -> addi rd, x0, nzimm
                         // (c.li hints are translated into an addi hint)
-                        instr_o = {{6{instr_i[12]}}, instr_i[12], instr_i[6:2], 5'b0, 3'b0, instr_i[11:7], {OPCODE_OP_IMM}};
+                        instr_o = {{6{instr_i[12]}}, instr_i[12], instr_i[6:2], 5'b0, 3'b0, instr_i[11:7], {INST_TYPE_I}};
                     end
 
                     3'b011: begin
                         // c.lui -> lui rd, imm
                         // (c.lui hints are translated into a lui hint)
-                        instr_o = {{15{instr_i[12]}}, instr_i[6:2], instr_i[11:7], {OPCODE_LUI}};
+                        instr_o = {{15{instr_i[12]}}, instr_i[6:2], instr_i[11:7], {INST_LUI}};
 
                         if (instr_i[11:7] == 5'h02) begin
                             // c.addi16sp -> addi x2, x2, nzimm
@@ -162,7 +162,7 @@ module ibex_compressed_decoder (
                                 5'h02,
                                 3'b000,
                                 5'h02,
-                                {OPCODE_OP_IMM}
+                                {INST_TYPE_I}
                             };
                         end
 
@@ -185,7 +185,7 @@ module ibex_compressed_decoder (
                                     3'b101,
                                     2'b01,
                                     instr_i[9:7],
-                                    {OPCODE_OP_IMM}
+                                    {INST_TYPE_I}
                                 };
                                 if (instr_i[12] == 1'b1) illegal_instr_o = 1'b1;
                             end
@@ -201,7 +201,7 @@ module ibex_compressed_decoder (
                                     3'b111,
                                     2'b01,
                                     instr_i[9:7],
-                                    {OPCODE_OP_IMM}
+                                    {INST_TYPE_I}
                                 };
                             end
 
@@ -221,7 +221,7 @@ module ibex_compressed_decoder (
                                             3'b000,
                                             2'b01,
                                             instr_i[9:7],
-                                            {OPCODE_OP}
+                                            {INST_TYPE_R_M}
                                         };
                                     end
 
@@ -236,7 +236,7 @@ module ibex_compressed_decoder (
                                             3'b100,
                                             2'b01,
                                             instr_i[9:7],
-                                            {OPCODE_OP}
+                                            {INST_TYPE_R_M}
                                         };
                                     end
 
@@ -251,7 +251,7 @@ module ibex_compressed_decoder (
                                             3'b110,
                                             2'b01,
                                             instr_i[9:7],
-                                            {OPCODE_OP}
+                                            {INST_TYPE_R_M}
                                         };
                                     end
 
@@ -266,7 +266,7 @@ module ibex_compressed_decoder (
                                             3'b111,
                                             2'b01,
                                             instr_i[9:7],
-                                            {OPCODE_OP}
+                                            {INST_TYPE_R_M}
                                         };
                                     end
 
@@ -303,7 +303,7 @@ module ibex_compressed_decoder (
                             instr_i[11:10],
                             instr_i[4:3],
                             instr_i[12],
-                            {OPCODE_BRANCH}
+                            {INST_TYPE_B}
                         };
                     end
 
@@ -323,14 +323,14 @@ module ibex_compressed_decoder (
                     3'b000: begin
                         // c.slli -> slli rd, rd, shamt
                         // (c.ssli hints are translated into a slli hint)
-                        instr_o = {7'b0, instr_i[6:2], instr_i[11:7], 3'b001, instr_i[11:7], {OPCODE_OP_IMM}};
+                        instr_o = {7'b0, instr_i[6:2], instr_i[11:7], 3'b001, instr_i[11:7], {INST_TYPE_I}};
                         if (instr_i[12] == 1'b1) illegal_instr_o = 1'b1;  // reserved for custom extensions
                     end
 
                     3'b010: begin
                         // c.lwsp -> lw rd, imm(x2)
                         instr_o = {
-                            4'b0, instr_i[3:2], instr_i[12], instr_i[6:4], 2'b00, 5'h02, 3'b010, instr_i[11:7], OPCODE_LOAD
+                            4'b0, instr_i[3:2], instr_i[12], instr_i[6:4], 2'b00, 5'h02, 3'b010, instr_i[11:7], INST_TYPE_L
                         };
                         if (instr_i[11:7] == 5'b0) illegal_instr_o = 1'b1;
                     end
@@ -340,11 +340,11 @@ module ibex_compressed_decoder (
                             if (instr_i[6:2] != 5'b0) begin
                                 // c.mv -> add rd/rs1, x0, rs2
                                 // (c.mv hints are translated into an add hint)
-                                instr_o = {7'b0, instr_i[6:2], 5'b0, 3'b0, instr_i[11:7], {OPCODE_OP}};
+                                instr_o = {7'b0, instr_i[6:2], 5'b0, 3'b0, instr_i[11:7], {INST_TYPE_R_M}};
                             end
                             else begin
                                 // c.jr -> jalr x0, rd/rs1, 0
-                                instr_o = {12'b0, instr_i[11:7], 3'b0, 5'b0, {OPCODE_JALR}};
+                                instr_o = {12'b0, instr_i[11:7], 3'b0, 5'b0, {INST_JALR}};
                                 if (instr_i[11:7] == 5'b0) illegal_instr_o = 1'b1;
                             end
                         end
@@ -352,7 +352,7 @@ module ibex_compressed_decoder (
                             if (instr_i[6:2] != 5'b0) begin
                                 // c.add -> add rd, rd, rs2
                                 // (c.add hints are translated into an add hint)
-                                instr_o = {7'b0, instr_i[6:2], instr_i[11:7], 3'b0, instr_i[11:7], {OPCODE_OP}};
+                                instr_o = {7'b0, instr_i[6:2], instr_i[11:7], 3'b0, instr_i[11:7], {INST_TYPE_R_M}};
                             end
                             else begin
                                 if (instr_i[11:7] == 5'b0) begin
@@ -361,7 +361,7 @@ module ibex_compressed_decoder (
                                 end
                                 else begin
                                     // c.jalr -> jalr x1, rs1, 0
-                                    instr_o = {12'b0, instr_i[11:7], 3'b000, 5'b00001, {OPCODE_JALR}};
+                                    instr_o = {12'b0, instr_i[11:7], 3'b000, 5'b00001, {INST_JALR}};
                                 end
                             end
                         end
@@ -370,7 +370,7 @@ module ibex_compressed_decoder (
                     3'b110: begin
                         // c.swsp -> sw rs2, imm(x2)
                         instr_o = {
-                            4'b0, instr_i[8:7], instr_i[12], instr_i[6:2], 5'h02, 3'b010, instr_i[11:9], 2'b00, {OPCODE_STORE}
+                            4'b0, instr_i[8:7], instr_i[12], instr_i[6:2], 5'h02, 3'b010, instr_i[11:9], 2'b00, {INST_TYPE_S}
                         };
                     end
 
@@ -393,23 +393,21 @@ module ibex_compressed_decoder (
         endcase
     end
 
-    assign is_compressed_o = (instr_i[1:0] != 2'b11);
-
     ////////////////
     // Assertions //
     ////////////////
 
-    // The valid_i signal used to gate below assertions must be known.
-    `ASSERT_KNOWN(IbexInstrValidKnown, valid_i)
+    // // The valid_i signal used to gate below assertions must be known.
+    // `ASSERT_KNOWN(IbexInstrValidKnown, valid_i)
 
-    // Selectors must be known/valid.
-    `ASSERT(IbexInstrLSBsKnown, valid_i |-> !$isunknown(instr_i[1:0]))
-    `ASSERT(IbexC0Known1, (valid_i && (instr_i[1:0] == 2'b00)) |-> !$isunknown(instr_i[15:13]))
-    `ASSERT(IbexC1Known1, (valid_i && (instr_i[1:0] == 2'b01)) |-> !$isunknown(instr_i[15:13]))
-    `ASSERT(IbexC1Known2, (valid_i && (instr_i[1:0] == 2'b01) && (instr_i[15:13] == 3'b100)) |-> !$isunknown(instr_i[11:10]))
-    `ASSERT(IbexC1Known3,
-            (valid_i && (instr_i[1:0] == 2'b01) && (instr_i[15:13] == 3'b100) && (instr_i[11:10] == 2'b11)) |-> !$isunknown
-            ({instr_i[12], instr_i[6:5]}))
-    `ASSERT(IbexC2Known1, (valid_i && (instr_i[1:0] == 2'b10)) |-> !$isunknown(instr_i[15:13]))
+    // // Selectors must be known/valid.
+    // `ASSERT(IbexInstrLSBsKnown, valid_i |-> !$isunknown(instr_i[1:0]))
+    // `ASSERT(IbexC0Known1, (valid_i && (instr_i[1:0] == 2'b00)) |-> !$isunknown(instr_i[15:13]))
+    // `ASSERT(IbexC1Known1, (valid_i && (instr_i[1:0] == 2'b01)) |-> !$isunknown(instr_i[15:13]))
+    // `ASSERT(IbexC1Known2, (valid_i && (instr_i[1:0] == 2'b01) && (instr_i[15:13] == 3'b100)) |-> !$isunknown(instr_i[11:10]))
+    // `ASSERT(IbexC1Known3,
+    //         (valid_i && (instr_i[1:0] == 2'b01) && (instr_i[15:13] == 3'b100) && (instr_i[11:10] == 2'b11)) |-> !$isunknown
+    //         ({instr_i[12], instr_i[6:5]}))
+    // `ASSERT(IbexC2Known1, (valid_i && (instr_i[1:0] == 2'b10)) |-> !$isunknown(instr_i[15:13]))
 
 endmodule

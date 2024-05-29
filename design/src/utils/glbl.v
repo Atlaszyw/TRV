@@ -1,7 +1,7 @@
 // $Header: /devl/xcs/repo/env/Databases/CAEInterfaces/verunilibs/data/glbl.v,v 1.14 2010/10/28 20:44:00 fphillip Exp $
 `ifndef GLBL
 `define GLBL
-`timescale  1 ps / 1 ps
+`timescale  1 ns / 1 ps
 
 module glbl ();
 
@@ -24,7 +24,7 @@ module glbl ();
     wire FCSBO_GLBL;
     wire [3:0] DO_GLBL;
     wire [3:0] DI_GLBL;
-   
+
     reg GSR_int;
     reg GTS_int;
     reg PRLD_int;
@@ -72,7 +72,7 @@ module glbl ();
 	GTS_int = 1'b0;
     end
 
-    initial begin 
+    initial begin
 	GRESTORE_int = 1'b0;
 	#(GRES_START);
 	GRESTORE_int = 1'b1;

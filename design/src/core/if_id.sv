@@ -35,8 +35,9 @@ module if_id
     output logic [InstAddrBus - 1:0] inst_addr_o,      // 指令地址
     output logic [InstAddrBus - 1:0] inst_addr_next_o, // 下一指令地址
 
-    output logic instr_req_o,
     input        instr_ready_i,
+    output logic instr_req_o,
+
     input        ready_from_id_ex_i,
     output logic valid_to_id_ex_o
 );

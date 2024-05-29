@@ -126,7 +126,7 @@ module clint
                     if (int_state == S_INT_SYNC_ASSERT) begin
                         csr_state <= S_CSR_MEPC;
                         // 在中断处理函数里会将中断返回地址加4
-                        if (jump_flag_i == JumpEnable) begin
+                        if (jump_flag_i) begin
                             inst_addr <= jump_addr_i - 4'h4;
                         end
                         else begin
@@ -149,7 +149,7 @@ module clint
                         // 定时器中断
                         cause     <= 32'h80000004;
                         csr_state <= S_CSR_MEPC;
-                        if (jump_flag_i == JumpEnable) begin
+                        if (jump_flag_i) begin
                             inst_addr <= jump_addr_i;
                             // 异步中断可以中断除法指令的执行，中断处理完再重新执行除法指令
                         end

@@ -199,9 +199,6 @@ module id
                 op1_o       = inst_addr_i;
                 op2_o       = {inst_i[31:12], 12'b0};
             end
-            INST_NOP_OP: begin
-                // Pass
-            end
             INST_FENCE: begin
                 // Pass
             end

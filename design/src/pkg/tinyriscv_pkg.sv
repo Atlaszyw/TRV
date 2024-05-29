@@ -83,8 +83,7 @@ package tinyriscv_pkg;
 
     localparam logic [6:0] INST_LUI = 7'b0110111;
     localparam logic [6:0] INST_AUIPC = 7'b0010111;
-    localparam int unsigned INST_NOP = 32'h00000001;
-    localparam logic [6:0] INST_NOP_OP = 7'b0000001;
+    localparam int unsigned INST_NOP = 32'h00000013;
     localparam int unsigned INST_MRET = 32'h30200073;
     localparam int unsigned INST_RET = 32'h00008067;
 

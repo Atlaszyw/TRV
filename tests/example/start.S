@@ -2,7 +2,7 @@
     .section .init;
     .globl   _start;
     .type    _start,@function
-
+    # .option  norvc;
 
 _start:
     .option  push

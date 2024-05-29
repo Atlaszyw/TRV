@@ -193,7 +193,7 @@ module ex
         mem_req     = RIB_NREQ;
         csr_wdata_o = '0;
 
-        jump_flag   = ~JumpEnable;
+        jump_flag   = '0;
         jump_addr   = '0;
         mem_addr_o  = '0;
         mem_wdata_o = '0;
@@ -214,8 +214,6 @@ module ex
                     reg_wdata  = mem_rdata_i;
                 end
                 if (funct3 == INST_INFI_FUN3) begin
-                    jump_flag = ~JumpEnable;
-                    jump_addr = '0;
                     if (~|inst_i[31:20]) begin
                         if (compare_i[1]) begin
                             reg_wdata   = '0;
@@ -353,48 +351,41 @@ module ex
             INST_TYPE_B: begin
                 case (funct3)
                     INST_BEQ: begin
-                        jump_flag = compare_i[0] & JumpEnable;
+                        jump_flag = compare_i[0];
                         jump_addr = {32{compare_i[0]}} & op1_add_op2_res;
                     end
                     INST_BNE: begin
-                        jump_flag = (~compare_i[0]) & JumpEnable;
+                        jump_flag = (~compare_i[0]);
                         jump_addr = {32{(~compare_i[0])}} & op1_add_op2_res;
                     end
                     INST_BLT: begin
-                        jump_flag = (~compare_i[2]) & JumpEnable;
+                        jump_flag = (~compare_i[2]);
                         jump_addr = {32{(~compare_i[2])}} & op1_add_op2_res;
                     end
                     INST_BGE: begin
-                        jump_flag = (compare_i[2]) & JumpEnable;
+                        jump_flag = (compare_i[2]);
                         jump_addr = {32{(compare_i[2])}} & op1_add_op2_res;
                     end
                     INST_BLTU: begin
-                        jump_flag = (~compare_i[1]) & JumpEnable;
+                        jump_flag = (~compare_i[1]);
                         jump_addr = {32{(~compare_i[1])}} & op1_add_op2_res;
                     end
                     INST_BGEU: begin
-                        jump_flag = (compare_i[1]) & JumpEnable;
+                        jump_flag = (compare_i[1]);
                         jump_addr = {32{(compare_i[1])}} & op1_add_op2_res;
-                    end
-                    default: begin
-                        jump_flag = ~JumpEnable;
-                        jump_addr = '0;
                     end
                 endcase
             end
             INST_JAL, INST_JALR: begin
-                jump_flag = JumpEnable;
+                jump_flag = '1;
                 jump_addr = op1_add_op2_res;
                 reg_wdata = inst_addr_next_i;
             end
             INST_LUI, INST_AUIPC: begin
                 reg_wdata = op1_add_op2_res;
             end
-            INST_NOP_OP: begin
-                //   pass
-            end
             INST_FENCE: begin
-                jump_flag = JumpEnable;
+                jump_flag = '1;
                 jump_addr = inst_addr_next_i;
             end
             INST_CSR: begin
