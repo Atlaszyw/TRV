@@ -46,14 +46,14 @@ module tinyriscv
 );
 
     // pc_reg模块输出信号
-    wire [  InstAddrBus - 1:0] pc_pc_o;
     wire [  InstAddrBus - 1:0] pc_real;
     wire [  InstAddrBus - 1:0] pc_next_f2d;
     wire [  InstAddrBus - 1:0] pc_next_d2e;
     wire [  InstAddrBus - 1:0] pc_next_e;
 
     wire [      InstBus - 1:0] if_instr;
-    wire instr_valid;
+    wire                       instr_valid;
+    wire                       rib_pc_req;
 
     // if_id模块输出信号
     wire [      InstBus - 1:0] if_inst_o;
@@ -159,9 +159,6 @@ module tinyriscv
     assign rib_ex_we_o    = ex_mem_we_o;
     assign ex_mem_ready_i = rib_ex_ready_i;
 
-    assign rib_pc_addr_o  = pc_pc_o;
-
-
     // pc_reg模块例化
     // pc_reg u_pc_reg (
     //     .clk_i,
@@ -186,12 +183,12 @@ module tinyriscv
         .jump_flag_i      (ctrl_jump_flag_o),
         .jump_addr_i      (ctrl_jump_addr_o),
         .jtag_reset_flag_i(jtag_reset_flag_i),
-        .instr_i           (rib_pc_data_i),
+        .instr_i          (rib_pc_data_i),
 
-        .instr_o(if_instr),
+        .instr_o      (if_instr),
         .instr_valid_o(instr_valid),
 
-        .pc_o     (pc_pc_o),     // PC指针
+        .pc_o     (rib_pc_addr_o),     // PC指针
         .pc_real  (pc_real),
         .pc_next_o(pc_next_f2d)
     );

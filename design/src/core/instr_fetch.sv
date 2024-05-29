@@ -5,15 +5,15 @@ module instr_fetch
     input rst_ni,
 
     input instr_ready_i,
-    input instr_req_i,
+
+    output logic instr_valid_o,  // to if-id
+    input        instr_req_i,    // from if-id
 
     input                           jump_flag_i,
     input logic [InstAddrBus - 1:0] jump_addr_i,
     input                           jtag_reset_flag_i,
 
     input logic [InstBus - 1:0] instr_i,
-
-    output logic instr_valid_o,
 
     output logic [InstBus - 1:0] instr_o,
 
@@ -23,36 +23,33 @@ module instr_fetch
 );
     logic en;
 
-    enum logic [2:0] {
-        ALIGNED = 2'b00,
-
-        INIT_UNALIGNED     = 2'b10,
-        UNALIGNED,
-        UNALIGNED_CONTINUE
-    }
-        if_s_q, if_s_d;
-
     logic low_compressed, high_compressed;
     logic [31:0] cdecoder_i;
     logic [15:0] instr_buffer;
 
-    assign en            = instr_valid_o & instr_req_i;
-    assign instr_valid_o = instr_ready_i & ~(if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE);
-    always_comb begin : compressed_judge
-        low_compressed  = ~&instr_i[1:0];
-        high_compressed = ~&instr_i[17:16];
-    end : compressed_judge
+    typedef enum logic [2:0] {
+        ALIGNED            = 3'b000,
+        INIT_UNALIGNED     = 3'b010,
+        UNALIGNED,
+        UNALIGNED_CONTINUE
+    } if_state_e;
+    if_state_e if_s_q, if_s_d;
+
+    assign en            = instr_req_i & instr_ready_i;
+    assign instr_valid_o = instr_ready_i && ~(if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE);
 
     always_ff @(posedge clk_i) begin : state_d2q
         if (~rst_ni) if_s_q <= ALIGNED;
-        else if_s_q = if_s_d;
+        else if_s_q <= if_s_d;
     end : state_d2q
 
     always_comb begin : state_next
         if_s_d = if_s_q;
 
-        if (jump_flag_i) if_s_d = jump_addr_i[1:0];
-
+        if (jump_flag_i) begin
+            if (jump_addr_i[1:0] == ALIGNED) if_s_d = ALIGNED;
+            else if (jump_addr_i[1:0] == INIT_UNALIGNED) if_s_d = INIT_UNALIGNED;
+        end
         else if (en)
             unique case (if_s_q)
                 ALIGNED: begin
@@ -74,9 +71,13 @@ module instr_fetch
             endcase
     end : state_next
 
+    always_comb begin : compressed_judge
+        low_compressed  = ~&instr_i[1:0];
+        high_compressed = ~&instr_i[17:16];
+    end : compressed_judge
+
     always_comb begin : pc_next_ctrl
-        if (if_s_q == ALIGNED && if_s_d != ALIGNED) pc_next_o = pc_real + 2;
-        else if ((if_s_q == UNALIGNED || if_s_q == INIT_UNALIGNED) && if_s_d == ALIGNED) pc_next_o = pc_real + 2;
+        if (cdecoder_i[1:0] != 2'b11) pc_next_o = pc_real + 2;
         else pc_next_o = pc_real + 4;
     end : pc_next_ctrl
 
@@ -98,12 +99,10 @@ module instr_fetch
 
     always_ff @(posedge clk_i) begin : instr_buffer_ctrl
         if (~rst_ni || jtag_reset_flag_i) instr_buffer <= 16'd1;
-        else if (en)
+        else if (instr_ready_i)
             if (if_s_d == UNALIGNED_CONTINUE) instr_buffer <= instr_i[31:16];
             else instr_buffer <= 16'd1;
     end : instr_buffer_ctrl
-
-
 
     always_comb begin : cdecoder_i_ctrl
         if (if_s_q == ALIGNED) cdecoder_i = instr_i;

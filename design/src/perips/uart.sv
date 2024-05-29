@@ -91,7 +91,7 @@ module uart #(
 
     always_comb begin : reginum_ns
         regi_s_d = regi_s_q;
-        unique case (regi_s_q)
+        case (regi_s_q)
             NUM_IDLE:
             if (req_i && we_i && addr_i[0 +: 8] == 8'h14) begin
                 if (uart_status[0]) regi_s_d = NUM_WAITING;

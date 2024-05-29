@@ -91,7 +91,7 @@ module i2c
 
     always_comb begin : i2c_ns
         i2c_s_d = i2c_s_q;
-        unique case (i2c_s_q)
+        case (i2c_s_q)
             IDLE:    if (req_i && ~we_i && addr_i[16 +: 4] == 4'h2) i2c_s_d = START;
             START:   if (~|clk_s_cnt && cnt_done) i2c_s_d = WADDR;
             WADDR:   if (~|bit_cnt && ~|clk_s_cnt && cnt_done) i2c_s_d = RDACK;

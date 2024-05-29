@@ -2,7 +2,7 @@ Magic 271485
 Revision Verdi_P-2019.06-SP2
 
 ; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
-viewPort 0 39 3840 622 590 89
+viewPort 0 39 2560 848 590 89
 
 ; File list:
 ; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
@@ -16,16 +16,16 @@ signalSpacing 5
 
 ; windowTimeUnit is used for zoom, cursor & marker
 ; waveform viewport range
-zoom 0.000000 316018732.037126
-cursor 370000.000000
+zoom 507375.086981 629599.897850
+cursor 570000.000000
 marker 0.000000
 
 ; user define markers
 ; userMarker time_pos marker_name color linestyle
 ; visible top row signal index
-top 21
+top 0
 ; marker line index
-markerPos 33
+markerPos 10
 
 ; event list
 ; addEvent event_name event_expression
@@ -51,37 +51,38 @@ addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/rib_ex_data_i[31:0]
 addSignal -h 25 -holdScope rib_ex_data_o[31:0]
 addSignal -h 25 -holdScope rib_ex_req_o
 addSignal -h 25 -holdScope rib_ex_we_o
-addGroup "Addr port"
-addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_pc_reg/pc_o[31:0]
-addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/rib_pc_data_i[31:0]
-addGroup "IF->ID"
-addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_if_id/en
-addSignal -h 25 -holdScope inst_i[31:0]
+addGroup "IF"
+addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/instr_f/pc_o[31:0]
+addSignal -h 25 -holdScope pc_real[31:0]
+addSignal -h 25 -holdScope pc_next_o[31:0]
+addSignal -h 25 -holdScope en
+addSignal -h 25 -holdScope instr_valid_o
+addSignal -h 25 -holdScope jump_flag_i
+addSignal -h 25 -holdScope jump_addr_i[31:0]
+addSignal -h 25 -holdScope low_compressed
+addSignal -h 25 -holdScope high_compressed
+addSignal -h 25 -UNSIGNED -holdScope if_s_q[2:0]
+addSignal -h 25 -UNSIGNED -holdScope if_s_d[2:0]
+addSignal -h 25 -holdScope instr_i[31:0]
+addSignal -h 25 -holdScope cdecoder_i[31:0]
+addSignal -h 25 -holdScope instr_o[31:0]
+addGroup "IF->ID" -e FALSE
+addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_if_id/inst_i[31:0]
 addSignal -h 25 -holdScope inst_o[31:0]
 addSignal -h 25 -holdScope inst_addr_i[31:0]
 addSignal -h 25 -holdScope inst_addr_o[31:0]
-addGroup "G9"
+addGroup "EX" -e FALSE
 addSignal -h 25 -UNSIGNED -BIN /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_ex/opcode[6:0]
 addSignal -h 25 -holdScope funct3[2:0]
 addSignal -h 25 -holdScope funct7[6:0]
 addSignal -h 25 -holdScope rd[4:0]
 addSignal -h 25 -holdScope uimm[4:0]
-addGroup "hold flag"
-addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_ctrl/jump_flag_i
-addSignal -h 25 -holdScope hold_flag_o[2:0]
-addGroup "G4"
-addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_id/reg1_raddr_o[4:0]
-addSignal -h 25 -holdScope reg2_raddr_o[4:0]
-addGroup "G5"
-addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_id/reg1_rdata_i[31:0]
-addSignal -h 25 -holdScope reg2_rdata_i[31:0]
-addGroup "G6"
+addGroup "I2C"
 addSignal -h 25 /tb_top/i_tinyriscv_soc_top/i_i2c/scl_o
 addSignal -h 25 -holdScope sda_o
 addSignal -h 25 -holdScope sda_t_o
 addSignal -h 25 -holdScope sda_i
-addGroup "DIV"
-addGroup "G10"
+addGroup "G6"
 
 ; getSignalForm Scope Hierarchy Status
 ; active file of getSignalForm
