@@ -242,21 +242,21 @@ module tb_top ();
             #bolt;  // Baud rate delay (1 bit period at 115200 bps)
             rx_pin = '0;  // Bit 0
             #bolt;
-            rx_pin = data[7];  // Bit 1
+            rx_pin = data[0];  // Bit 1
             #bolt;
-            rx_pin = data[6];  // Bit 2
+            rx_pin = data[1];  // Bit 2
             #bolt;
-            rx_pin = data[5];  // Bit 3
+            rx_pin = data[2];  // Bit 3
             #bolt;
-            rx_pin = data[4];  // Bit 4
+            rx_pin = data[3];  // Bit 4
             #bolt;
-            rx_pin = data[3];  // Bit 5
+            rx_pin = data[4];  // Bit 5
             #bolt;
-            rx_pin = data[2];  // Bit 6
+            rx_pin = data[5];  // Bit 6
             #bolt;
-            rx_pin = data[1];  // Bit 7
+            rx_pin = data[6];  // Bit 7
             #bolt;
-            rx_pin = data[0];  // Stop bit
+            rx_pin = data[7];  // Bit 8
             #bolt;
             rx_pin = '1;  // Stop bit
             #bolt;
