@@ -18,6 +18,7 @@ description = "~"
         # "$PRJ_ROOT/tb/IF.mif",
         # "$PRJ_ROOT/tb/temp_compress.mif",
         # "$PRJ_ROOT/tb/temp.mif",
+        "$PRJ_ROOT/tb/pwm.mif",
     ]
     macros = [
         "FPGA",

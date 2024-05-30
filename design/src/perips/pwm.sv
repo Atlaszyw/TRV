@@ -37,7 +37,7 @@ module pwm
 
     always_ff @(posedge clk_i) begin : reg_en_ctl
         if (~rst_ni) reg_en <= '0;
-        else if (we_i && addr_inner[4 +: 4] == 4'h2) reg_en <= data_i;
+        else if (we_i && addr_inner[0 +: 4] == 4'h4) reg_en <= data_i;
     end : reg_en_ctl
 
     logic [31:0] cnt[channel];
