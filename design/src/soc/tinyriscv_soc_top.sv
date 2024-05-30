@@ -190,7 +190,7 @@ module tinyriscv_soc_top
     // tinyriscv处理器核模块例化
     tinyriscv u_tinyriscv (
         .clk_i         (clk_i),
-        .rst_ni        (rst_ni),
+        .rst_ni        (rst_ni & ~uart_debug_pin),
         .rib_ex_addr_o (m0_addr),
         .rib_ex_data_i (m0_data_o),
         .rib_ex_data_o (m0_data_i),

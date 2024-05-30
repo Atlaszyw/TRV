@@ -28,10 +28,10 @@ module instr_fetch
     logic [31:0] cdecoder_i;
     logic [15:0] instr_buffer;
 
-    typedef enum logic [2:0] {
-        ALIGNED            = 3'b000,
-        INIT_UNALIGNED     = 3'b010,
+    typedef enum logic [1:0] {
+        ALIGNED            = 2'b00,
         UNALIGNED,
+        INIT_UNALIGNED     = 2'b10,
         UNALIGNED_CONTINUE
     } if_state_e;
     if_state_e if_s_q, if_s_d;
@@ -41,11 +41,11 @@ module instr_fetch
     // 在跳转misalign后，暂存半字时不使能
     assign instr_valid_o       = instr_ready_i && ~(jump_fetch_phase_on);
 
-    // 上位控制，隐含要求输入有效
+    // 上位握手控制，隐含要求输入有效
     assign handshake           = instr_req_i & instr_valid_o;
 
     always_ff @(posedge clk_i) begin : state_d2q
-        if (~rst_ni) if_s_q <= ALIGNED;
+        if (~rst_ni || jtag_reset_flag_i) if_s_q <= ALIGNED;
         // 在存储半字时强制递进，否则使用握手信号判断是否递进
         else if (jump_fetch_phase_on & instr_ready_i) if_s_q <= if_s_d;
         else if (handshake) if_s_q <= if_s_d;
@@ -123,6 +123,7 @@ module instr_fetch
             else if (if_s_q == INIT_UNALIGNED) cdecoder_i = {16'b0, instr_i[31:16]};
             else if (if_s_q == UNALIGNED_CONTINUE) cdecoder_i = {instr_i[15:0], instr_buffer};
             else if (if_s_q == UNALIGNED) cdecoder_i = {16'b0, instr_i[31:16]};
+            else cdecoder_i = INST_NOP;
         end
         else cdecoder_i = INST_NOP;
     end : cdecoder_i_ctrl

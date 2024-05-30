@@ -50,88 +50,91 @@ module tb_top ();
         0,
         0,
         0,
-        8'h20,
+        8'd40,
         0,
         0,
         0,
         0,
-        8'ha3,
-        8'hce
+        8'h42,
+        8'h0f
     };
+
     logic [7:0] pack2[35] = '{
-        1,
-        1,
-        2,
-        3,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        8'h20,
-        0,
-        0,
-        0,
-        8'h32,
-        8'h22,
-        8'h1b
+        8'h01,
+        8'hb7,
+        8'h07,
+        8'h00,
+        8'h30,
+        8'h13,
+        8'h07,
+        8'h10,
+        8'h00,
+        8'h23,
+        8'ha0,
+        8'he7,
+        8'h00,
+        8'h93,
+        8'h0f,
+        8'h00,
+        8'h08,
+        8'h13,
+        8'h0f,
+        8'h00,
+        8'h00,
+        8'h2f,
+        8'h2f,
+        8'haf,
+        8'h00,
+        8'h2f,
+        8'h2f,
+        8'haf,
+        8'h01,
+        8'h2f,
+        8'h2f,
+        8'haf,
+        8'h03,
+        8'h7a,
+        8'h3b
     };
     logic [7:0] pack3[35] = '{
-        2,
-        1,
-        2,
-        3,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        8'h20,
-        0,
-        0,
-        0,
-        8'h32,
-        8'h22,
-        8'h1b
+        8'h02,
+        8'h2f,
+        8'h2f,
+        8'hcf,
+        8'h02,
+        8'h2f,
+        8'h2f,
+        8'h0f,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'h00,
+        8'he0,
+        8'hd2
     };
+
+
     logic clk_i;
     logic rst_ni;
 
@@ -139,6 +142,7 @@ module tb_top ();
     logic uart_tx_pin;
     logic uart_rx_pin;
     wire [15:0] gpio;
+    logic uart_debug_pin_r;
 
     wire [2:0] pwm_o;
     wire scl_o;
@@ -150,34 +154,22 @@ module tb_top ();
     end
 
     initial begin
+        uart_debug_pin_r = '0;
         GenRst(clk_i, rst_ni, 5, 3);
+        #100;
+        uart_debug_pin_r = '1;
 
         uart_send_package(pack1, uart_rx_pin);
         uart_send_package(pack2, uart_rx_pin);
         uart_send_package(pack3, uart_rx_pin);
 
-        // GenRst(clk_i, rst_ni, 5, 3);
+        #10000;
+
+        uart_debug_pin_r = '0;
     end
 
-    // initial begin
-    //     #0 gpiodriver = '0;
-    //     #5000;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     #1000 gpiodriver = ~gpiodriver;
-    //     $finish();
-    // end
     assign gpio[1]        = gpiodriver;
-    assign uart_debug_pin = '1;
+    assign uart_debug_pin = uart_debug_pin_r;
     tinyriscv_soc_top i_tinyriscv_soc_top (
 
         .clk_i (clk_i),
@@ -262,7 +254,4 @@ module tb_top ();
             #bolt;
         end
     endtask
-
-
-
 endmodule

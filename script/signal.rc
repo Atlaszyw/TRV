@@ -2,7 +2,7 @@ Magic 271485
 Revision Verdi_P-2019.06-SP2
 
 ; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
-viewPort 0 39 2560 648 590 89
+viewPort 0 39 3840 816 590 89
 
 ; File list:
 ; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
@@ -16,16 +16,16 @@ signalSpacing 5
 
 ; windowTimeUnit is used for zoom, cursor & marker
 ; waveform viewport range
-zoom 0.000000 1560393.997824
-cursor 1110000.000000
+zoom 0.000000 3766371079.213184
+cursor 2829470000.000000
 marker 0.000000
 
 ; user define markers
 ; userMarker time_pos marker_name color linestyle
 ; visible top row signal index
-top 6
+top 53
 ; marker line index
-markerPos 32
+markerPos 73
 
 ; rename signal list
 ; addRenameSig new_name org_name
@@ -114,6 +114,34 @@ addGroup "G6"
 addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_tinyriscv/u_id/inst_addr_i[31:0]
 addSignal -h 25 -holdScope inst_i[31:0]
 addGroup "G7"
+addSignal -h 25 /tb_top/i_tinyriscv_soc_top/uart_0/tx_pin
+addSignal -h 25 /tb_top/i_tinyriscv_soc_top/i_i2c/scl_o
+addSignal -h 25 -holdScope sda_o
+addSignal -h 25 -holdScope sda_t_o
+addSignal -h 25 -holdScope sda_i
+addGroup "G8"
+addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_pwm/data_i[31:0]
+addSignal -h 25 -holdScope addr_i[31:0]
+addSignal -h 25 -holdScope we_i
+addSignal -h 25 -holdScope data_o[31:0]
+addSignal -expanded -h 25 -holdScope pwm_o[2:0]
+addSignal -h 25 -holdScope pwm_o[2]
+addSignal -h 25 -holdScope pwm_o[1]
+addSignal -h 25 -holdScope pwm_o[0]
+addSignal -expanded -h 25 -holdScope cnt[0:2]
+addSignal -h 25 -holdScope cnt[0][31:0]
+addSignal -h 25 -holdScope cnt[1][31:0]
+addSignal -h 25 -holdScope cnt[2][31:0]
+addSignal -h 25 -holdScope reg_en[2:0]
+addSignal -h 25 -holdScope reg_A[0:2]
+addSignal -h 25 -holdScope reg_B[0:2]
+addGroup "G9"
+addSignal -h 25 /tb_top/i_tinyriscv_soc_top/u_uart_debug/req_o
+addSignal -h 25 -holdScope mem_we_o
+addSignal -h 25 -holdScope mem_addr_o[31:0]
+addSignal -h 25 -holdScope mem_wdata_o[31:0]
+addSignal -h 25 -holdScope mem_rdata_i[31:0]
+addGroup "G10"
 
 ; getSignalForm Scope Hierarchy Status
 ; active file of getSignalForm
