@@ -13,6 +13,7 @@ module instr_fetch
     input logic [InstAddrBus - 1:0] jump_addr_i,
     input                           jtag_reset_flag_i,
 
+    // 每一个输出指令都要求输入信号有效
     input logic [InstBus - 1:0] instr_i,
 
     output logic [InstBus - 1:0] instr_o,
@@ -22,7 +23,7 @@ module instr_fetch
     output logic [InstAddrBus - 1:0] pc_next_o
 );
     logic handshake;
-
+    logic jump_fetch_phase_on;
     logic low_compressed, high_compressed;
     logic [31:0] cdecoder_i;
     logic [15:0] instr_buffer;
@@ -35,12 +36,19 @@ module instr_fetch
     } if_state_e;
     if_state_e if_s_q, if_s_d;
 
-    assign instr_valid_o = instr_ready_i && ~(if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE);
-    assign handshake     = instr_req_i & instr_valid_o;
+    // 在跳转misalign后，需要先提取半字指令，再和后一地址的前半字进行拼接。
+    assign jump_fetch_phase_on = if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE;
+    // 在跳转misalign后，暂存半字时不使能
+    assign instr_valid_o       = instr_ready_i && ~(jump_fetch_phase_on);
+
+    // 上位控制，隐含要求输入有效
+    assign handshake           = instr_req_i & instr_valid_o;
 
     always_ff @(posedge clk_i) begin : state_d2q
         if (~rst_ni) if_s_q <= ALIGNED;
-        else if_s_q <= if_s_d;
+        // 在存储半字时强制递进，否则使用握手信号判断是否递进
+        else if (jump_fetch_phase_on & instr_ready_i) if_s_q <= if_s_d;
+        else if (handshake) if_s_q <= if_s_d;
     end : state_d2q
 
     always_comb begin : state_next
@@ -50,7 +58,7 @@ module instr_fetch
             if (jump_addr_i[1:0] == ALIGNED) if_s_d = ALIGNED;
             else if (jump_addr_i[1:0] == INIT_UNALIGNED) if_s_d = INIT_UNALIGNED;
         end
-        else if (instr_ready_i)
+        else
             unique case (if_s_q)
                 ALIGNED: begin
                     if (low_compressed && high_compressed) if_s_d = UNALIGNED;
@@ -72,15 +80,8 @@ module instr_fetch
     end : state_next
 
     always_comb begin : compressed_judge
-        if (instr_ready_i) begin
-            low_compressed  = ~&instr_i[1:0];
-            high_compressed = ~&instr_i[17:16];
-        end
-        else begin
-            high_compressed = '0;
-            low_compressed  = '0;
-        end
-
+        low_compressed  = ~&instr_i[1:0];
+        high_compressed = ~&instr_i[17:16];
     end : compressed_judge
 
     always_comb begin : pc_next_ctrl
@@ -104,24 +105,25 @@ module instr_fetch
             else pc_o <= pc_o + 4;
         end
         else if (~handshake) begin
-            if (if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE && instr_ready_i) pc_o <= pc_o + 4;
+            // 在跳转misalign后，在输入有效的前提下，是否握手都得强制+4地址
+            if (jump_fetch_phase_on && instr_ready_i) pc_o <= pc_o + 4;
         end
     end : pc_o_ctrl
 
     always_ff @(posedge clk_i) begin : instr_buffer_ctrl
-        if (~rst_ni || jtag_reset_flag_i) instr_buffer <= 16'd1;
-        else if (instr_ready_i && if_s_q == INIT_UNALIGNED && if_s_d == UNALIGNED_CONTINUE) instr_buffer <= instr_i[31:16];
-        else if (instr_ready_i && if_s_q == UNALIGNED_CONTINUE && if_s_d == UNALIGNED_CONTINUE && handshake)
-            instr_buffer <= instr_i[31:16];
-        else if (instr_ready_i && if_s_q == ALIGNED && if_s_d == UNALIGNED_CONTINUE && handshake)
-            instr_buffer <= instr_i[31:16];
+        if (~rst_ni || jtag_reset_flag_i || jump_flag_i) instr_buffer <= 16'd1;
+        else if (jump_fetch_phase_on && instr_ready_i) instr_buffer <= instr_i[31:16];
+        else if (if_s_q == UNALIGNED_CONTINUE && if_s_d == UNALIGNED_CONTINUE && handshake) instr_buffer <= instr_i[31:16];
+        else if (if_s_q == ALIGNED && if_s_d == UNALIGNED_CONTINUE && handshake) instr_buffer <= instr_i[31:16];
     end : instr_buffer_ctrl
 
     always_comb begin : cdecoder_i_ctrl
-        if (if_s_q == ALIGNED) cdecoder_i = instr_i;
-        else if (if_s_q == INIT_UNALIGNED) cdecoder_i = {16'b0, instr_i[31:16]};
-        else if (if_s_q == UNALIGNED_CONTINUE) cdecoder_i = {instr_i[15:0], instr_buffer};
-        else if (if_s_q == UNALIGNED) cdecoder_i = {16'b0, instr_i[31:16]};
+        if (instr_ready_i) begin
+            if (if_s_q == ALIGNED) cdecoder_i = instr_i;
+            else if (if_s_q == INIT_UNALIGNED) cdecoder_i = {16'b0, instr_i[31:16]};
+            else if (if_s_q == UNALIGNED_CONTINUE) cdecoder_i = {instr_i[15:0], instr_buffer};
+            else if (if_s_q == UNALIGNED) cdecoder_i = {16'b0, instr_i[31:16]};
+        end
         else cdecoder_i = INST_NOP;
     end : cdecoder_i_ctrl
 
