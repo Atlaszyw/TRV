@@ -33,5 +33,7 @@ sv = [
     "$PRJ_ROOT/design/src/debug/jtag_top.sv",
     "$PRJ_ROOT/design/src/soc/tinyriscv_soc_top.sv",
     "$PRJ_ROOT/tb/src/SimSrcGen_pkg.sv",
-    "$PRJ_ROOT/tb/src/tb_top.sv",
+    # "$PRJ_ROOT/tb/src/tb_top.sv",
+    # "$PRJ_ROOT/tb/src/GPIO_tb.sv",
+    "$PRJ_ROOT/tb/src/Uart_Download_tb.sv",
 ]
