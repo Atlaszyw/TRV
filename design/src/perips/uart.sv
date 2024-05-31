@@ -80,7 +80,7 @@ module uart #(
         if (regi_s_q == NUM_DONE) ready_o = '1;
         else if (regi_s_q != NUM_EMITTING && tx_s_q == TX_DONE) ready_o = '1;
         else if (req_i & ~we_i) ready_o = '1;
-        else if (req_i && we_i && (addr_i[0 +: 8] == 8'h00 || addr_i[0 +: 8] == 8'h08)) ready_o = '1;
+        else if (req_i && we_i && (addr_i[0 +: 8] == 8'h00 || addr_i[0 +: 8] == 8'h04 || addr_i[0 +: 8] == 8'h08)) ready_o = '1;
     end : ready_o_ctrl
 
     // reginum state
