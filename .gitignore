@@ -17,5 +17,5 @@ novas.conf
 
 sim
 *.bak
-
+*.jou
 verilate

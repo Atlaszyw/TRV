@@ -99,45 +99,55 @@ module ex
     logic div_hold, div_error;
 
     always_comb begin
-        opcode          = inst_i[6:0];
-        funct3          = inst_i[14:12];
-        funct7          = inst_i[31:25];
-        rd              = inst_i[11:7];
-        uimm            = inst_i[19:15];
+        opcode = inst_i[6:0];
+        funct3 = inst_i[14:12];
+        funct7 = inst_i[31:25];
+        rd     = inst_i[11:7];
+        uimm   = inst_i[19:15];
+    end
 
-        sr_shift        = op1_i >> op2_i[4:0];
-        sri_shift       = op1_i >> inst_i[24:20];
-        sr_shift_mask   = 32'hffffffff >> op2_i[4:0];
-        sri_shift_mask  = 32'hffffffff >> inst_i[24:20];
+    always_comb begin
+        sr_shift       = op1_i >> op2_i[4:0];
+        sri_shift      = op1_i >> inst_i[24:20];
+        sr_shift_mask  = 32'hffffffff >> op2_i[4:0];
+        sri_shift_mask = 32'hffffffff >> inst_i[24:20];
+    end
 
-        op1_add_op2_res = op1_i + op2_i;
+    assign op1_add_op2_res = op1_i + op2_i;
 
+    always_comb begin
         mul_op1_invert  = ~op1_i + 1;
         mul_op2_invert  = ~op2_i + 1;
 
         mul_temp        = mul_op1 * mul_op2;
         mul_temp_invert = ~mul_temp + 1;
+    end
 
-        mem_addr_index  = op1_add_op2_res[1:0] & 2'b11;
+    always_comb begin
+        mem_addr_index = op1_add_op2_res[1:0] & 2'b11;
 
-        reg_wdata_o     = reg_wdata;
+        reg_wdata_o    = reg_wdata;
         // 响应中断时不写通用寄存器
-        reg_we_o        = (int_assert_i == INT_ASSERT) ? ~WriteEnable : reg_we;
-        reg_waddr_o     = reg_waddr;
+        reg_we_o       = (int_assert_i == INT_ASSERT) ? ~WriteEnable : reg_we;
+        reg_waddr_o    = reg_waddr;
 
         // 响应中断时不写内存
-        mem_we_o        = (int_assert_i == INT_ASSERT) ? ~WriteEnable : mem_we;
+        mem_we_o       = (int_assert_i == INT_ASSERT) ? ~WriteEnable : mem_we;
 
         // 响应中断时不向总线请求访问内存
-        mem_req_o       = (int_assert_i == INT_ASSERT) ? RIB_NREQ : mem_req;
+        mem_req_o      = (int_assert_i == INT_ASSERT) ? RIB_NREQ : mem_req;
+    end
 
-        ready_o         = ~(div_hold | mem_hold);
-        jump_flag_o     = jump_flag || ((int_assert_i == INT_ASSERT) ? JumpEnable : ~JumpEnable);
-        jump_addr_o     = (int_assert_i == INT_ASSERT) ? int_addr_i : jump_addr;
+    always_comb begin
+        ready_o     = ~(div_hold | mem_hold);
+        jump_flag_o = jump_flag || ((int_assert_i == INT_ASSERT) ? JumpEnable : ~JumpEnable);
+        jump_addr_o = (int_assert_i == INT_ASSERT) ? int_addr_i : jump_addr;
+    end
 
+    always_comb begin
         // 响应中断时不写CSR寄存器
-        csr_we_o        = (int_assert_i == INT_ASSERT) ? ~WriteEnable : csr_we_i;
-        csr_waddr_o     = csr_waddr_i;
+        csr_we_o    = (int_assert_i == INT_ASSERT) ? ~WriteEnable : csr_we_i;
+        csr_waddr_o = csr_waddr_i;
     end
 
     // 处理乘法指令
