@@ -14,7 +14,7 @@
  limitations under the License.
  */
 // tinyriscv处理器核顶层模块
-module tinyriscv
+module tinyriscv_yw
     import tinyriscv_pkg::*;
 (
 
@@ -173,7 +173,7 @@ module tinyriscv
     //     .req_i  (rib_pc_req)
     // );
 
-    instr_fetch instr_f (
+    instr_fetch_yw instr_f (
         .clk_i,
         .rst_ni,
 
@@ -194,7 +194,7 @@ module tinyriscv
     );
 
     // ctrl模块例化
-    ctrl u_ctrl (
+    ctrl_yw u_ctrl (
         .rst_ni,
         .jump_flag_i      (ex_jump_flag_o),
         .jump_addr_i      (ex_jump_addr_o),
@@ -208,7 +208,7 @@ module tinyriscv
     );
 
     // regs模块例化
-    regs u_regs (
+    regs_yw u_regs (
         .clk_i,
         .rst_ni,
         .we_i       (ex_reg_we_o),
@@ -225,7 +225,7 @@ module tinyriscv
     );
 
     // csr_reg模块例化
-    csr_reg u_csr_reg (
+    csr_reg_yw u_csr_reg (
         .clk_i,
         .rst_ni,
         .we_i             (ex_csr_we_o),
@@ -245,7 +245,7 @@ module tinyriscv
     );
 
     // if_id模块例化
-    if_id u_if_id (
+    if_id_yw u_if_id (
         .clk_i (clk_i),
         .rst_ni(rst_ni),
 
@@ -267,7 +267,7 @@ module tinyriscv
     );
 
     // id模块例化
-    id u_id (
+    id_yw u_id (
         .inst_i        (if_inst_o),
         .inst_addr_i   (if_inst_addr_o),
         .reg1_rdata_i  (regs_rdata1_o),
@@ -291,7 +291,7 @@ module tinyriscv
     );
 
     // id_ex模块例化
-    id_ex u_id_ex (
+    id_ex_yw u_id_ex (
         .clk_i,
         .rst_ni,
 
@@ -327,7 +327,7 @@ module tinyriscv
     );
 
     // ex模块例化
-    ex u_ex (
+    ex_yw u_ex (
         .clk_i,
         .rst_ni,
 
@@ -368,7 +368,7 @@ module tinyriscv
     );
 
     // clint模块例化
-    clint u_clint (
+    clint_yw u_clint (
         .clk_i          (clk_i),
         .rst_ni         (rst_ni),
         .int_flag_i     (if_int_flag_o),

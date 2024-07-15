@@ -1,4 +1,4 @@
-module div
+module div_yw
     import tinyriscv_pkg::*;
 #(
     parameter WIDTH = 32

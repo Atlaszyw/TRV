@@ -15,7 +15,7 @@
  */
 // 译码模块
 // 纯组合逻辑电路
-module id
+module id_yw
     import tinyriscv_pkg::*;
 (
     // from if_id

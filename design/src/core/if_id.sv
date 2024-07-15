@@ -15,7 +15,7 @@
  */
 
 // 将指令向译码模块传递
-module if_id
+module if_id_yw
     import tinyriscv_pkg::*;
 (
 

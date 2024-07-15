@@ -15,7 +15,7 @@
  */
 // 执行模块
 // 纯组合逻辑电路
-module ex
+module ex_yw
     import tinyriscv_pkg::*;
 (
     input clk_i,
@@ -215,8 +215,8 @@ module ex
                 if (funct3 == INST_ID_FUN3) begin
                     mem_we      = WriteEnable;
                     mem_req     = RIB_REQ;
-                    mem_addr_o  = 32'h30000014;
-                    mem_wdata_o = '0;
+                    mem_addr_o  = 32'h30000000;
+                    mem_wdata_o = 32'h4;
                 end
                 if (funct3 == INST_TEMP_FUN3) begin
                     mem_req    = RIB_REQ;
@@ -430,7 +430,7 @@ module ex
     end
 
 
-    div i_div (
+    div_yw i_div (
         .clk_i,
         .rst_ni,
         .valid_i   (div_valid),

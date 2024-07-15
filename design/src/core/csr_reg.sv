@@ -14,7 +14,7 @@
  limitations under the License.
  */
 // CSR寄存器模块
-module csr_reg
+module csr_reg_yw
     import tinyriscv_pkg::*;
 (
 

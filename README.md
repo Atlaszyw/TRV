@@ -1,5 +1,5 @@
 与本项目配套的设计文档[《从零开始写RISC-V处理器》](https://liangkangnan.gitee.io/2020/04/29/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99RISC-V%E5%A4%84%E7%90%86%E5%99%A8/)，目前已经更新完第三章硬件篇，开始更新软件篇。
-
+scp -P 40022 zhangyw@166.111.78.45:/home2/zhangyw/Projects/tinyriscv/fpga_prj/fpga_prj.runs/impl_1/tinyriscv_soc_top.bit /c/Users/44576/Desktop/
 # 1.初衷
 
 本开源项目的初衷是本人想入门RISC-V，熟悉RISC-V的指令内容和汇编语法。
