@@ -188,7 +188,7 @@ module tinyriscv
         .instr_o      (if_instr),
         .instr_valid_o(instr_valid),
 
-        .pc_o     (rib_pc_addr_o),     // PC指针
+        .pc_o     (rib_pc_addr_o),  // PC指针
         .pc_real  (pc_real),
         .pc_next_o(pc_next_f2d)
     );

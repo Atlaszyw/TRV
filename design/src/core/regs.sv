@@ -47,7 +47,7 @@ module regs
     // to jtag
     output logic [RegBus - 1:0] jtag_data_o  // 读寄存器数据
 );
-
+    integer i;
     logic [RegBus - 1:0] regs[RegNum];
 
     // 写寄存器
@@ -62,40 +62,9 @@ module regs
             end
         end
         else
-            regs <= '{
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0,
-                32'h0
-            };
+            for (i = 0; i < 32; i = i + 1) begin
+                regs[i] <= 32'h0;
+            end
     end
 
     // 读寄存器1
