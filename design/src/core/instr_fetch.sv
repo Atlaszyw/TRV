@@ -1,4 +1,4 @@
-module instr_fetch_yw
+module instr_fetch
     import tinyriscv_pkg::*;
 (
     input clk_i,

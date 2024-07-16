@@ -15,11 +15,11 @@
  */
 
 // 将指令向译码模块传递
-module if_id_yw
+module if_id
     import tinyriscv_pkg::*;
 (
 
-    input clk_i,
+    input clk_i ,
     input rst_ni,
 
     input [    InstBus - 1:0] inst_i,           // 指令内容

@@ -1,5 +1,5 @@
 fsdbDumpfile "./top.fsdb"
 fsdbDumpvars 0 "tb_top" +all
 
-run 50000000ns
+run 20000ns
 exit

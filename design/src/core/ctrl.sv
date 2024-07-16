@@ -16,12 +16,9 @@
 
 // 控制模块
 // 发出跳转、暂停流水线信号
-module ctrl_yw
+module ctrl
     import tinyriscv_pkg::*;
 (
-
-    input rst_ni,
-
     // from ex
     input                     jump_flag_i,
     input [InstAddrBus - 1:0] jump_addr_i,

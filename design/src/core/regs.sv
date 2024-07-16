@@ -15,7 +15,7 @@
  */
 
 // 通用寄存器模块
-module regs_yw
+module regs
     import tinyriscv_pkg::*;
 (
 

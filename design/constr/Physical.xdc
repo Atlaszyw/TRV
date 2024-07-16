@@ -6,8 +6,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports rst_ni]
 set_property PACKAGE_PIN F20 [get_ports rst_ni]
 
 # ³ÌÐòÖ´ÐÐ³É¹¦Ö¸Ê¾Òý½Å
-# set_property IOSTANDARD LVCMOS33 [get_ports succ]
-# set_property PACKAGE_PIN F19 [get_ports succ]
+set_property IOSTANDARD LVCMOS33 [get_ports succ]
+set_property PACKAGE_PIN F19 [get_ports succ]
 
 # ´®¿Ú·¢ËÍÒý½Å
 set_property IOSTANDARD LVCMOS33 [get_ports uart_tx_pin]

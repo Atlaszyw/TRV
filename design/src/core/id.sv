@@ -15,7 +15,7 @@
  */
 // 译码模块
 // 纯组合逻辑电路
-module id_yw
+module id
     import tinyriscv_pkg::*;
 (
     // from if_id
@@ -62,8 +62,10 @@ module id_yw
     wire [4:0] rs2 = inst_i[24:20];
 
     always_comb begin : compare_logic
-        compare_o[2] = $signed(reg1_rdata_i) >= $signed(reg2_rdata_i);
-        compare_o[1] = reg1_rdata_i >= reg2_rdata_i;
+        compare_o[2] = (opcode == INST_TYPE_I && funct3 == INST_SLTI) ? $signed(reg1_rdata_i) >=
+            $signed({{20{inst_i[31]}}, inst_i[31:20]}) : $signed(reg1_rdata_i) >= $signed(reg2_rdata_i);
+        compare_o[1] = (opcode == INST_TYPE_I && funct3 == INST_SLTIU) ? reg1_rdata_i >= {{20{inst_i[31]}}, inst_i[31:20]} :
+            reg1_rdata_i >= reg2_rdata_i;
         compare_o[0] = reg1_rdata_i == reg2_rdata_i;
     end : compare_logic
 

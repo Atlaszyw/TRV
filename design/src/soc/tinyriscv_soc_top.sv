@@ -40,7 +40,7 @@ module tinyriscv_soc_top
     // output logic spi_ss,    // SPI SS引脚
     // output logic spi_clk,   // SPI CLK引脚
 
-    // output logic over,  // 测试是否完成信号
+    //    output logic over,  // 测试是否完成信号
     // output logic succ,  // 测试是否成功信号
 
     output logic [2:0] pwm_o,
@@ -48,6 +48,8 @@ module tinyriscv_soc_top
     output logic scl_o,
     inout        sda_io
 );
+    logic                      rst_nid;
+    logic                      uart_debug_pind;
 
     logic                      jtag_TCK;  // JTAG TCK引脚
     logic                      jtag_TMS;  // JTAG TMS引脚
@@ -166,6 +168,7 @@ module tinyriscv_soc_top
     logic [GPIO_NUM * 2 - 1:0] gpio_ctrl;
     logic [    GPIO_NUM - 1:0] gpio_data;
 
+
     assign int_flag   = {7'h0, timer0_int};
 
     // 低电平点亮LED
@@ -176,21 +179,45 @@ module tinyriscv_soc_top
     assign sda_io = sda_t ? sda_o : 'z;
     assign sda_i  = sda_io;
 
-    // always_ff @(posedge clk_i) begin
-    //     if (rst_ni == RstEnable) begin
-    //         over <= 1'b1;
-    //         succ <= 1'b1;
-    //     end
-    //     else begin
-    //         over <= ~u_tinyriscv.u_regs.regs[26];  // when = 1, run over
-    //         succ <= ~u_tinyriscv.u_regs.regs[27];  // when = 1, run succ, otherwise fail
-    //     end
-    // end
+    always_ff @(posedge clk_i) begin
+        if (rst_nid == RstEnable) begin
+            over <= 1'b1;
+            succ <= 1'b1;
+        end
+        else begin
+            over <= ~u_tinyriscv.u_regs.regs[26];  // when = 1, run over
+            succ <= ~u_tinyriscv.u_regs.regs[27];  // when = 1, run succ, otherwise fail
+        end
+    end
+
+    debounce #(
+`ifdef SIM
+        .DEBOUNCE_INTERVAL(1)
+`else
+        .DEBOUNCE_INTERVAL(4000000)
+`endif
+    ) u_debounce_rst (
+        .clk_i,  // Clock input
+        .button_in (rst_ni),  // Raw button input
+        .button_out(rst_nid)  // Debounced button output
+    );
+    debounce #(
+`ifdef SIM
+        .DEBOUNCE_INTERVAL(1)
+`else
+        .DEBOUNCE_INTERVAL(4000000)
+`endif
+    ) u_debounce_debug (
+        .clk_i,  // Clock input
+        .button_in (uart_debug_pin),  // Raw button input
+        .button_out(uart_debug_pind)  // Debounced button output
+    );
+
 
     // tinyriscv处理器核模块例化
-    tinyriscv_yw u_tinyriscv (
+    tinyriscv u_tinyriscv (
         .clk_i         (clk_i),
-        .rst_ni        (rst_ni & ~uart_debug_pin),
+        .rst_ni        (rst_nid & ~uart_debug_pind),
         .rib_ex_addr_o (m0_addr),
         .rib_ex_data_i (m0_data_o),
         .rib_ex_data_o (m0_data_i),
@@ -217,8 +244,8 @@ module tinyriscv_soc_top
     // 串口下载模块例化
     uart_debug u_uart_debug (
         .clk_i      (clk_i),
-        .rst_ni     (rst_ni),
-        .debug_en_i (uart_debug_pin),
+        .rst_ni     (rst_nid),
+        .debug_en_i (uart_debug_pind),
         .req_o      (m3_req),
         .mem_we_o   (m3_we),
         .mem_addr_o (m3_addr),
@@ -229,7 +256,7 @@ module tinyriscv_soc_top
     // rom模块例化
     rom u_rom (
         .clk_i (clk_i),
-        .rst_ni(rst_ni),
+        .rst_ni(rst_nid),
         .we_i  (s0_we),
         .addr_i(s0_addr),
         .data_i(s0_data_o),
@@ -239,7 +266,7 @@ module tinyriscv_soc_top
     // ram模块例化
     ram u_ram (
         .clk_i (clk_i),
-        .rst_ni(rst_ni),
+        .rst_ni(rst_nid),
         .we_i  (s1_we),
         .addr_i(s1_addr),
         .data_i(s1_data_o),
@@ -249,7 +276,7 @@ module tinyriscv_soc_top
     // timer模块例化
     timer timer_0 (
         .clk_i    (clk_i),
-        .rst_ni   (rst_ni),
+        .rst_ni   (rst_nid),
         .data_i   (s2_data_o),
         .addr_i   (s2_addr),
         .we_i     (s2_we),
@@ -260,7 +287,7 @@ module tinyriscv_soc_top
     // uart模块例化
     uart uart_0 (
         .clk_i  (clk_i),
-        .rst_ni (rst_ni),
+        .rst_ni (rst_nid),
         .we_i   (s3_we),
         .addr_i (s3_addr),
         .data_i (s3_data_o),
@@ -273,7 +300,7 @@ module tinyriscv_soc_top
 
     i2c i_i2c (
         .clk_i  (clk_i),
-        .rst_ni (rst_ni),
+        .rst_ni (rst_nid),
         .we_i   (s7_we),
         .req_i  (s7_req),
         .addr_i (s7_addr),
@@ -300,7 +327,7 @@ module tinyriscv_soc_top
     // gpio模块例化
     gpio gpio_0 (
         .clk_i   (clk_i),
-        .rst_ni  (rst_ni),
+        .rst_ni  (rst_nid),
         .we_i    (s4_we),
         .addr_i  (s4_addr),
         .data_i  (s4_data_o),
@@ -313,7 +340,7 @@ module tinyriscv_soc_top
     // spi模块例化
     spi spi_0 (
         .clk_i,
-        .rst_ni,
+        .rst_ni  (rst_nid),
         .data_i  (s5_data_o),
         .addr_i  (s5_addr),
         .we_i    (s5_we),
@@ -328,7 +355,7 @@ module tinyriscv_soc_top
         .channel(3)
     ) u_pwm (
         .clk_i,
-        .rst_ni,
+        .rst_ni(rst_nid),
 
         .data_i(s6_data_o),
         .addr_i(s6_addr),
@@ -434,7 +461,7 @@ module tinyriscv_soc_top
         .DMI_OP_BITS  (2)
     ) u_jtag_top (
         .clk_i       (clk_i),
-        .jtag_rst_n  (rst_ni),
+        .jtag_rst_n  (rst_nid),
         .jtag_pin_TCK(jtag_TCK),
         .jtag_pin_TMS(jtag_TMS),
         .jtag_pin_TDI(jtag_TDI),

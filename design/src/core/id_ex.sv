@@ -15,7 +15,7 @@
  */
 
 // 将译码结果向执行模块传递
-module id_ex_yw
+module id_ex
     import tinyriscv_pkg::*;
 (
 

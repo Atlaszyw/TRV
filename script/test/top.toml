@@ -3,11 +3,8 @@ description = "~"
 
 [design]
     top = "tb_top"
-
     ext_lib = [
-        # "/home2/zhangyw/Tools/Xilinx/Vivado/2023.2/data/verilog/src/unisims",
     ]
-
     inc_dirs = [
     ]
     roms = [
@@ -19,17 +16,16 @@ description = "~"
         # "$PRJ_ROOT/tb/temp_compress.mif",
         # "$PRJ_ROOT/tb/led.mif",
         # "$PRJ_ROOT/tb/temp.mif",
-        "$PRJ_ROOT/tb/pwm.mif",
+        # "$PRJ_ROOT/tb/pwm.mif",
         # "$PRJ_ROOT/tb/empty.mif",
+        "$PRJ_ROOT/tb/inst_sltiu.data",
     ]
     macros = [
         "FPGA",
+        "SIM",
     ]
-
     depend = [
     ]
-
-
     [design.param]
         # "fpga_top.i_interposer.u_config_plane.u_ibex_wrapper.SRAMInitFile" = "driver.mem"
         # "fpga_top.i_cpu_chiplet_dummy.i_cpu_chiplet.i_cpu_subsys_xbar.i_bootrom.MemInitFile" = "boot_code.mem"
@@ -49,7 +45,7 @@ description = "~"
         timescale = "1ns/10ps"
         top = "tb_top"
         lib_path = [
-            '/home2/zhangyw/Xilinx_Kintex_simlib',
+            # '/home2/zhangyw/Xilinx_Kintex_simlib',
         ]
         vlogan_args = [
             "-full64",

@@ -17,7 +17,7 @@
 
 // core local interruptor module
 // 核心中断管理、仲裁模块
-module clint_yw
+module clint
     import tinyriscv_pkg::*;
 (
 

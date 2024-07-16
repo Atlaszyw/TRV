@@ -15,7 +15,7 @@
  */
 // 执行模块
 // 纯组合逻辑电路
-module ex_yw
+module ex
     import tinyriscv_pkg::*;
 (
     input clk_i,
@@ -96,7 +96,7 @@ module ex_yw
 
     logic [RegBus - 1:0] div_data;
     logic div_valid, div_ready;
-    logic div_hold, div_error;
+    logic div_hold;
 
     always_comb begin
         opcode = inst_i[6:0];
@@ -193,7 +193,7 @@ module ex_yw
     end
 
     always_comb begin
-        mem_hold = mem_req ^ mem_ready_i;
+        mem_hold = mem_req & ~mem_ready_i;
     end
 
     // 单周期代码
@@ -215,8 +215,8 @@ module ex_yw
                 if (funct3 == INST_ID_FUN3) begin
                     mem_we      = WriteEnable;
                     mem_req     = RIB_REQ;
-                    mem_addr_o  = 32'h30000000;
-                    mem_wdata_o = 32'h4;
+                    mem_addr_o  = 32'h30000014;
+                    mem_wdata_o = '0;
                 end
                 if (funct3 == INST_TEMP_FUN3) begin
                     mem_req    = RIB_REQ;
@@ -430,7 +430,7 @@ module ex_yw
     end
 
 
-    div_yw i_div (
+    div i_div (
         .clk_i,
         .rst_ni,
         .valid_i   (div_valid),
@@ -438,7 +438,6 @@ module ex_yw
         .divisor_i (op2_i),
         .op_i      (funct3),
         .data_o    (div_data),
-        .ready_o   (div_ready),
-        .error_o   (div_error)
+        .ready_o   (div_ready)
     );
 endmodule
