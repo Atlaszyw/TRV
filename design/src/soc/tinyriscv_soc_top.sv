@@ -41,7 +41,7 @@ module tinyriscv_soc_top
     // output logic spi_clk,   // SPI CLK引脚
 
     //    output logic over,  // 测试是否完成信号
-    // output logic succ,  // 测试是否成功信号
+     output logic succ,  // 测试是否成功信号
 
     output logic [2:0] pwm_o,
 

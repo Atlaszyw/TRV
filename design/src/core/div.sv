@@ -24,6 +24,7 @@ module div
     state_t state, next_state;
     logic [WIDTH-1:0] quotient_reg, remainder_reg;
     logic [WIDTH-1:0] temp_remainder;
+
     logic [WIDTH-1:0] abs_dividend, abs_divisor;
     logic dividend_neg, result_neg;
     logic [5:0] count;
@@ -58,51 +59,53 @@ module div
             endcase
     end
 
+    assign temp_remainder = {remainder_reg[WIDTH-2:0], abs_dividend[WIDTH-1]};
+
     // Counters and registers
     always_ff @(posedge clk_i) begin
         if (~rst_ni | ~valid_i) begin
-            count          <= '0;
-            quotient_reg   <= '0;
-            remainder_reg  <= '0;
-            temp_remainder <= '0;
-            abs_dividend   <= '0;
-            abs_divisor    <= '0;
-            dividend_neg   <= '0;
+            count         <= '0;
+            quotient_reg  <= '0;
+            remainder_reg <= '0;
+            // temp_remainder <= '0;
+            abs_dividend  <= '0;
+            abs_divisor   <= '0;
+            dividend_neg  <= '0;
 
-            result_neg     <= '0;
-            ready_o        <= '0;
+            result_neg    <= '0;
+            ready_o       <= '0;
 
-            data_o         <= '0;
+            data_o        <= '0;
         end
         else begin
             case (state)
                 STATE_IDLE: begin
-                    count          <= WIDTH - 1;
-                    dividend_neg   <= is_signed && dividend_i[WIDTH-1];
+                    count         <= WIDTH - 1;
+                    dividend_neg  <= is_signed && dividend_i[WIDTH-1];
 
-                    abs_dividend   <= is_signed && dividend_i[WIDTH-1] ? -dividend_i : dividend_i;
-                    abs_divisor    <= is_signed && divisor_i[WIDTH-1] ? -divisor_i : divisor_i;
+                    abs_dividend  <= is_signed && dividend_i[WIDTH-1] ? -dividend_i : dividend_i;
+                    abs_divisor   <= is_signed && divisor_i[WIDTH-1] ? -divisor_i : divisor_i;
 
-                    quotient_reg   <= '0;
-                    remainder_reg  <= '0;
-                    temp_remainder <= '0;
-                    result_neg     <= is_signed && (dividend_i[WIDTH-1] ^ divisor_i[WIDTH-1]);
-                    ready_o        <= '0;
+                    quotient_reg  <= '0;
+                    remainder_reg <= '0;
+                    // temp_remainder <= '0;
+                    result_neg    <= is_signed && (dividend_i[WIDTH-1] ^ divisor_i[WIDTH-1]);
+                    ready_o       <= '0;
 
-                    data_o         <= '0;
+                    data_o        <= '0;
                 end
                 STATE_CALC: begin
-                    temp_remainder = {remainder_reg[WIDTH-2:0], abs_dividend[WIDTH-1]};
-                    abs_dividend   = abs_dividend << 1;
+                    // temp_remainder = {remainder_reg[WIDTH-2:0], abs_dividend[WIDTH-1]};`
                     if (temp_remainder >= abs_divisor) begin
-                        temp_remainder = temp_remainder - abs_divisor;
-                        quotient_reg   = {quotient_reg[WIDTH-2:0], 1'b1};
+                        remainder_reg <= temp_remainder - abs_divisor;
+                        quotient_reg  <= {quotient_reg[WIDTH-2:0], 1'b1};
                     end
                     else begin
-                        quotient_reg = {quotient_reg[WIDTH-2:0], 1'b0};
+                        quotient_reg  <= {quotient_reg[WIDTH-2:0], 1'b0};
+                        remainder_reg <= temp_remainder;
                     end
-                    remainder_reg = temp_remainder;
-                    count <= count - 1;
+                    abs_dividend <= abs_dividend << 1;
+                    count        <= count - 1;
                 end
                 STATE_END: begin
                     if (op_i == INST_DIV || op_i == INST_DIVU) data_o <= result_neg ? -quotient_reg : quotient_reg;

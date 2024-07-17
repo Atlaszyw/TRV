@@ -41,8 +41,11 @@ module tinyriscv
     input jtag_halt_flag_i,  // jtag暂停标志
     input jtag_reset_flag_i, // jtag复位PC标志
 
-    input [INT_BUS - 1:0] int_i  // 中断信号
+    input [INT_BUS - 1:0] int_i,  // 中断信号
 
+
+    output succ,
+    output over
 );
 
     // pc_reg模块输出信号
@@ -206,7 +209,10 @@ module tinyriscv
         .jtag_we_i  (jtag_reg_we_i),
         .jtag_addr_i(jtag_reg_addr_i),
         .jtag_data_i(jtag_reg_data_i),
-        .jtag_data_o(jtag_reg_data_o)
+        .jtag_data_o(jtag_reg_data_o),
+
+        .succ,
+        .over
     );
 
     // csr_reg模块例化
