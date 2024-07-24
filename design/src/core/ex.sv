@@ -24,7 +24,7 @@ module ex
     // from id
     input [    InstBus - 1:0] inst_i,            // 指令内容
     input [InstAddrBus - 1:0] inst_addr_i,       // 指令地址
-    input [InstAddrBus - 1:0] inst_addr_next_i,
+    input [InstAddrBus - 1:0] inst_addr_next_type_i,
     input                     reg_we_i,          // 是否写通用寄存器
     input [ RegAddrBus - 1:0] reg_waddr_i,       // 写通用寄存器地址
     input                     csr_we_i,          // 是否写CSR寄存器
@@ -399,14 +399,14 @@ module ex
             INST_JAL, INST_JALR: begin
                 jump_flag = '1;
                 jump_addr = op1_add_op2_res;
-                reg_wdata = inst_addr_next_i;
+                reg_wdata = inst_addr_next_type_i ? inst_addr_i + 32'd2 : inst_addr_i + 32'd4;
             end
             INST_LUI, INST_AUIPC: begin
                 reg_wdata = op1_add_op2_res;
             end
             INST_FENCE: begin
                 jump_flag = '1;
-                jump_addr = inst_addr_next_i;
+                jump_addr = inst_addr_next_type_i ? inst_addr_i + 32'd2 : inst_addr_i + 32'd4;
             end
             INST_CSR: begin
                 case (funct3)

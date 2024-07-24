@@ -27,7 +27,7 @@ module id_ex
 
     input [    InstBus - 1:0] inst_i,            // 指令内容
     input [InstAddrBus - 1:0] inst_addr_i,       // 指令地址
-    input [InstAddrBus - 1:0] inst_addr_next_i,  // 指令地址
+    input [InstAddrBus - 1:0] inst_addr_next_type_i,  // 指令地址
     input                     reg_we_i,          // 写通用寄存器标志
     input [ RegAddrBus - 1:0] reg_waddr_i,       // 写通用寄存器地址
     input                     csr_we_i,          // 写CSR寄存器标志
@@ -47,7 +47,7 @@ module id_ex
     output       [     RegBus - 1:0] reg2_rdata_o,
     output logic [    InstBus - 1:0] inst_o,            // 指令内容
     output logic [InstAddrBus - 1:0] inst_addr_o,       // 指令地址
-    output logic [InstAddrBus - 1:0] inst_addr_next_o,  // 指令地址
+    output logic [InstAddrBus - 1:0] inst_addr_next_type_o,  // 指令地址
     output logic                     reg_we_o,          // 写通用寄存器标志
     output logic [ RegAddrBus - 1:0] reg_waddr_o,       // 写通用寄存器地址
     output logic                     csr_we_o,          // 写CSR寄存器标志
