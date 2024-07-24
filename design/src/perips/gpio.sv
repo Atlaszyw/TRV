@@ -58,7 +58,7 @@ module gpio
     generate
         for (i = 0; i < GPIO_NUM_; i = i + 1) begin
             always_ff @(posedge clk_i) begin
-                if (rst_ni == 1'b0) gpio_data[i] <= '0;
+                if (~rst_ni) gpio_data[i] <= '0;
                 else if (we_i && addr_i[3:0] == GPIO_DATA && gpio_ctrl[2 * i+:2] == 2'b01) gpio_data[i] <= data_i[i];
                 else if (gpio_ctrl[2 * i+:2] == 2'b10) gpio_data[i] <= io_pin_i[i];
             end

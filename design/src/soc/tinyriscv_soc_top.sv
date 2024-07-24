@@ -61,8 +61,7 @@ module tinyriscv_soc_top
     logic                      spi_ss;  // SPI SS引脚
     logic                      spi_clk;  // SPI CLK引脚
 
-    logic                      over;  // 测试是否完成信号
-    logic                      succ;  // 测试是否成功信号
+    // logic                      over;  // 测试是否完成信号
 
     logic                      halted_ind;  // jtag是否已经halt住CPU信号
 
@@ -179,16 +178,16 @@ module tinyriscv_soc_top
     assign sda_io = sda_t ? sda_o : 'z;
     assign sda_i  = sda_io;
 
-    always_ff @(posedge clk_i) begin
-        if (rst_nid == RstEnable) begin
-            over <= 1'b1;
-            succ <= 1'b1;
-        end
-        else begin
-            over <= ~u_tinyriscv.u_regs.regs[26];  // when = 1, run over
-            succ <= ~u_tinyriscv.u_regs.regs[27];  // when = 1, run succ, otherwise fail
-        end
-    end
+    // always_ff @(posedge clk_i) begin
+    //     if (rst_nid == RstEnable) begin
+    //         over <= 1'b1;
+    //         succ <= 1'b1;
+    //     end
+    //     else begin
+    //         over <= ~u_tinyriscv.u_regs.regs[26];  // when = 1, run over
+    //         succ <= ~u_tinyriscv.u_regs.regs[27];  // when = 1, run succ, otherwise fail
+    //     end
+    // end
 
     debounce #(
 `ifdef SIM
@@ -238,7 +237,8 @@ module tinyriscv_soc_top
         .jtag_halt_flag_i (jtag_halt_req_o),
         .jtag_reset_flag_i(jtag_reset_req_o),
 
-        .int_i(int_flag)
+        .int_i(int_flag),
+        .succ(succ)
     );
 
     // 串口下载模块例化

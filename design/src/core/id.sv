@@ -40,16 +40,18 @@ module id
     output logic [MemAddrBus - 1:0] csr_raddr_o,  // 读CSR寄存器地址
 
     // to ex
-    output logic [ MemAddrBus - 1:0] op1_o,
-    output logic [ MemAddrBus - 1:0] op2_o,
-    output logic [    InstBus - 1:0] inst_o,       // 指令内容
-    output logic [InstAddrBus - 1:0] inst_addr_o,  // 指令地址
-    output logic                     reg_we_o,     // 写通用寄存器标志
-    output logic [ RegAddrBus - 1:0] reg_waddr_o,  // 写通用寄存器地址
-    output logic                     csr_we_o,     // 写CSR寄存器标志
-    output logic [     RegBus - 1:0] csr_rdata_o,  // CSR寄存器数据
-    output logic [ MemAddrBus - 1:0] csr_waddr_o,  // 写CSR寄存器地址
-    output logic [              2:0] compare_o,    // [2] signed ge [1] unsigned ge [0] unsigned eq
+    output logic [MemAddrBus - 1:0] op1_o,
+    output logic [MemAddrBus - 1:0] op2_o,
+
+    output logic [     RegBus - 1:0] reg1_rdata_o,
+    output logic [     RegBus - 1:0] reg2_rdata_o,
+    output logic [    InstBus - 1:0] inst_o,        // 指令内容
+    output logic [InstAddrBus - 1:0] inst_addr_o,   // 指令地址
+    output logic                     reg_we_o,      // 写通用寄存器标志
+    output logic [ RegAddrBus - 1:0] reg_waddr_o,   // 写通用寄存器地址
+    output logic                     csr_we_o,      // 写CSR寄存器标志
+    output logic [     RegBus - 1:0] csr_rdata_o,   // CSR寄存器数据
+    output logic [ MemAddrBus - 1:0] csr_waddr_o,   // 写CSR寄存器地址
     output logic [     RegBus - 1:0] store_data_o
 
 );
@@ -61,13 +63,10 @@ module id
     wire [4:0] rs1 = inst_i[19:15];
     wire [4:0] rs2 = inst_i[24:20];
 
-    always_comb begin : compare_logic
-        compare_o[2] = $signed(reg1_rdata_i) >= ((opcode == INST_TYPE_I && funct3 == INST_SLTI) ?
-                                                 $signed({{20{inst_i[31]}}, inst_i[31:20]}) : $signed(reg2_rdata_i));
-        compare_o[1] = reg1_rdata_i >=
-            ((opcode == INST_TYPE_I && funct3 == INST_SLTIU) ? {{20{inst_i[31]}}, inst_i[31:20]} : reg2_rdata_i);
-        compare_o[0] = reg1_rdata_i == reg2_rdata_i;
-    end : compare_logic
+    always_comb begin : regpass
+        reg1_rdata_o = reg1_rdata_i;
+        reg2_rdata_o = reg2_rdata_i;
+    end
 
 
     always_comb begin

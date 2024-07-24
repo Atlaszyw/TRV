@@ -48,6 +48,7 @@ module tinyriscv
     output over
 );
 
+
     // pc_reg模块输出信号
     wire [  InstAddrBus - 1:0] pc_real;
     wire [  InstAddrBus - 1:0] pc_next_f2d;
@@ -81,8 +82,6 @@ module tinyriscv
     wire [   MemAddrBus - 1:0] id_op2_o;
     wire [   MemAddrBus - 1:0] id_op1_jump_o;
     wire [   MemAddrBus - 1:0] id_op2_jump_o;
-    wire [                2:0] compare;
-    wire [                2:0] compare_e;
 
     // id_ex模块输出信号
     wire [      InstBus - 1:0] ie_inst_o;
@@ -277,7 +276,8 @@ module tinyriscv
         .csr_we_o      (id_csr_we_o),
         .csr_rdata_o   (id_csr_rdata_o),
         .csr_waddr_o   (id_csr_waddr_o),
-        .compare_o     (compare),
+        .reg1_rdata_o  (id_reg1_rdata_o),
+        .reg2_rdata_o  (id_reg2_rdata_o),
         .store_data_o  (store_data_i)
     );
 
@@ -305,14 +305,17 @@ module tinyriscv
         .op2_i           (id_op2_o),
         .op1_o           (ie_op1_o),
         .op2_o           (ie_op2_o),
+        .reg1_rdata_i    (id_reg1_rdata_o),
+        .reg2_rdata_i    (id_reg2_rdata_o),
+        .reg1_rdata_o    (ie_reg1_rdata_o),
+        .reg2_rdata_o    (ie_reg2_rdata_o),
         .csr_we_i        (id_csr_we_o),
         .csr_waddr_i     (id_csr_waddr_o),
         .csr_rdata_i     (id_csr_rdata_o),
         .csr_we_o        (ie_csr_we_o),
         .csr_waddr_o     (ie_csr_waddr_o),
         .csr_rdata_o     (ie_csr_rdata_o),
-        .compare_i       (compare),
-        .compare_o       (compare_e),
+
         .store_data_i,
         .store_data_o
     );
@@ -329,10 +332,12 @@ module tinyriscv
         .inst_addr_next_i(pc_next_e),
         .reg_we_i        (ie_reg_we_o),
         .reg_waddr_i     (ie_reg_waddr_o),
-        .compare_i       (compare_e),
 
         .op1_i(ie_op1_o),
         .op2_i(ie_op2_o),
+
+        .reg1_rdata_i    (ie_reg1_rdata_o),
+        .reg2_rdata_i    (ie_reg2_rdata_o),
 
         .mem_rdata_i(rib_ex_data_i),
         .mem_wdata_o(ex_mem_wdata_o),
