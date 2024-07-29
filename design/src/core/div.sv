@@ -42,7 +42,7 @@ module div
         next_state = state;
         if (~valid_i) next_state = STATE_IDLE;
         else
-            unique case (state)
+            case (state)
                 STATE_IDLE: begin
                     next_state = STATE_CALC;
 

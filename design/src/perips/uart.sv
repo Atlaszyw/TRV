@@ -111,7 +111,7 @@ module uart #(
 
     always_comb begin : tx_ns
         tx_s_d = tx_s_q;
-        unique case (tx_s_q)
+        case (tx_s_q)
             TX_IDLE: begin
                 if (~uart_ctrl[0]) tx_s_d = TX_IDLE;
                 else if (tx_data_valid) tx_s_d = TX_EMITTING;
@@ -229,7 +229,7 @@ module uart #(
 
     always_comb begin : rx_ns
         rx_s_d = rx_s_q;
-        unique case (rx_s_q)
+        case (rx_s_q)
             RX_IDLE:      if (negedge_detect) rx_s_d = RX_START_BIT;
             RX_START_BIT: if (rx_start_bit_check) rx_s_d = RX_DATA;
             RX_DATA:      if (rx_bit_cnt == 4'd0) rx_s_d = RX_STOP;
@@ -302,7 +302,7 @@ module uart #(
     always_comb begin : data_out_ctrl
         data_o = '0;
         if (req_i & ~we_i)
-            unique case (addr_i[0 +: 8])
+            case (addr_i[0 +: 8])
                 8'h10:   data_o = rx_data;
                 8'h04:   data_o = uart_status;
                 default: data_o = '0;

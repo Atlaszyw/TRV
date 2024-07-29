@@ -25,14 +25,14 @@ module id_ex
     input ready_ex_i,
     input valid_if_id_i,
 
-    input [    InstBus - 1:0] inst_i,            // 指令内容
-    input [InstAddrBus - 1:0] inst_addr_i,       // 指令地址
-    input [InstAddrBus - 1:0] inst_addr_next_type_i,  // 指令地址
-    input                     reg_we_i,          // 写通用寄存器标志
-    input [ RegAddrBus - 1:0] reg_waddr_i,       // 写通用寄存器地址
-    input                     csr_we_i,          // 写CSR寄存器标志
-    input [ MemAddrBus - 1:0] csr_waddr_i,       // 写CSR寄存器地址
-    input [     RegBus - 1:0] csr_rdata_i,       // CSR寄存器读数据
+    input [    InstBus - 1:0] inst_i,                 // 指令内容
+    input [InstAddrBus - 1:0] inst_addr_i,            // 指令地址
+    input                     inst_addr_next_type_i,  // 指令地址
+    input                     reg_we_i,               // 写通用寄存器标志
+    input [ RegAddrBus - 1:0] reg_waddr_i,            // 写通用寄存器地址
+    input                     csr_we_i,               // 写CSR寄存器标志
+    input [ MemAddrBus - 1:0] csr_waddr_i,            // 写CSR寄存器地址
+    input [     RegBus - 1:0] csr_rdata_i,            // CSR寄存器读数据
     input [ MemAddrBus - 1:0] op1_i,
     input [ MemAddrBus - 1:0] op2_i,
     input [     RegBus - 1:0] reg1_rdata_i,
@@ -45,14 +45,14 @@ module id_ex
     output logic [ MemAddrBus - 1:0] op2_o,
     output       [     RegBus - 1:0] reg1_rdata_o,
     output       [     RegBus - 1:0] reg2_rdata_o,
-    output logic [    InstBus - 1:0] inst_o,            // 指令内容
-    output logic [InstAddrBus - 1:0] inst_addr_o,       // 指令地址
-    output logic [InstAddrBus - 1:0] inst_addr_next_type_o,  // 指令地址
-    output logic                     reg_we_o,          // 写通用寄存器标志
-    output logic [ RegAddrBus - 1:0] reg_waddr_o,       // 写通用寄存器地址
-    output logic                     csr_we_o,          // 写CSR寄存器标志
-    output logic [ MemAddrBus - 1:0] csr_waddr_o,       // 写CSR寄存器地址
-    output logic [     RegBus - 1:0] csr_rdata_o,       // CSR寄存器读数据
+    output logic [    InstBus - 1:0] inst_o,                 // 指令内容
+    output logic [InstAddrBus - 1:0] inst_addr_o,            // 指令地址
+    output logic                     inst_addr_next_type_o,  // 指令地址
+    output logic                     reg_we_o,               // 写通用寄存器标志
+    output logic [ RegAddrBus - 1:0] reg_waddr_o,            // 写通用寄存器地址
+    output logic                     csr_we_o,               // 写CSR寄存器标志
+    output logic [ MemAddrBus - 1:0] csr_waddr_o,            // 写CSR寄存器地址
+    output logic [     RegBus - 1:0] csr_rdata_o,            // CSR寄存器读数据
     output logic [     RegBus - 1:0] store_data_o,
 
     output logic ready_id_ex_o
@@ -84,15 +84,15 @@ module id_ex
     );
     assign inst_addr_o = inst_addr;
 
-    logic [InstAddrBus - 1:0] inst_addr_next;
-    gen_en_dff #(32, 0) inst_addr_next_ff (
+    logic inst_addr_next_type;
+    gen_en_dff #(1, 0) inst_addr_next_type_ff (
         .clk_i,
         .rst_ni(~clear & rst_ni),
         .en,
-        .din   (inst_addr_next_i),
-        .qout  (inst_addr_next)
+        .din   (inst_addr_next_type_i),
+        .qout  (inst_addr_next_type)
     );
-    assign inst_addr_next_o = inst_addr_next;
+    assign inst_addr_next_type_o = inst_addr_next_type;
 
     logic reg_we;
     gen_en_dff #(1, 0) reg_we_ff (
@@ -183,16 +183,6 @@ module id_ex
         .qout  (reg2_rdata)
     );
     assign reg2_rdata_o = reg2_rdata;
-
-    logic [2:0] compare;
-    gen_en_dff #(3, 0) compare_ff (
-        .clk_i,
-        .rst_ni(~clear & rst_ni),
-        .en,
-        .din   (compare_i),
-        .qout  (compare)
-    );
-    assign compare_o = compare;
 
     logic [RegBus - 1:0] store_data;
     gen_en_dff #(RegBus, 0) store_data_ff (

@@ -60,7 +60,7 @@ module instr_fetch
             else if (jump_addr_i[1:0] == INIT_UNALIGNED) if_s_d = INIT_UNALIGNED;
         end
         else
-            unique case (if_s_q)
+            case (if_s_q)
                 ALIGNED: begin
                     if (low_compressed && high_compressed) if_s_d = UNALIGNED;
                     else if (low_compressed && ~high_compressed) if_s_d = UNALIGNED_CONTINUE;

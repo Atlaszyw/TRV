@@ -17,6 +17,7 @@ sv = [
     "$PRJ_ROOT/design/src/core/if_id.sv",
     "$PRJ_ROOT/design/src/core/id_ex.sv",
     "$PRJ_ROOT/design/src/core/div.sv",
+    "$PRJ_ROOT/design/src/core/mult.sv",
     "$PRJ_ROOT/design/src/core/regs.sv",
     "$PRJ_ROOT/design/src/core/ex.sv",
     "$PRJ_ROOT/design/src/perips/gpio.sv",

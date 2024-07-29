@@ -36,6 +36,7 @@ package tinyriscv_pkg;
     localparam logic [2:0] INST_ANDI = 3'b111;
     localparam logic [2:0] INST_SLLI = 3'b001;
     localparam logic [2:0] INST_SRI = 3'b101;
+
     // sID type inst
     localparam logic [6:0] INST_ID_OPCODE = 7'b0101111;
     localparam logic [2:0] INST_ID_FUN3 = 3'b000;
@@ -119,7 +120,7 @@ package tinyriscv_pkg;
     localparam logic [11:0] CSR_MSTATUS = 12'h300;
     localparam logic [11:0] CSR_MSCRATCH = 12'h340;
 
-    localparam int unsigned RomNum = 256;  // rom depth(how many words)
+    localparam int unsigned RomNum = 1024;  // rom depth(how many words)
 
     localparam int unsigned MemNum = 16;  // memory depth(how many words)
     localparam int unsigned MemBus = 32;

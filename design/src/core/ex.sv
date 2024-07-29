@@ -22,16 +22,16 @@ module ex
     input rst_ni,
 
     // from id
-    input [    InstBus - 1:0] inst_i,            // 指令内容
-    input [InstAddrBus - 1:0] inst_addr_i,       // 指令地址
-    input [InstAddrBus - 1:0] inst_addr_next_type_i,
-    input                     reg_we_i,          // 是否写通用寄存器
-    input [ RegAddrBus - 1:0] reg_waddr_i,       // 写通用寄存器地址
-    input                     csr_we_i,          // 是否写CSR寄存器
-    input [ MemAddrBus - 1:0] csr_waddr_i,       // 写CSR寄存器地址
-    input [     RegBus - 1:0] csr_rdata_i,       // CSR寄存器输入数据
-    input                     int_assert_i,      // 中断发生标志
-    input [InstAddrBus - 1:0] int_addr_i,        // 中断跳转地址
+    input [    InstBus - 1:0] inst_i,                 // 指令内容
+    input [InstAddrBus - 1:0] inst_addr_i,            // 指令地址
+    input                     inst_addr_next_type_i,
+    input                     reg_we_i,               // 是否写通用寄存器
+    input [ RegAddrBus - 1:0] reg_waddr_i,            // 写通用寄存器地址
+    input                     csr_we_i,               // 是否写CSR寄存器
+    input [ MemAddrBus - 1:0] csr_waddr_i,            // 写CSR寄存器地址
+    input [     RegBus - 1:0] csr_rdata_i,            // CSR寄存器输入数据
+    input                     int_assert_i,           // 中断发生标志
+    input [InstAddrBus - 1:0] int_addr_i,             // 中断跳转地址
     input [ MemAddrBus - 1:0] op1_i,
     input [ MemAddrBus - 1:0] op2_i,
     input [     RegBus - 1:0] reg1_rdata_i,
@@ -97,7 +97,10 @@ module ex
     logic mem_hold;
 
     logic [RegBus - 1:0] div_data;
+    logic [RegBus - 1:0] mult_data;
+    logic mult_valid, mult_ready;
     logic div_valid, div_ready;
+    logic mult_hold;
     logic div_hold;
 
     always_comb begin
@@ -141,7 +144,7 @@ module ex
     end
 
     always_comb begin
-        ready_o     = ~(div_hold | mem_hold);
+        ready_o     = ~(div_hold | mult_hold | mem_hold);
         jump_flag_o = jump_flag || ((int_assert_i == INT_ASSERT) ? JumpEnable : ~JumpEnable);
         jump_addr_o = (int_assert_i == INT_ASSERT) ? int_addr_i : jump_addr;
     end
@@ -190,10 +193,16 @@ module ex
 
     // 处理除法指令
     always_comb begin
-        div_valid = '0;
-        div_hold  = '0;
+        div_valid  = '0;
+        div_hold   = '0;
+        mult_hold  = '0;
+        mult_valid = '0;
         if ((opcode == INST_TYPE_R_M) && (funct7 == 7'b0000001)) begin
             case (funct3)
+                INST_MUL, INST_MULHU, INST_MULH, INST_MULHSU: begin
+                    mult_valid = (int_assert_i == INT_ASSERT) ? '0 : '1;
+                    mult_hold  = mult_valid ^ mult_ready;
+                end
                 INST_DIV, INST_DIVU, INST_REM, INST_REMU: begin
                     div_valid = (int_assert_i == INT_ASSERT) ? '0 : '1;
                     div_hold  = div_valid ^ div_ready;
@@ -293,27 +302,14 @@ module ex
                 // M
                 else if (funct7 == 7'b0000001) begin
                     case (funct3)
-                        INST_MUL:   reg_wdata = mul_temp[31:0];
-                        INST_MULHU: reg_wdata = mul_temp[63:32];
-                        INST_MULH: begin
-                            case ({
-                                op1_i[31], op2_i[31]
-                            })
-                                2'b00:   reg_wdata = mul_temp[63:32];
-                                2'b11:   reg_wdata = mul_temp[63:32];
-                                2'b10:   reg_wdata = mul_temp_invert[63:32];
-                                default: reg_wdata = mul_temp_invert[63:32];
-                            endcase
-                        end
-                        INST_MULHSU: begin
-                            if (op1_i[31] == 1'b1) reg_wdata = mul_temp_invert[63:32];
-                            else reg_wdata = mul_temp[63:32];
+                        INST_MUL, INST_MULHU, INST_MULH, INST_MULHSU: begin
+                            reg_we    = mult_ready & mult_valid;
+                            reg_wdata = mult_data;
                         end
                         INST_DIV, INST_DIVU, INST_REM, INST_REMU: begin
                             reg_we    = div_ready & div_valid;
                             reg_wdata = div_data;
                         end
-                        default:    reg_wdata = '0;
                     endcase
                 end
             end
@@ -449,5 +445,16 @@ module ex
         .op_i      (funct3),
         .data_o    (div_data),
         .ready_o   (div_ready)
+    );
+
+    mult i_mult (
+        .clk_i,
+        .rst_ni,
+        .valid_i       (mult_valid),
+        .op_i          (funct3),
+        .multiplicand_i(op1_i),
+        .multiplier_i  (op2_i),
+        .result_o      (mult_data),
+        .ready_o       (mult_ready)
     );
 endmodule
