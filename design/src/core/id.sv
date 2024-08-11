@@ -89,24 +89,6 @@ module id
         store_data_o = '0;
 
         case (opcode)
-            INST_ID_OPCODE: begin
-                if (funct3 == INST_ID_FUN3) begin
-                    // PASS
-                end
-                else if (funct3 == INST_TEMP_FUN3) begin
-                    reg_we_o    = WriteEnable;
-                    reg_waddr_o = rd;
-                end
-                else if (funct3 == INST_INFI_FUN3) begin
-                    reg_we_o     = WriteEnable;
-                    reg_waddr_o  = rd;
-                    reg1_raddr_o = rs1;
-                    reg2_raddr_o = 5'd31;
-                    op1_o        = reg1_rdata_i;
-                    if (~|inst_i[31:20]) op2_o = reg2_rdata_i;
-                    else op2_o = {{20{inst_i[31]}}, inst_i[31:20]};
-                end
-            end
             INST_TYPE_I: begin
                 case (funct3)
                     INST_ADDI, INST_SLTI, INST_SLTIU, INST_XORI, INST_ORI, INST_ANDI, INST_SLLI, INST_SRI: begin

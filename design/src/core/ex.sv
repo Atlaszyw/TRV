@@ -74,11 +74,7 @@ module ex
     logic [31:0] sr_shift_mask;
     logic [31:0] sri_shift_mask;
     logic [31:0] op1_add_op2_res;
-    logic [31:0] mul_op1_invert;
-    logic [31:0] mul_op2_invert;
 
-    logic [RegBus - 1:0] mul_op1;
-    logic [RegBus - 1:0] mul_op2;
     logic [6:0] opcode;
     logic [2:0] funct3;
     logic [6:0] funct7;
@@ -91,7 +87,6 @@ module ex
     logic jump_flag;
     logic [InstAddrBus - 1:0] jump_addr;
 
-
     logic mem_we;
     logic mem_req;
     logic mem_hold;
@@ -100,8 +95,7 @@ module ex
     logic [RegBus - 1:0] mult_data;
     logic mult_valid, mult_ready;
     logic div_valid, div_ready;
-    logic mult_hold;
-    logic div_hold;
+    logic mult_hold, div_hold;
 
     always_comb begin
         opcode = inst_i[6:0];
@@ -118,15 +112,9 @@ module ex
         sri_shift_mask = 32'hffffffff >> inst_i[24:20];
     end
 
-    assign op1_add_op2_res = op1_i + op2_i;
-
-    always_comb begin
-        mul_op1_invert  = ~op1_i + 1;
-        mul_op2_invert  = ~op2_i + 1;
-
-        mul_temp        = mul_op1 * mul_op2;
-        mul_temp_invert = ~mul_temp + 1;
-    end
+    always_comb begin : add_logic
+        op1_add_op2_res = op1_i + op2_i;
+    end : add_logic
 
     always_comb begin
         mem_addr_index = op1_add_op2_res[1:0] & 2'b11;
@@ -162,34 +150,6 @@ module ex
             reg1_rdata_i >= reg2_rdata_i;
         compare[0] = reg1_rdata_i == reg2_rdata_i;
     end : compare_logic
-
-    // 处理乘法指令
-    always_comb begin
-        if ((opcode == INST_TYPE_R_M) && (funct7 == 7'b0000001)) begin
-            case (funct3)
-                INST_MUL, INST_MULHU: begin
-                    mul_op1 = op1_i;
-                    mul_op2 = op2_i;
-                end
-                INST_MULHSU: begin
-                    mul_op1 = (op1_i[31] == 1'b1) ? (mul_op1_invert) : op1_i;
-                    mul_op2 = op2_i;
-                end
-                INST_MULH: begin
-                    mul_op1 = (op1_i[31] == 1'b1) ? (mul_op1_invert) : op1_i;
-                    mul_op2 = (op2_i[31] == 1'b1) ? (mul_op2_invert) : op2_i;
-                end
-                default: begin
-                    mul_op1 = op1_i;
-                    mul_op2 = op2_i;
-                end
-            endcase
-        end
-        else begin
-            mul_op1 = op1_i;
-            mul_op2 = op2_i;
-        end
-    end
 
     // 处理除法指令
     always_comb begin
@@ -230,34 +190,6 @@ module ex
         reg_wdata   = '0;
 
         case (opcode)
-            INST_ID_OPCODE: begin
-                if (funct3 == INST_ID_FUN3) begin
-                    mem_we      = WriteEnable;
-                    mem_req     = RIB_REQ;
-                    mem_addr_o  = 32'h30000000;
-                    mem_wdata_o = 32'h5;
-                end
-                if (funct3 == INST_TEMP_FUN3) begin
-                    mem_req    = RIB_REQ;
-                    mem_addr_o = 32'h70030000;
-                    reg_wdata  = mem_rdata_i;
-                end
-                if (funct3 == INST_INFI_FUN3) begin
-                    if (~|inst_i[31:20]) begin
-                        if (compare[1]) begin
-                            reg_wdata   = '0;
-                            mem_wdata_o = {24'b0, op1_i[7:0]};
-                            mem_addr_o  = 32'h3000000c;
-                            mem_we      = WriteEnable;
-                            mem_req     = RIB_REQ;
-                        end
-                        else reg_wdata = op1_i;
-                    end
-                    else begin
-                        reg_wdata = op1_add_op2_res;
-                    end
-                end
-            end
             INST_TYPE_I: begin
                 case (funct3)
                     INST_ADDI:  reg_wdata = op1_add_op2_res;

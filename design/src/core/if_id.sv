@@ -50,7 +50,6 @@ module if_id
     assign instr_req_o      = ~full;
     assign valid_to_id_ex_o = ~empty;
 
-
     fifo_v3 #(
         .FALL_THROUGH(1'b1),
         .DATA_WIDTH  (73),
