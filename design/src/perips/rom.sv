@@ -14,45 +14,35 @@
  limitations under the License.
  */
 module rom
-    import tinyriscv_pkg::*;
+  import tinyriscv_pkg::*;
 #(
-    parameter MemInitFile = "test.mif"
+  parameter int unsigned Depth       = 1024,
+  parameter int unsigned Width       = 32,
+  parameter string       MemInitFile = ""
 ) (
 
-    input clk_i,
-    input rst_ni,
+  input clk_i,
+  input rst_ni,
 
-    input                    we_i,    // write enable
-    input [MemAddrBus - 1:0] addr_i,  // addr
-    input [    MemBus - 1:0] data_i,
+  input                    we_i,    // write enable
+  input [MemAddrBus - 1:0] addr_i,  // addr
+  input [     Width - 1:0] data_i,
 
-    output logic [MemBus - 1:0] data_o  // read data
+  output logic [Width - 1:0] data_o  // read data
 
 );
 
-    (* ram_style="block" *) logic [MemBus - 1:0] _rom[RomNum];
+  (* ram_style="block" *) logic [Width - 1:0] mem[Depth];
 
-    always @(posedge clk_i) begin
-        if (we_i == WriteEnable) begin
-            _rom[addr_i[$clog2(RomNum) + 1:2]] <= data_i;
-        end
-    end
+  always @(posedge clk_i) begin
+    if (we_i == WriteEnable) mem[addr_i[$clog2(Depth) + 1:2]] <= data_i;
+  end
 
-    always_comb begin
-        if (rst_ni == RstEnable) begin
-            data_o = '0;
-        end
-        else begin
-            data_o = _rom[addr_i[$clog2(RomNum) + 1:2]];
-        end
-    end
+  always_comb begin
+    if (~rst_ni) data_o = '0;
+    else data_o = mem[addr_i[$clog2(Depth) + 1:2]];
+  end
 
-`ifdef FPGA
-    initial begin
-        if (MemInitFile != "") begin : gen_meminit
-            $display("Initializing memory %m from file '%s'.", MemInitFile);
-            $readmemh(MemInitFile, _rom);
-        end
-    end
-`endif
+  `include "prim_memutil.svh"
+
 endmodule

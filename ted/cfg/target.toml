@@ -1,0 +1,52 @@
+[target]
+    default = "test1"
+    work_dir = "build"
+    [[target.tools]]
+        type = "verilator"
+        timescale = "1ps/1ps"
+        flowstr = "compile->"
+
+
+    [[target.tools]]
+        type = "vcs"
+        x64 = true
+        select = "three"
+        timescale = "1ns/10ps"
+        top = "tb_top"
+
+        [[target.tools.flow]]
+            name = "three"
+            flowstr = "compile->elaborate->simulate->wave"
+
+            lib_path = [
+                # '/home2/zhangyw/Xilinx_Kintex_simlib',
+            ]
+            # flow: Define each step in the workflow as a node
+            # 编译节点
+            [target.tools.flow.compile]
+                command = [
+                    "-kdb",
+                    "-debug_access+all",
+                ]
+
+            # 仿真器生成节点 (三步法流程)
+            [target.tools.flow.elaborate]
+                command = [
+                    "+vcs+incremental+compile",
+                    "-debug_acc+pp+dmptf",
+                    "-licqueue",
+                    "-notice",
+                    "-kdb",
+                ]
+
+            # 仿真节点
+            [target.tools.flow.simulate]
+                command = [
+                    "-ucli",
+                    "-licqueue",
+                    "+fsdb+autoflush",
+                    "-i",
+                ]
+                script = [
+                    "/home2/zhangyw/Projects/tinyriscv/script/script/simulate.tcl",
+                ]

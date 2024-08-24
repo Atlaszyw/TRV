@@ -64,7 +64,7 @@ module csr_reg
     // 复位撤销后就一直计数
     always @(posedge clk_i) begin
         if (rst_ni == RstEnable) begin
-            cycle <= {'0, '0};
+            cycle <= '0;
         end
         else begin
             cycle <= cycle + 1'b1;

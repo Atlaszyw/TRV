@@ -1,0 +1,24 @@
+VLNV = "vendor:tinyriscv:fpga_top:0.0.1"
+description = "~"
+
+[design]
+    top = "tb_top"
+    inc_dirs = [
+    ]
+    roms = [
+        "$PRJ_ROOT/tb/mulhsu.mif",
+    ]
+    macros = [
+        "FPGA",
+        "SIM",
+    ]
+    depend = [
+    ]
+    [design.param]
+
+    [design.filelists]
+        ##include "./svlist.toml"
+
+        ##include "./vlist.toml"
+
+##include "./target.toml"

@@ -83,7 +83,6 @@ module ex
     logic [RegBus - 1:0] reg_wdata;
     logic reg_we;
     logic [RegAddrBus - 1:0] reg_waddr;
-    logic hold_flag;
     logic jump_flag;
     logic [InstAddrBus - 1:0] jump_addr;
 
@@ -274,6 +273,7 @@ module ex
                         if (mem_addr_index == 2'b0) reg_wdata = {16'h0, mem_rdata_i[15:0]};
                         else reg_wdata = {16'h0, mem_rdata_i[31:16]};
                     end
+                    default: ;
                 endcase
             end
             INST_TYPE_S: begin
@@ -294,6 +294,7 @@ module ex
                         else mem_wdata_o = {store_data_i[15:0], mem_rdata_i[15:0]};
                     end
                     INST_SW: mem_wdata_o = store_data_i;
+                    default: ;
                 endcase
             end
             INST_TYPE_B: begin
@@ -322,6 +323,7 @@ module ex
                         jump_flag = (compare[1]);
                         jump_addr = {32{(compare[1])}} & op1_add_op2_res;
                     end
+                    default: ;
                 endcase
             end
             INST_JAL, INST_JALR: begin
@@ -362,8 +364,10 @@ module ex
                         csr_wdata_o = (~{27'h0, uimm}) & csr_rdata_i;
                         reg_wdata   = csr_rdata_i;
                     end
+                    default: ;
                 endcase
             end
+            default: ;
         endcase
     end
 

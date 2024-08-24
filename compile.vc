@@ -1,0 +1,17 @@
+-Mdir build
+-cc
+--main
+-O3
+-trace
+--timing
+--relative-includes
+--MMD
+-I./design/src/inc
+-DSIM
+-y design/src/core
+-y design/src/debug
+-y design/src/perips
+-y design/src/utils
+-top tinyriscv_soc_top
+./design/src/pkg/tinyriscv_pkg.sv
+./design/src/soc/tinyriscv_soc_top.sv

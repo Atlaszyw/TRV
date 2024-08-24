@@ -22,7 +22,6 @@ module ctrl
     // from ex
     input                     jump_flag_i,
     input [InstAddrBus - 1:0] jump_addr_i,
-    input                     hold_flag_ex_i,
 
     // from rib
     input hold_flag_rib_i,

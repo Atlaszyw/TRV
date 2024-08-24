@@ -1,7 +1,8 @@
 import re
-import tomllib
 from pathlib import Path
 from pprint import pprint
+
+import tomllib
 
 INC_PATTERN = r'##include\s+"(.*?)"\s*'
 
@@ -17,8 +18,8 @@ def _toml_subcall(match: re.Match, base_path: Path) -> str:
         return include_cache[include_file_path]
 
     if not include_file_path.exists():
-        print(f'File {include_file_path} not found. Skipping include.')
-        return ''
+        print(f"File {include_file_path} not found. Skipping include.")
+        return ""
 
     # Cache and return the content of the included file
     include_cache[include_file_path] = _toml_subreplace(include_file_path)
@@ -33,8 +34,8 @@ def _toml_subreplace(file_path: Path) -> str:
         )
         return preprocessed_content
     except Exception as e:
-        print(f'Error processing file {file_path}: {e}')
-        return ''
+        print(f"Error processing file {file_path}: {e}")
+        return ""
 
 
 def toml_parse(ted_path: Path) -> dict:
@@ -42,11 +43,11 @@ def toml_parse(ted_path: Path) -> dict:
     try:
         return tomllib.loads(ted_content)
     except Exception as e:
-        print(f'Error parsing TOML content: {e}')
+        print(f"Error parsing TOML content: {e}")
         return {}
 
 
-if __name__ == '__main__':
-    file_path = Path('test/top.toml')  # Replace with your TOML file path
+if __name__ == "__main__":
+    file_path = Path("test/top.toml")  # Replace with your TOML file path
     result = toml_parse(file_path.absolute())
     pprint(result)

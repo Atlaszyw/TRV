@@ -5,7 +5,7 @@ module mult (
     input        [ 2:0] op_i,
     input        [31:0] multiplicand_i,  // 34-bit signed multiplicand
     input        [31:0] multiplier_i,    // 34-bit signed multiplier
-    output logic [31:0] result_o,      // 68-bit signed product
+    output logic [31:0] result_o,        // 68-bit signed product
     output logic        ready_o
 );
 
@@ -44,7 +44,7 @@ module mult (
                     next_state = STATE_CALC;
                 end
                 STATE_CALC: begin
-                    if (count == 4'd0) next_state = STATE_END;
+                    if (count == 5'd0) next_state = STATE_END;
                 end
                 STATE_END: next_state = STATE_IDLE;
                 STATE_ERROR: begin
@@ -92,8 +92,9 @@ module mult (
                             S <= ~{2'b0, multiplicand_i} + 1;
                             P <= {36'b0, multiplier_i, 1'b0};
                         end
+                        default: ;
                     endcase
-                    count <= 5'd16;  // 34 bits / 2 (Radix-4) = 17 iterations
+                    count   <= 5'd16;  // 34 bits / 2 (Radix-4) = 17 iterations
                     ready_o <= 1'b0;
                 end
                 STATE_CALC: begin
@@ -102,11 +103,13 @@ module mult (
                 end
                 STATE_END: begin
                     ready_o <= 1'b1;
-                    case(op_i)
-                        3'b000: result_o <= P[32:1];
+                    case (op_i)
+                        3'b000:                 result_o <= P[32:1];
                         3'b001, 3'b010, 3'b011: result_o <= P[64:33];
+                        default:                ;
                     endcase
                 end
+                default: ;
             endcase
     end
 endmodule

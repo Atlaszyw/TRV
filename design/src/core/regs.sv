@@ -60,19 +60,19 @@ module regs
 
     // 写寄存器
     always_ff @(posedge clk_i) begin
-        if (rst_ni == ~RstEnable) begin
-            // 优先ex模块写操作
-            if ((we_i == WriteEnable) && (waddr_i != '0)) begin
-                regs[waddr_i] <= wdata_i;
-            end
-            else if ((jtag_we_i == WriteEnable) && (jtag_addr_i != '0)) begin
-                regs[jtag_addr_i] <= jtag_data_i;
-            end
-        end
-        else
+        if (~rst_ni) begin
             for (i = 0; i < 32; i = i + 1) begin
                 regs[i] <= 32'h0;
             end
+        end
+        else  // 优先ex模块写操作
+        if ((we_i == WriteEnable) && (waddr_i != '0)) begin
+            regs[waddr_i] <= wdata_i;
+        end
+        else if ((jtag_we_i == WriteEnable) && (jtag_addr_i != '0)) begin
+            regs[jtag_addr_i] <= jtag_data_i;
+        end
+
     end
 
     // 读寄存器1

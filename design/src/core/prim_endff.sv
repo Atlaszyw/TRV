@@ -1,5 +1,5 @@
 // 带使能端、复位后输出为0的触发器
-module gen_en_dff
+module prim_endff
     import tinyriscv_pkg::*;
 #(
     parameter int unsigned            DW      = 32,

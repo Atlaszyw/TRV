@@ -16,36 +16,36 @@
 
 // ram module
 module ram
-    import tinyriscv_pkg::*;
+  import tinyriscv_pkg::*;
 (
 
-    input clk_i,
-    input rst_ni,
+  input clk_i,
+  input rst_ni,
 
-    input                    we_i,    // write enable
-    input [MemAddrBus - 1:0] addr_i,  // addr
-    input [    MemBus - 1:0] data_i,
+  input                    we_i,    // write enable
+  input [MemAddrBus - 1:0] addr_i,  // addr
+  input [    MemBus - 1:0] data_i,
 
-    output logic [MemBus - 1:0] data_o  // read data
+  output logic [MemBus - 1:0] data_o  // read data
 
 );
 
-    logic [MemBus - 1:0] _ram[MemNum];
+  logic [MemBus - 1:0] _ram[MemNum];
 
 
-    always_ff @(posedge clk_i) begin
-        if (we_i == WriteEnable) begin
-            _ram[addr_i[$clog2(MemNum) + 1:2]] <= data_i;
-        end
+  always_ff @(posedge clk_i) begin
+    if (we_i == WriteEnable) begin
+      _ram[addr_i[$clog2(MemNum) + 1:2]] <= data_i;
     end
+  end
 
-    always_comb begin
-        if (rst_ni == RstEnable) begin
-            data_o = '0;
-        end
-        else begin
-            data_o = _ram[addr_i[$clog2(MemNum) + 1:2]];
-        end
+  always_comb begin
+    if (~rst_ni) begin
+      data_o = '0;
     end
+    else begin
+      data_o = _ram[addr_i[$clog2(MemNum) + 1:2]];
+    end
+  end
 
 endmodule

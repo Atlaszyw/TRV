@@ -41,6 +41,9 @@ description = "~"
 [target]
     default_tool = "vcs"
     work_dir = "build"
+    [target.tools.verilator]
+        timescale = "1ps/1ps"
+
 
     [target.tools.vcs]
         name = "fpga_func"

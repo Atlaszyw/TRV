@@ -19,3 +19,7 @@ sim
 *.bak
 *.jou
 verilate
+
+build
+*.log
+*.so
