@@ -9,7 +9,7 @@ module div
     input  logic [WIDTH-1:0] dividend_i,
     input  logic [WIDTH-1:0] divisor_i,
     input        [      2:0] op_i,
-    output logic [WIDTH-1:0] data_o,
+    output logic [WIDTH-1:0] result_o,
     output logic             ready_o
 );
 
@@ -75,7 +75,7 @@ module div
             result_neg    <= '0;
             ready_o       <= '0;
 
-            data_o        <= '0;
+            result_o      <= '0;
         end
         else begin
             case (state)
@@ -92,7 +92,7 @@ module div
                     result_neg    <= is_signed && (dividend_i[WIDTH-1] ^ divisor_i[WIDTH-1]);
                     ready_o       <= '0;
 
-                    data_o        <= '0;
+                    result_o      <= '0;
                 end
                 STATE_CALC: begin
                     // temp_remainder = {remainder_reg[WIDTH-2:0], abs_dividend[WIDTH-1]};`
@@ -108,25 +108,25 @@ module div
                     count        <= count - 1;
                 end
                 STATE_END: begin
-                    if (op_i == INST_DIV || op_i == INST_DIVU) data_o <= result_neg ? -quotient_reg : quotient_reg;
-                    else if (op_i == INST_REM || op_i == INST_REMU) data_o <= dividend_neg ? -remainder_reg : remainder_reg;
+                    if (op_i == INST_DIV || op_i == INST_DIVU) result_o <= result_neg ? -quotient_reg : quotient_reg;
+                    else if (op_i == INST_REM || op_i == INST_REMU) result_o <= dividend_neg ? -remainder_reg : remainder_reg;
                     ready_o <= '1;
                 end
                 STATE_ERROR: begin
                     ready_o <= '1;
                     if (divisor_i == 32'b0)
                         case (op_i)
-                            INST_DIV:  data_o <= '1;
-                            INST_DIVU: data_o <= '1;
-                            INST_REM:  data_o <= dividend_i;
-                            INST_REMU: data_o <= dividend_i;
-                            default:   data_o <= '0;
+                            INST_DIV:  result_o <= '1;
+                            INST_DIVU: result_o <= '1;
+                            INST_REM:  result_o <= dividend_i;
+                            INST_REMU: result_o <= dividend_i;
+                            default:   result_o <= '0;
                         endcase
                     else if (divisor_i == 32'hffff_ffff && dividend_i == 32'h8000_0000)
                         case (op_i)
-                            INST_DIV: data_o <= dividend_i;
-                            INST_REM: data_o <= '0;
-                            default:  data_o <= '0;
+                            INST_DIV: result_o <= dividend_i;
+                            INST_REM: result_o <= '0;
+                            default:  result_o <= '0;
                         endcase
                 end
             endcase

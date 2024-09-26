@@ -1,13 +1,13 @@
 module debounce #(
     parameter int unsigned DEBOUNCE_INTERVAL = 4000000
-)(
+) (
     input  logic clk_i,      // Clock input
     input  logic button_in,  // Raw button input
     output logic button_out  // Debounced button output
 );
     // Internal signals
-    logic [21:0] counter;  // 22-bit counter to handle up to 4 million cycles
-    logic        button_state;  // Internal stable state of the button
+    int   counter;  // 22-bit counter to handle up to 4 million cycles
+    logic button_state;  // Internal stable state of the button
 
     // Debouncing logic
     always_ff @(posedge clk_i) begin

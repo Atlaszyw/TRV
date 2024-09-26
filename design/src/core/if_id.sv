@@ -19,21 +19,21 @@ module if_id
     import tinyriscv_pkg::*;
 (
 
-    input clk_i ,
+    input clk_i,
     input rst_ni,
 
-    input [    InstBus - 1:0] inst_i,           // 指令内容
-    input [InstAddrBus - 1:0] inst_addr_i,      // 指令地址
-    input inst_addr_next_type_i, // 下一指令地址
+    input [    InstBus - 1:0] inst_i,                // 指令内容
+    input [InstAddrBus - 1:0] inst_addr_i,           // 指令地址
+    input                     inst_addr_next_type_i, // 下一指令地址
 
     input [Hold_Flag_Bus - 1:0] hold_flag_i,  // 流水线暂停标志
 
     input        [INT_BUS - 1:0] int_flag_i,  // 外设中断输入信号
     output logic [INT_BUS - 1:0] int_flag_o,
 
-    output logic [    InstBus - 1:0] inst_o,           // 指令内容
-    output logic [InstAddrBus - 1:0] inst_addr_o,      // 指令地址
-    output logic inst_addr_next_type_o, // 下一指令地址
+    output logic [    InstBus - 1:0] inst_o,                // 指令内容
+    output logic [InstAddrBus - 1:0] inst_addr_o,           // 指令地址
+    output logic                     inst_addr_next_type_o, // 下一指令地址
 
     input        instr_ready_i,
     output logic instr_req_o,
@@ -51,7 +51,7 @@ module if_id
     assign valid_to_id_ex_o = ~empty;
 
     fifo_v3 #(
-        .FALL_THROUGH(1'b1),
+        .FALL_THROUGH(1'b0),
         .DATA_WIDTH  (73),
         .DEPTH       (1)
     ) if_id_fifo (

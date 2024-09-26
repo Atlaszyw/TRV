@@ -22,7 +22,7 @@ module regs
     input clk_i,
     input rst_ni,
 
-    // from ex
+    // from wb
     input                    we_i,     // 写寄存器标志
     input [RegAddrBus - 1:0] waddr_i,  // 写寄存器地址
     input [    RegBus - 1:0] wdata_i,  // 写寄存器数据
@@ -34,12 +34,14 @@ module regs
 
     // from id
     input [RegAddrBus - 1:0] raddr1_i,  // 读寄存器1地址
+    input                    r1_en_i,
 
     // to id
     output logic [RegBus - 1:0] rdata1_o,  // 读寄存器1数据
 
     // from id
     input [RegAddrBus - 1:0] raddr2_i,  // 读寄存器2地址
+    input                    r2_en_i,
 
     // to id
     output logic [RegBus - 1:0] rdata2_o,  // 读寄存器2数据
@@ -66,10 +68,10 @@ module regs
             end
         end
         else  // 优先ex模块写操作
-        if ((we_i == WriteEnable) && (waddr_i != '0)) begin
+        if ((we_i) && (waddr_i != '0)) begin
             regs[waddr_i] <= wdata_i;
         end
-        else if ((jtag_we_i == WriteEnable) && (jtag_addr_i != '0)) begin
+        else if ((jtag_we_i) && (jtag_addr_i != '0)) begin
             regs[jtag_addr_i] <= jtag_data_i;
         end
 
@@ -81,12 +83,14 @@ module regs
             rdata1_o = '0;
             // 如果读地址等于写地址，并且正在写操作，则直接返回写数据
         end
-        else if (raddr1_i == waddr_i && we_i == WriteEnable) begin
-            rdata1_o = wdata_i;
-        end
-        else begin
-            rdata1_o = regs[raddr1_i];
-        end
+        else if (r1_en_i)
+            if (raddr1_i == waddr_i && we_i) begin
+                rdata1_o = wdata_i;
+            end
+            else begin
+                rdata1_o = regs[raddr1_i];
+            end
+        else rdata1_o = '0;
     end
 
     // 读寄存器2
@@ -95,12 +99,14 @@ module regs
             rdata2_o = '0;
             // 如果读地址等于写地址，并且正在写操作，则直接返回写数据
         end
-        else if (raddr2_i == waddr_i && we_i == WriteEnable) begin
-            rdata2_o = wdata_i;
-        end
-        else begin
-            rdata2_o = regs[raddr2_i];
-        end
+        else if (r2_en_i)
+            if (raddr2_i == waddr_i && we_i) begin
+                rdata2_o = wdata_i;
+            end
+            else begin
+                rdata2_o = regs[raddr2_i];
+            end
+        else rdata2_o = '0;
     end
 
     // jtag读寄存器

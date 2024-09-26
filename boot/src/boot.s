@@ -1,5 +1,4 @@
     .section .text
-    # .option  norvc;
     .global  reset_handler
 reset_handler:
     la       x2, stack

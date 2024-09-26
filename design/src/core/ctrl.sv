@@ -23,9 +23,6 @@ module ctrl
     input                     jump_flag_i,
     input [InstAddrBus - 1:0] jump_addr_i,
 
-    // from rib
-    input hold_flag_rib_i,
-
     // from jtag
     input jtag_halt_flag_i,
 

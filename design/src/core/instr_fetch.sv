@@ -135,10 +135,10 @@ module instr_fetch
         else cdecoder_i = INST_NOP;
     end : cdecoder_i_ctrl
 
-    compressed_decoder cdecoder (
+    comp cdecoder (
         .clk_i,
         .rst_ni,
-        .valid_i        (),
+        .valid_i        ('1),
         .instr_i        (cdecoder_i),
         .instr_o        (instr_o),
         .illegal_instr_o()

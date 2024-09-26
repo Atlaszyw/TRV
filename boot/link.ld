@@ -4,13 +4,13 @@ OUTPUT_ARCH(riscv)
 
 /* Symbols for the RAM section */
 _ram_start = 0x10000000;
-_ram_end = _ram_start + 64;  /* 64 bytes RAM */
+_ram_end = _ram_start + 1000;  /* 64 bytes RAM */
 
 /* Specify the memory regions */
 MEMORY
 {
-    ROM (rx) : ORIGIN = 0x00002000, LENGTH = 700
-    RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 64
+    ROM (rx) : ORIGIN = 0x00000400, LENGTH = 0x400
+    RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 1000
 }
 
 /* Provide stack address for reset handler */

@@ -1,314 +1,263 @@
 module uart #(
-
+    parameter int unsigned ADDR_WIDTH = 32,
+    parameter int unsigned DATA_WIDTH = 32,
+    parameter              CLOCK_FREQ = 50_000_000  // 时钟频率，单位 Hz
 ) (
-  input clk_i,
-  input rst_ni,
+    apb4_intf.slave apb_slave,  // APB 接口从端口
 
-  input        we_i,
-  input        req_i,
-  input [31:0] addr_i,
-  input [31:0] data_i,
-
-  output logic ready_o,
-
-  output logic [31:0] data_o,
-  output logic        tx_pin,
-  input               rx_pin
+    output logic tx,  // UART 发送引脚
+    input  logic rx   // UART 接收引脚
 );
 
+    // UART 寄存器定义
+    logic [7:0] THR;  // 发送保持寄存器（写）
+    logic [7:0] RBR;  // 接收缓冲寄存器（读）
+    logic [7:0] IER;  // 中断使能寄存器
+    logic [7:0] IIR;  // 中断识别寄存器（读）
+    logic [7:0] FCR;  // FIFO 控制寄存器（写）
+    logic [7:0] LCR;  // 线路控制寄存器
+    logic [7:0] MCR;  // 调制解调器控制寄存器
+    logic [7:0] LSR;  // 线路状态寄存器
+    logic [7:0] MSR;  // 调制解调器状态寄存器
+    logic [7:0] SCR;  // 暂存寄存器
+    logic [7:0] DLL;  // 除数锁存器低位
+    logic [7:0] DLM;  // 除数锁存器高位
 
-  // -------------------------------------------reg-----------------------------------------
+    // 内部信号
+    logic DLAB;  // 除数锁存访问位（LCR[7]）
 
-  // 50MHz                  115200bps
-  localparam BAUD_115200 = 32'h1B8;
+    // 分配 DLAB
+    assign DLAB = LCR[7];
 
-  // addr: 0x00
-  // rw. bit[0]: tx enable, 1 = enable, 0 = disable
-  // rw. bit[1]: rx enable, 1 = enable, 0 = disable
 
-  logic [1:0] uart_ctrl;
-  always_ff @(posedge clk_i) begin : uart_ctrl_reg
-    if (~rst_ni) uart_ctrl <= '0;
-    else if (req_i && we_i && addr_i[0 +: 8] == 8'h00) uart_ctrl <= data_i[0 +: 2];
-  end : uart_ctrl_reg
-  // addr: 0x04
-  // ro. bit[0]: tx busy, 1 = busy, 0 = idle
-  // rw. bit[1]: rx over, 1 = over, 0 = receiving
-  // must check this bit before tx data
-  //   logic [1:0] uart_status;
-  logic rx_over, tx_busy;
 
-  // addr: 0x08
-  // rw. clk_i div
-  logic [31:0] uart_baud;
-  always_ff @(posedge clk_i) begin : uart_baud_reg
-    if (~rst_ni) uart_baud <= 32'h1B8;
-    else if (req_i && we_i && addr_i[0 +: 8] == 8'h08) uart_baud <= data_i;
-  end : uart_baud_reg
-
-  // --------------------------------TX-----------------------------------------
-  logic [7:0] rom0[10] = '{8'h32, 8'h30, 8'h32, 8'h33, 8'h32, 8'h31, 8'h31, 8'h30, 8'h36, 8'h31};
-
-  logic [7:0] rom1[10] = '{8'h32, 8'h30, 8'h32, 8'h33, 8'h32, 8'h31, 8'h31, 8'h30, 8'h36, 8'h31};
-
-  typedef enum logic [1:0] {
-    TX_IDLE,
-    TX_EMITTING,
-    TX_STOP,
-    TX_DONE
-  } tx_state_e;
-  tx_state_e tx_s_d, tx_s_q;
-
-  typedef enum logic [2:0] {
-    NUM_IDLE,
-    NUM_WAITING,
-    NUM_EMITTING,
-    NUM_DONE
-  } reginum_state_e;
-  reginum_state_e regi_s_d, regi_s_q;
-
-  logic [7:0] tx_data;  // 0x0c
-  logic tx_data_valid;
-  logic [3:0] tx_bit_cnt;
-  logic [3:0] tx_num_cnt;
-  logic [31:0] tx_cnt;
-
-  logic tx_done;
-  assign tx_done = tx_s_q == TX_DONE && tx_s_d == TX_IDLE;
-
-  always_comb begin : ready_o_ctrl
-    ready_o = '0;
-    if (regi_s_q == NUM_DONE) ready_o = '1;
-    else if (regi_s_q != NUM_EMITTING && tx_s_q == TX_DONE) ready_o = '1;
-    else if (req_i & ~we_i) ready_o = '1;
-    else if (req_i && we_i && (addr_i[0 +: 8] == 8'h00 || addr_i[0 +: 8] == 8'h04 || addr_i[0 +: 8] == 8'h08)) ready_o = '1;
-  end : ready_o_ctrl
-
-  // reginum state
-  always_ff @(posedge clk_i) begin : reginum_d2q
-    if (~rst_ni) regi_s_q <= NUM_IDLE;
-    else regi_s_q <= regi_s_d;
-  end : reginum_d2q
-
-  always_comb begin : reginum_ns
-    regi_s_d = regi_s_q;
-    case (regi_s_q)
-      NUM_IDLE:
-      if (req_i && we_i && addr_i[0 +: 8] == 8'h14) begin
-        if (tx_busy) regi_s_d = NUM_WAITING;
-        else regi_s_d = NUM_EMITTING;
-      end
-      NUM_WAITING:  if (~tx_busy) regi_s_d = NUM_EMITTING;
-      NUM_EMITTING: if (tx_num_cnt == 4'd9 && (tx_done)) regi_s_d = NUM_DONE;
-      NUM_DONE:     regi_s_d = NUM_IDLE;
-    endcase
-  end : reginum_ns
-
-  // tx state
-  always_ff @(posedge clk_i) begin : tx_d2q
-    if (~rst_ni) tx_s_q <= TX_IDLE;
-    else tx_s_q <= tx_s_d;
-  end : tx_d2q
-
-  always_comb begin : tx_ns
-    tx_s_d = tx_s_q;
-    case (tx_s_q)
-      TX_IDLE: begin
-        if (~uart_ctrl[0]) tx_s_d = TX_IDLE;
-        else if (tx_data_valid) tx_s_d = TX_EMITTING;
-      end
-      TX_EMITTING: begin
-        if (tx_bit_cnt == 4'd8 && ~|tx_cnt) tx_s_d = TX_STOP;
-      end
-      TX_STOP: if (~|tx_cnt) tx_s_d = TX_DONE;
-      TX_DONE: tx_s_d = TX_IDLE;
-    endcase
-  end : tx_ns
-
-  always_ff @(posedge clk_i) begin : tx_num_cnt_ctrl
-    if (~rst_ni || regi_s_q == NUM_IDLE) tx_num_cnt <= '0;
-    else if (regi_s_q == NUM_EMITTING) begin
-      if (tx_done) begin
-        tx_num_cnt <= tx_num_cnt + 1'b1;
-      end
+    // APB 接口读写处理
+    always_ff @(posedge apb_slave.PCLK) begin
+        if (~apb_slave.PRESETn) begin
+            // 复位所有寄存器
+            THR              <= 8'h00;
+            IER              <= 8'h00;
+            LCR              <= 8'h00;
+            MCR              <= 8'h00;
+            MSR              <= 8'h00;
+            SCR              <= 8'h00;
+            DLL              <= 8'h01;  // 默认除数值
+            DLM              <= 8'h00;
+            apb_slave.PRDATA <= '0;
+        end
+        else begin
+            if (apb_slave.PSEL && apb_slave.PENABLE && apb_slave.PREADY) begin
+                if (apb_slave.PWRITE) begin
+                    // 写操作
+                    case (apb_slave.PADDR[4:2])  // 假设地址是字对齐的
+                        3'b000: begin
+                            if (DLAB) DLL <= apb_slave.PWDATA[7:0];
+                            else begin
+                                THR <= apb_slave.PWDATA[7:0];
+                            end
+                        end
+                        3'b001: begin
+                            if (DLAB) DLM <= apb_slave.PWDATA[7:0];
+                            else IER <= apb_slave.PWDATA[7:0];
+                        end
+                        3'b010:  FCR <= apb_slave.PWDATA[7:0];  // FIFO 控制寄存器
+                        3'b011:  LCR <= apb_slave.PWDATA[7:0];  // 线路控制寄存器
+                        3'b100:  MCR <= apb_slave.PWDATA[7:0];  // 调制解调器控制寄存器
+                        3'b111:  SCR <= apb_slave.PWDATA[7:0];  // 暂存寄存器
+                        default: ;
+                    endcase
+                end
+                else begin
+                    // 读操作
+                    case (apb_slave.PADDR[4:2])
+                        3'b000: begin
+                            if (DLAB) apb_slave.PRDATA <= {24'b0, DLL};
+                            else begin
+                                apb_slave.PRDATA <= {24'b0, RBR};
+                            end
+                        end
+                        3'b001: begin
+                            if (DLAB) apb_slave.PRDATA <= {24'b0, DLM};
+                            else apb_slave.PRDATA <= {24'b0, IER};
+                        end
+                        3'b010:  apb_slave.PRDATA <= {24'b0, IIR};  // 中断识别寄存器
+                        3'b011:  apb_slave.PRDATA <= {24'b0, LCR};  // 线路控制寄存器
+                        3'b100:  apb_slave.PRDATA <= {24'b0, MCR};  // 调制解调器控制寄存器
+                        3'b101:  apb_slave.PRDATA <= {24'b0, LSR};  // 线路状态寄存器
+                        3'b110:  apb_slave.PRDATA <= {24'b0, MSR};  // 调制解调器状态寄存器
+                        3'b111:  apb_slave.PRDATA <= {24'b0, SCR};  // 暂存寄存器
+                        default: apb_slave.PRDATA <= 32'h0;
+                    endcase
+                end
+            end
+        end
     end
-  end : tx_num_cnt_ctrl
 
-  // tx
-  always_ff @(posedge clk_i) begin : tx_data_reg
-    if (~rst_ni || tx_done) begin
-      tx_data       <= '0;
-      tx_data_valid <= '0;
+    // APB 接口的 PREADY 和 PSLVERR 信号
+    assign apb_slave.PREADY  = 1'b1;
+    assign apb_slave.PSLVERR = 1'b0;
+
+    // 波特率计算
+    logic [15:0] divisor;
+    assign divisor = {DLM, DLL};
+
+    // 生成波特率时钟使能信号
+    logic baud_tick;
+    logic [31:0] baud_counter;
+
+    always_ff @(posedge apb_slave.PCLK) begin
+        if (~apb_slave.PRESETn) begin
+            baud_counter <= 32'h0;
+            baud_tick    <= 1'b0;
+        end
+        else begin
+            if (baud_counter >= divisor << 4) begin
+                baud_counter <= 32'h0;
+                baud_tick    <= 1'b1;
+            end
+            else begin
+                baud_counter <= baud_counter + 1;
+                baud_tick    <= 1'b0;
+            end
+        end
     end
-    else if (regi_s_q == NUM_EMITTING) begin
-      if (tx_s_q == TX_IDLE) begin
-        tx_data       <= rom0[tx_num_cnt];
-        tx_data_valid <= '1;
-      end
-      else if (tx_s_q == TX_IDLE && tx_s_d == TX_EMITTING) begin
-        tx_data       <= tx_data;
-        tx_data_valid <= '0;
-      end
+
+    // UART 发送器
+    logic [10:0] tx_shift_reg;  // 最多11位：起始位，数据位，奇偶校验位，停止位
+    logic [3:0] tx_bit_cnt;  // 位计数器
+    logic tx_busy;
+
+    logic [3:0] data_bits_num;
+    logic parity_enable;
+    logic even_parity;
+    logic [1:0] stop_bits_num;
+
+    always_comb begin
+        case (LCR[1:0])
+            2'b00: data_bits_num = 4'd5;
+            2'b01: data_bits_num = 4'd6;
+            2'b10: data_bits_num = 4'd7;
+            2'b11: data_bits_num = 4'd8;
+        endcase
+
+        parity_enable = LCR[3];
+        even_parity   = LCR[4];
+        stop_bits_num = LCR[2] ? 2 : 1;
     end
-    else if (regi_s_q == NUM_IDLE) begin
-      if (req_i && we_i && addr_i[0 +: 8] == 8'h0c) begin
-        tx_data       <= data_i;
-        tx_data_valid <= '1;
-      end
-      else if (tx_s_q == TX_IDLE && tx_s_d == TX_EMITTING) begin
-        tx_data       <= tx_data;
-        tx_data_valid <= '0;
-      end
+
+    // 发送器逻辑
+    always_ff @(posedge apb_slave.PCLK) begin
+        if (~apb_slave.PRESETn) begin
+            tx           <= 1'b1;  // 空闲状态为高电平
+            tx_shift_reg <= {11{1'b1}};
+            tx_bit_cnt   <= 4'h0;
+            tx_busy      <= 1'b0;
+        end
+        else begin
+            if (baud_tick) begin
+                if (tx_busy) begin
+                    tx           <= tx_shift_reg[0];
+                    tx_shift_reg <= {1'b1, tx_shift_reg[10:1]};
+                    tx_bit_cnt   <= tx_bit_cnt + 1;
+                    if (tx_bit_cnt == (1 + data_bits_num + parity_enable + stop_bits_num - 1)) begin
+                        tx_busy <= 1'b0;
+                    end
+                end
+                else begin
+                    tx <= 1'b1;  // 空闲状态
+                end
+            end
+
+            if (!tx_busy && !LSR[5]) begin
+                // 从 THR 加载数据到移位寄存器
+                // 组装移位寄存器
+                case (data_bits_num)
+                    4'd5: tx_shift_reg <= {parity_enable ? even_parity ? ~(^THR[5-1:0]) : ^THR[5-1:0] : 1'b1, THR[5-1:0], 1'b0};
+                    4'd6: tx_shift_reg <= {parity_enable ? even_parity ? ~(^THR[6-1:0]) : ^THR[6-1:0] : 1'b1, THR[6-1:0], 1'b0};
+                    4'd7: tx_shift_reg <= {parity_enable ? even_parity ? ~(^THR[7-1:0]) : ^THR[7-1:0] : 1'b1, THR[7-1:0], 1'b0};
+                    4'd8: tx_shift_reg <= {parity_enable ? even_parity ? ~(^THR[8-1:0]) : ^THR[8-1:0] : 1'b1, THR[8-1:0], 1'b0};
+                endcase
+                tx_bit_cnt <= 4'h0;
+                tx_busy    <= 1'b1;
+            end
+        end
     end
-  end : tx_data_reg
 
-  always_ff @(posedge clk_i) begin : tx_cnt_ctrl
-    if (~rst_ni) tx_cnt <= BAUD_115200;
-    else if (tx_s_q == TX_IDLE) tx_cnt <= uart_baud;
-    else if (tx_s_q == TX_EMITTING || tx_s_q == TX_STOP) begin
-      if (|tx_cnt) tx_cnt <= tx_cnt - 1'b1;
-      else tx_cnt <= uart_baud;
+    // UART 接收器
+    logic [10:0] rx_shift_reg;
+    logic [3:0] rx_bit_cnt;
+    logic rx_busy;
+    logic [15:0] rx_baud_counter;
+
+    // 接收器逻辑
+    always_ff @(posedge apb_slave.PCLK) begin
+        if (~apb_slave.PRESETn) begin
+            rx_shift_reg    <= {11{1'b0}};
+            rx_bit_cnt      <= 4'h0;
+            rx_busy         <= 1'b0;
+            RBR             <= 8'h00;
+            rx_baud_counter <= 16'h0;
+        end
+        else begin
+            if (!rx_busy) begin
+                if (!rx) begin  // 检测到起始位
+                    rx_busy         <= 1'b1;
+                    rx_baud_counter <= (divisor << 4) / 2;  // 在位的中间采样
+                    rx_bit_cnt      <= 0;
+                end
+            end
+            else begin
+                if (rx_baud_counter == 0) begin
+                    rx_baud_counter <= divisor << 4;
+                    rx_shift_reg    <= {rx, rx_shift_reg[10:1]};
+                    rx_bit_cnt      <= rx_bit_cnt + 1;
+                    if (rx_bit_cnt == (4'd1 + 4'(data_bits_num) + 4'(parity_enable) + 4'(stop_bits_num) - 4'd1)) begin
+                        rx_busy <= 1'b0;
+                        // 检查奇偶校验、停止位等
+                        case (data_bits_num)
+                            4'd5: RBR <= rx_shift_reg[5:1];
+                            4'd6: RBR <= rx_shift_reg[6:1];
+                            4'd7: RBR <= rx_shift_reg[7:1];
+                            4'd8: RBR <= rx_shift_reg[8:1];
+                        endcase
+                    end
+                end
+                else begin
+                    rx_baud_counter <= rx_baud_counter - 1;
+                end
+            end
+        end
     end
-  end : tx_cnt_ctrl
 
-  always_ff @(posedge clk_i) begin : tx_cnt_bit_ctrl
-    if (~rst_ni) tx_bit_cnt <= 4'h0;
-    else if (tx_s_q == TX_EMITTING && ~|tx_cnt && tx_bit_cnt < 4'd8) tx_bit_cnt <= tx_bit_cnt + 1'b1;
-    else if (tx_s_q == TX_STOP || tx_s_q == TX_IDLE) tx_bit_cnt <= 4'h0;
-  end : tx_cnt_bit_ctrl
+    // LSR reg读写控制
+    always_ff @(posedge apb_slave.PCLK) begin : lsr_reg
+        if (~apb_slave.PRESETn) LSR <= 8'h60;  // 发射保持寄存器空，发送器空
+        else if (apb_slave.PSEL && apb_slave.PENABLE && apb_slave.PREADY)
+            if (apb_slave.PADDR[4:2] == 3'b000) begin
+                if (apb_slave.PWRITE) begin
+                    // 写操作
+                    if (~DLAB) LSR[5] <= 1'b0;  // THR 非空
+                end
+                else begin
+                    // 读操作
+                    if (~DLAB) LSR[0] <= 1'b0;  // 数据已读
+                end
+            end
 
-  //       buffer
-  logic [8:0] tx_buffer;
-  always_ff @(posedge clk_i) begin : tx_buffer_ctrl
-    if (~rst_ni) tx_buffer <= '1;
-    else if (tx_s_q == TX_IDLE && tx_s_d == TX_EMITTING) tx_buffer <= {tx_data, 1'b0};
-    else if (tx_s_q == TX_EMITTING && ~|tx_cnt) tx_buffer <= {1'b1, tx_buffer[8:1]};
-    else if (tx_s_q == TX_STOP && tx_s_q == TX_IDLE) tx_buffer <= '1;
-  end : tx_buffer_ctrl
+        if (baud_tick) begin
+            if (tx_busy) begin
+                if (tx_bit_cnt == (1 + data_bits_num + parity_enable + stop_bits_num - 1)) LSR[6] <= 1'b1;  // 发送器空
+            end
+        end
+        else if (!tx_busy && !LSR[5]) begin
+            LSR[5] <= 1'b1;  // THR 空
+            LSR[6] <= 1'b0;  // 发送器非空
+        end
 
-  assign tx_pin  = tx_buffer[0];
-  assign tx_busy = tx_s_q == TX_EMITTING || tx_s_q == TX_STOP || regi_s_q == NUM_EMITTING;
-
-  // -----------------------------------------rx-------------------------------------------------
-
-  logic negedge_detect;
-  logic rx_pin_q0, rx_pin_q1;
-  typedef enum logic [2:0] {
-    RX_IDLE,
-    RX_START_BIT,
-    RX_DATA,
-    RX_STOP
-  } rx_state_e;
-  rx_state_e rx_s_d, rx_s_q;
-  logic [ 3:0] rx_bit_cnt;
-  logic [31:0] rx_cnt;
-  logic [ 7:0] rx_data;  // 0x10
-  logic [ 2:0] rx_check_bit;
-  logic [ 7:0] rx_buffer;
-  logic rx_start_bit_check, rx_stop_bit_check, rx_data_check;
-
-  logic rx_cnt_done;
-  assign rx_cnt_done = ~|rx_cnt;
-
-  always_ff @(posedge clk_i) begin : rx_pin_negedge_detect
-    if (~rst_ni) begin
-      rx_pin_q0 <= '0;
-      rx_pin_q1 <= '0;
-    end
-    else begin
-      rx_pin_q0 <= rx_pin;
-      rx_pin_q1 <= rx_pin_q0;
-    end
-  end : rx_pin_negedge_detect
-
-  assign negedge_detect = rx_pin_q1 & ~rx_pin_q0;
-
-  always_ff @(posedge clk_i) begin : rx_d2q
-    if (~rst_ni) rx_s_q <= RX_IDLE;
-    else rx_s_q <= rx_s_d;
-  end : rx_d2q
-
-  always_comb begin : rx_ns
-    rx_s_d = rx_s_q;
-    case (rx_s_q)
-      RX_IDLE:      if (negedge_detect) rx_s_d = RX_START_BIT;
-      RX_START_BIT: if (rx_start_bit_check) rx_s_d = RX_DATA;
-      RX_DATA:      if (rx_bit_cnt == 4'd0) rx_s_d = RX_STOP;
-      RX_STOP:      if (rx_stop_bit_check) rx_s_d = RX_IDLE;
-      default:      ;
-    endcase
-  end : rx_ns
-
-
-  always_ff @(posedge clk_i) begin : rx_cnt_ctrl
-    if (~rst_ni) rx_cnt <= BAUD_115200;
-    else if (rx_s_q == RX_IDLE) begin
-      if (rx_s_d == RX_START_BIT) rx_cnt <= uart_baud >> 1'b1;
-    end
-    else if (rx_s_q == RX_START_BIT) begin
-      if (~rx_cnt_done) rx_cnt <= rx_cnt - 1'b1;
-      else rx_cnt <= uart_baud;
-    end
-    else if (rx_s_q == RX_DATA || rx_s_q == RX_STOP) begin
-      if (~rx_cnt_done) rx_cnt <= rx_cnt - 1'b1;
-      else rx_cnt <= uart_baud;
-    end
-  end : rx_cnt_ctrl
-
-  always_ff @(posedge clk_i) begin : rx_bit_cnt_ctrl
-    if (~rst_ni) rx_bit_cnt <= 4'd8;
-    else if (rx_s_q == RX_DATA) begin
-      if (rx_data_check) rx_bit_cnt <= rx_bit_cnt - 1'b1;
-    end
-    else if (rx_s_q == RX_STOP || rx_s_q == RX_IDLE) begin
-      rx_bit_cnt <= 4'd8;
-    end
-  end : rx_bit_cnt_ctrl
-
-  always_ff @(posedge clk_i) begin : rx_check_bit_ctl
-    if (~rst_ni) rx_check_bit <= '0;
-    else rx_check_bit <= rx_check_bit << 1 | rx_pin;
-  end : rx_check_bit_ctl
-
-  assign rx_start_bit_check = rx_cnt_done && ~|rx_check_bit;
-  assign rx_stop_bit_check  = rx_cnt_done && &rx_check_bit;
-  assign rx_data_check      = rx_cnt_done && (&rx_check_bit | ~|rx_check_bit);
-
-  always_ff @(posedge clk_i) begin : rx_data_pick
-    if (~rst_ni) begin
-      rx_buffer <= '0;
-    end
-    else if (rx_s_q == RX_DATA) begin
-      if (rx_data_check) rx_buffer <= {rx_check_bit[0], rx_buffer[7:1]};
-    end
-  end : rx_data_pick
-
-  always_ff @(posedge clk_i) begin : rx_data_reg_ctrl
-    if (~rst_ni) begin
-      rx_over <= '0;
-      rx_data <= '0;
-    end
-    else if (rx_s_q == RX_STOP && rx_s_d == RX_IDLE) begin
-      rx_data <= rx_buffer;
-      rx_over <= '1;
-    end
-    else if (rx_s_q == RX_IDLE && rx_s_d == RX_START_BIT) begin
-      rx_data <= '0;
-      rx_over <= '0;
-    end
-    else if (req_i && we_i && addr_i[0 +: 8] == 8'h04) begin
-      rx_over <= data_i[1];
-    end
-  end : rx_data_reg_ctrl
-
-  always_comb begin : data_out_ctrl
-    data_o = '0;
-    if (req_i & ~we_i)
-      case (addr_i[0 +: 8])
-        8'h10:   data_o = rx_data;
-        8'h04:   data_o = {rx_over, tx_busy};
-        default: data_o = '0;
-      endcase
-  end : data_out_ctrl
-
+        if (rx_baud_counter == 0) begin
+            if (rx_bit_cnt == (4'd1 + 4'(data_bits_num) + 4'(parity_enable) + 4'(stop_bits_num) - 1)) begin
+                LSR[0] <= 1'b1;  // 数据准备好
+            end
+        end
+    end : lsr_reg
 endmodule

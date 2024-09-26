@@ -25,8 +25,8 @@
 export "DPI-C" task simutil_memload;
 
 task simutil_memload;
-  input string file;
-  $readmemh(file, mem);
+    input string file;
+    $readmemh(file, mem);
 endtask
 
 // Function for setting a specific element in |mem|
@@ -34,35 +34,35 @@ endtask
 export "DPI-C" function simutil_set_mem;
 
 function int simutil_set_mem(input int index, input bit [311:0] val);
-  int valid;
-  valid = Width > 312 || index >= Depth ? 0 : 1;
-  if (valid == 1) mem[index] = val[Width-1:0];
-  return valid;
+    int valid;
+    valid = Width > 312 || index >= Depth ? 0 : 1;
+    if (valid == 1) mem[index] = val[Width-1:0];
+    return valid;
 endfunction
 
 // Function for getting a specific element in |mem|
 export "DPI-C" function simutil_get_mem;
 
 function int simutil_get_mem(input int index, output bit [311:0] val);
-  int valid;
-  valid = Width > 312 || index >= Depth ? 0 : 1;
-  if (valid == 1) begin
-    val            = 0;
-    val[Width-1:0] = mem[index];
-  end
-  return valid;
+    int valid;
+    valid = Width > 312 || index >= Depth ? 0 : 1;
+    if (valid == 1) begin
+        val            = 0;
+        val[Width-1:0] = mem[index];
+    end
+    return valid;
 endfunction
 `endif
 
 initial begin
-  logic show_mem_paths;
+    logic show_mem_paths;
 
-  // Print the hierarchical path to the memory to help make formal connectivity checks easy.
-  void'($value$plusargs("show_mem_paths=%0b", show_mem_paths));
-  if (show_mem_paths) $display("%m");
+    // Print the hierarchical path to the memory to help make formal connectivity checks easy.
+    void'($value$plusargs("show_mem_paths=%0b", show_mem_paths));
+    if (show_mem_paths) $display("%m");
 
-  if (MemInitFile != "") begin : gen_meminit
-    $display("Initializing memory %m from file '%s'.", MemInitFile);
-    $readmemh(MemInitFile, mem);
-  end
+    if (MemInitFile != "") begin : gen_meminit
+        $display("Initializing memory %m from file '%s'.", MemInitFile);
+        $readmemh(MemInitFile, mem);
+    end
 end

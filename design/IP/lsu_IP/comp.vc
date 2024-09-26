@@ -1,0 +1,14 @@
+-Mdir build
+-cc
+-main
+-binary
+-O3
+-j 6
+-trace
+--timing
+--MMD
+-DSIM
+-top lsu_tb
+/home/main/Projects/tinyriscv/design/src/intf/apb4_intf.sv
+./lsu.sv
+./tb.sv

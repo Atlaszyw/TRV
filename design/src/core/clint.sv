@@ -87,20 +87,20 @@ module clint
 
     // 中断仲裁逻辑
     always_comb begin
-        if (rst_ni == RstEnable) begin
+        if (~rst_ni) begin
             int_state = S_INT_IDLE;
         end
         else begin
             if (inst_i == INST_ECALL || inst_i == INST_EBREAK) begin
                 // 如果执行阶段的指令为除法指令，则先不处理同步中断，等除法指令执行完再处理
-                if (div_started_i == DivStop) begin
+                if (~div_started_i) begin
                     int_state = S_INT_SYNC_ASSERT;
                 end
                 else begin
                     int_state = S_INT_IDLE;
                 end
             end
-            else if (int_flag_i != INT_NONE && global_int_en_i == True) begin
+            else if (int_flag_i != INT_NONE && global_int_en_i) begin
                 int_state = S_INT_ASYNC_ASSERT;
             end
             else if (inst_i == INST_MRET) begin
@@ -114,7 +114,7 @@ module clint
 
     // 写CSR寄存器状态切换
     always_ff @(posedge clk_i) begin
-        if (rst_ni == RstEnable) begin
+        if (~rst_ni) begin
             csr_state <= S_CSR_IDLE;
             cause     <= '0;
             inst_addr <= '0;
@@ -153,7 +153,7 @@ module clint
                             inst_addr <= jump_addr_i;
                             // 异步中断可以中断除法指令的执行，中断处理完再重新执行除法指令
                         end
-                        else if (div_started_i == DivStart) begin
+                        else if (div_started_i) begin
                             inst_addr <= inst_addr_i - 32'h4;
                         end
                         else begin
@@ -186,8 +186,8 @@ module clint
 
     // 发出中断信号前，先写几个CSR寄存器
     always_ff @(posedge clk_i) begin
-        if (rst_ni == RstEnable) begin
-            we_o    <= ~WriteEnable;
+        if (~rst_ni) begin
+            we_o    <= '0;
             waddr_o <= '0;
             data_o  <= '0;
         end
@@ -195,30 +195,30 @@ module clint
             case (csr_state)
                 // 将mepc寄存器的值设为当前指令地址
                 S_CSR_MEPC: begin
-                    we_o    <= WriteEnable;
+                    we_o    <= '1;
                     waddr_o <= {20'h0, CSR_MEPC};
                     data_o  <= inst_addr;
                 end
                 // 写中断产生的原因
                 S_CSR_MCAUSE: begin
-                    we_o    <= WriteEnable;
+                    we_o    <= '1;
                     waddr_o <= {20'h0, CSR_MCAUSE};
                     data_o  <= cause;
                 end
                 // 关闭全局中断
                 S_CSR_MSTATUS: begin
-                    we_o    <= WriteEnable;
+                    we_o    <= '1;
                     waddr_o <= {20'h0, CSR_MSTATUS};
                     data_o  <= {csr_mstatus[31:4], 1'b0, csr_mstatus[2:0]};
                 end
                 // 中断返回
                 S_CSR_MSTATUS_MRET: begin
-                    we_o    <= WriteEnable;
+                    we_o    <= '1;
                     waddr_o <= {20'h0, CSR_MSTATUS};
                     data_o  <= {csr_mstatus[31:4], csr_mstatus[7], csr_mstatus[2:0]};
                 end
                 default: begin
-                    we_o    <= ~WriteEnable;
+                    we_o    <= '0;
                     waddr_o <= '0;
                     data_o  <= '0;
                 end
@@ -228,24 +228,24 @@ module clint
 
     // 发出中断信号给ex模块
     always_ff @(posedge clk_i) begin
-        if (rst_ni == RstEnable) begin
-            int_assert_o <= INT_DEASSERT;
+        if (~rst_ni) begin
+            int_assert_o <= '0;
             int_addr_o   <= '0;
         end
         else begin
             case (csr_state)
                 // 发出中断进入信号.写完mcause寄存器才能发
                 S_CSR_MCAUSE: begin
-                    int_assert_o <= INT_ASSERT;
+                    int_assert_o <= '1;
                     int_addr_o   <= csr_mtvec;
                 end
                 // 发出中断返回信号
                 S_CSR_MSTATUS_MRET: begin
-                    int_assert_o <= INT_ASSERT;
+                    int_assert_o <= '1;
                     int_addr_o   <= csr_mepc;
                 end
                 default: begin
-                    int_assert_o <= INT_DEASSERT;
+                    int_assert_o <= '0;
                     int_addr_o   <= '0;
                 end
             endcase

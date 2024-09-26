@@ -1,14 +1,11 @@
-
-RISCV_PATH := /home/main/Tools/riscv_llvm/
-
-RISCV_GCC     := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-gcc)
-RISCV_AS      := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-as)
-RISCV_GXX     := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-g++)
-RISCV_OBJDUMP := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-objdump)
-RISCV_GDB     := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-gdb)
-RISCV_AR      := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-ar)
-RISCV_OBJCOPY := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-objcopy)
-RISCV_READELF := $(abspath $(RISCV_PATH)/bin/riscv32-unknown-elf-readelf)
+RISCV_GCC     := riscv32-unknown-elf-gcc
+RISCV_AS      := riscv32-unknown-elf-as
+RISCV_GXX     := riscv32-unknown-elf-g++
+RISCV_OBJDUMP := riscv32-unknown-elf-objdump
+RISCV_GDB     := riscv32-unknown-elf-gdb
+RISCV_AR      := riscv32-unknown-elf-ar
+RISCV_OBJCOPY := riscv32-unknown-elf-objcopy
+RISCV_READELF := riscv32-unknown-elf-readelf
 
 TARGET = boot
 .PHONY: all
@@ -19,7 +16,7 @@ C_SRCS +=   ./src/main.c
 
 
 LINKER_SCRIPT := ./link.ld
-RISCV_ARCH := rv32im
+RISCV_ARCH := rv32imc
 RISCV_ABI := ilp32
 RISCV_MCMODEL := medlow
 

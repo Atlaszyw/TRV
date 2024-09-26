@@ -54,7 +54,7 @@ module csr_reg
     logic [RegBus- 1:0] mstatus;
     logic [RegBus- 1:0] mscratch;
 
-    assign global_int_en_o   = (mstatus[3] == 1'b1) ? True : False;
+    assign global_int_en_o   = (mstatus[3] == 1'b1) ? '1 : '0;
 
     assign clint_csr_mtvec   = mtvec;
     assign clint_csr_mepc    = mepc;
@@ -63,7 +63,7 @@ module csr_reg
     // cycle counter
     // 复位撤销后就一直计数
     always @(posedge clk_i) begin
-        if (rst_ni == RstEnable) begin
+        if (~rst_ni) begin
             cycle <= '0;
         end
         else begin
@@ -74,7 +74,7 @@ module csr_reg
     // write reg
     // 写寄存器操作
     always @(posedge clk_i) begin
-        if (rst_ni == RstEnable) begin
+        if (~rst_ni) begin
             mtvec    <= '0;
             mcause   <= '0;
             mepc     <= '0;
@@ -84,7 +84,7 @@ module csr_reg
         end
         else begin
             // 优先响应ex模块的写操作
-            if (we_i == WriteEnable) begin
+            if (we_i) begin
                 case (waddr_i[11:0])
                     CSR_MTVEC: begin
                         mtvec <= data_i;
@@ -110,7 +110,7 @@ module csr_reg
                 endcase
                 // clint模块写操作
             end
-            else if (clint_we_i == WriteEnable) begin
+            else if (clint_we_i) begin
                 case (clint_waddr_i[11:0])
                     CSR_MTVEC: begin
                         mtvec <= clint_data_i;
@@ -141,7 +141,7 @@ module csr_reg
     // read reg
     // ex模块读CSR寄存器
     always_comb begin
-        if ((waddr_i[11:0] == raddr_i[11:0]) && (we_i == WriteEnable)) begin
+        if ((waddr_i[11:0] == raddr_i[11:0]) && (we_i)) begin
             data_o = data_i;
         end
         else begin
@@ -180,7 +180,7 @@ module csr_reg
     // read reg
     // clint模块读CSR寄存器
     always_comb begin
-        if ((clint_waddr_i[11:0] == clint_raddr_i[11:0]) && (clint_we_i == WriteEnable)) begin
+        if ((clint_waddr_i[11:0] == clint_raddr_i[11:0]) && (clint_we_i)) begin
             clint_data_o = clint_data_i;
         end
         else begin

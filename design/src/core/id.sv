@@ -26,8 +26,8 @@ module id
     input [InstAddrBus - 1:0] inst_addr_i, // 指令地址
 
     // from regs
-    input [RegBus - 1:0] reg1_rdata_i,  // 通用寄存器1输入数据
-    input [RegBus - 1:0] reg2_rdata_i,  // 通用寄存器2输入数据
+    input [RegBus - 1:0] rs1_rdata_i,  // 通用寄存器1输入数据
+    input [RegBus - 1:0] rs2_rdata_i,  // 通用寄存器2输入数据
 
     // from csr logic
     input [RegBus - 1:0] csr_rdata_i,  // CSR寄存器输入数据
@@ -41,80 +41,75 @@ module id
     input                       ready_ex_i,
     input                       valid_if_id_i,
 
-    output logic ready_id_ex_o,
+    output logic ready_if_id_o,
 
     // to regs
-    output logic [RegAddrBus - 1:0] reg1_raddr_o,  // 读通用寄存器1地址
-    output logic [RegAddrBus - 1:0] reg2_raddr_o,  // 读通用寄存器2地址
+    output logic [RegAddrBus - 1:0] rs1_raddr_o,  // 读通用寄存器1地址
+    output logic [RegAddrBus - 1:0] rs2_raddr_o,  // 读通用寄存器2地址
+    output logic                    r1_en_o,
+    output logic                    r2_en_o,
 
     // to csr logic
     output logic [MemAddrBus - 1:0] csr_raddr_o,  // 读CSR寄存器地址
 
     // to ex
-    output logic [MemAddrBus - 1:0] op1_o,
-    output logic [MemAddrBus - 1:0] op2_o,
 
-    output logic [     RegBus - 1:0] reg1_rdata_o,
-    output logic [     RegBus - 1:0] reg2_rdata_o,
-    output logic [    InstBus - 1:0] inst_o,        // 指令内容
-    output logic [InstAddrBus - 1:0] inst_addr_o,   // 指令地址
-    output logic                     reg_we_o,      // 写通用寄存器标志
-    output logic [ RegAddrBus - 1:0] reg_waddr_o,   // 写通用寄存器地址
-    output logic                     csr_we_o,      // 写CSR寄存器标志
-    output logic [     RegBus - 1:0] csr_rdata_o,   // CSR寄存器数据
-    output logic [ MemAddrBus - 1:0] csr_waddr_o,   // 写CSR寄存器地址
-    output logic [     RegBus - 1:0] store_data_o
-
+    output logic [     RegBus - 1:0] rs1_rdata_o,
+    output logic [     RegBus - 1:0] rs2_rdata_o,
+    output logic [ RegAddrBus - 1:0] rs1_raddr_pass_o,  // 读通用寄存器1地址
+    output logic [ RegAddrBus - 1:0] rs2_raddr_pass_o,  // 读通用寄存器2地址
+    output logic [    InstBus - 1:0] inst_o,            // 指令内容
+    output logic [InstAddrBus - 1:0] inst_addr_o,       // 指令地址
+    output logic [ RegAddrBus - 1:0] reg_waddr_o,       // 写通用寄存器地址
+    output logic [     RegBus - 1:0] csr_rdata_o,       // CSR寄存器数据
+    output logic [ MemAddrBus - 1:0] csr_waddr_o        // 写CSR寄存器地址
 );
 
-    wire [6:0] opcode = inst_i[6:0];
-    wire [2:0] funct3 = inst_i[14:12];
-    wire [6:0] funct7 = inst_i[31:25];
-    wire [4:0] rd = inst_i[11:7];
-    wire [4:0] rs1 = inst_i[19:15];
-    wire [4:0] rs2 = inst_i[24:20];
+    opcode_e opcode;
+    logic [2:0] funct3;
+    logic [6:0] funct7;
+    logic [4:0] rd;
+    logic [4:0] rs1;
+    logic [4:0] rs2;
 
-    logic csr_we;
-    logic reg_we;
+    always_comb begin
+        opcode = opcode_e'(inst_i[6:0]);
+        funct3 = inst_i[14:12];
+        funct7 = inst_i[31:25];
+        rd     = inst_i[11:7];
+        rs1    = inst_i[19:15];
+        rs2    = inst_i[24:20];
+    end
+
+
     logic [MemAddrBus - 1:0] csr_waddr;
     logic [RegAddrBus - 1:0] reg_waddr;
-    logic [RegBus - 1:0] op1;
-    logic [RegBus - 1:0] op2;
-    logic [RegBus - 1:0] store_data;
 
     logic en;
     logic clear;
 
     always_comb begin : ctrl_logic
-        clear         = hold_flag_i == Pipe_Clear || ready_ex_i & ~valid_if_id_i;
-        en            = ready_ex_i & valid_if_id_i;
-        ready_id_ex_o = ready_ex_i;
+        clear         = hold_flag_i == Pipe_Clear || ready_ex_i & (1'b1 & ~valid_if_id_i);
+        en            = 1'b1 & ready_ex_i & valid_if_id_i;
+        ready_if_id_o = 1'b1 & ready_ex_i;
     end : ctrl_logic
 
     always_comb begin
-        csr_raddr_o  = '0;
-        csr_waddr    = '0;
-        csr_we       = ~WriteEnable;
+        csr_raddr_o = '0;
+        csr_waddr   = '0;
 
-        op1          = '0;
-        op2          = '0;
+        r1_en_o     = '0;
+        r2_en_o     = '0;
 
-        reg_we       = ~WriteEnable;
-        reg_waddr    = '0;
-        reg1_raddr_o = '0;
-        reg2_raddr_o = '0;
-
-        store_data   = '0;
+        reg_waddr   = rd;
+        rs1_raddr_o = rs1;
+        rs2_raddr_o = rs2;
 
         case (opcode)
             INST_TYPE_I: begin
                 case (funct3)
                     INST_ADDI, INST_SLTI, INST_SLTIU, INST_XORI, INST_ORI, INST_ANDI, INST_SLLI, INST_SRI: begin
-                        reg_we       = WriteEnable;
-                        reg_waddr    = rd;
-                        reg1_raddr_o = rs1;
-                        op1          = reg1_rdata_i;
-                        op2          = {{20{inst_i[31]}}, inst_i[31:20]};
+                        r1_en_o = '1;
                     end
                 endcase
             end
@@ -122,24 +117,16 @@ module id
                 if ((funct7 == 7'b0000000) || (funct7 == 7'b0100000)) begin
                     case (funct3)
                         INST_ADD_SUB, INST_SLL, INST_SLT, INST_SLTU, INST_XOR, INST_SR, INST_OR, INST_AND: begin
-                            reg_we       = WriteEnable;
-                            reg_waddr    = rd;
-                            reg1_raddr_o = rs1;
-                            reg2_raddr_o = rs2;
-                            op1          = reg1_rdata_i;
-                            op2          = reg2_rdata_i;
+                            r1_en_o = '1;
+                            r2_en_o = '1;
                         end
                     endcase
                 end
                 else if (funct7 == 7'b0000001) begin
                     case (funct3)
                         INST_MUL, INST_MULHU, INST_MULH, INST_MULHSU, INST_DIV, INST_DIVU, INST_REM, INST_REMU: begin
-                            reg_we       = WriteEnable;
-                            reg_waddr    = rd;
-                            reg1_raddr_o = rs1;
-                            reg2_raddr_o = rs2;
-                            op1          = reg1_rdata_i;
-                            op2          = reg2_rdata_i;
+                            r1_en_o = '1;
+                            r2_en_o = '1;
                         end
                     endcase
                 end
@@ -147,11 +134,7 @@ module id
             INST_TYPE_L: begin
                 case (funct3)
                     INST_LB, INST_LH, INST_LW, INST_LBU, INST_LHU: begin
-                        reg1_raddr_o = rs1;
-                        reg_we       = WriteEnable;
-                        reg_waddr    = rd;
-                        op1          = reg1_rdata_i;
-                        op2          = {{20{inst_i[31]}}, inst_i[31:20]};
+                        r1_en_o = '1;
                     end
                     default: ;
                 endcase
@@ -159,11 +142,8 @@ module id
             INST_TYPE_S: begin
                 case (funct3)
                     INST_SB, INST_SW, INST_SH: begin
-                        reg1_raddr_o = rs1;
-                        reg2_raddr_o = rs2;
-                        op1          = reg1_rdata_i;
-                        op2          = {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
-                        store_data   = reg2_rdata_i;
+                        r1_en_o = '1;
+                        r2_en_o = '1;
                     end
                     default: ;
                 endcase
@@ -171,56 +151,36 @@ module id
             INST_TYPE_B: begin
                 case (funct3)
                     INST_BEQ, INST_BNE, INST_BLT, INST_BGE, INST_BLTU, INST_BGEU: begin
-                        reg1_raddr_o = rs1;
-                        reg2_raddr_o = rs2;
-                        op1          = inst_addr_i;
-                        op2          = {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
+                        r1_en_o = '1;
+                        r2_en_o = '1;
                     end
                     default: ;
                 endcase
             end
             INST_JAL: begin
-                reg_we    = WriteEnable;
-                reg_waddr = rd;
-                op1       = inst_addr_i;
-                op2       = {{12{inst_i[31]}}, inst_i[19:12], inst_i[20], inst_i[30:21], 1'b0};
+                ;
             end
             INST_JALR: begin
-                reg_we       = WriteEnable;
-                reg1_raddr_o = rs1;
-                reg_waddr    = rd;
-                op1          = reg1_rdata_i;
-                op2          = {{20{inst_i[31]}}, inst_i[31:20]};
+                r1_en_o = '1;
             end
             INST_LUI: begin
-                reg_we    = WriteEnable;
-                reg_waddr = rd;
-                op1       = {inst_i[31:12], 12'b0};
+                ;
             end
             INST_AUIPC: begin
-                reg_we    = WriteEnable;
-                reg_waddr = rd;
-                op1       = inst_addr_i;
-                op2       = {inst_i[31:12], 12'b0};
+                ;
             end
             INST_FENCE: begin
-                // Pass
+                ;
             end
             INST_CSR: begin
                 csr_raddr_o = {20'h0, inst_i[31:20]};
                 csr_waddr   = {20'h0, inst_i[31:20]};
                 case (funct3)
                     INST_CSRRW, INST_CSRRS, INST_CSRRC: begin
-                        reg1_raddr_o = rs1;
-                        op1          = reg1_rdata_i;
-                        reg_we       = WriteEnable;
-                        reg_waddr    = rd;
-                        csr_we       = WriteEnable;
+                        r1_en_o = '1;
                     end
                     INST_CSRRWI, INST_CSRRSI, INST_CSRRCI: begin
-                        reg_we    = WriteEnable;
-                        reg_waddr = rd;
-                        csr_we    = WriteEnable;
+                        ;
                     end
                     default: ;
                 endcase
@@ -254,13 +214,6 @@ module id
         .qout  (inst_addr_next_type_o)
     );
 
-    prim_endff #(1, 0) reg_we_ff (
-        .clk_i,
-        .rst_ni(~clear & rst_ni),
-        .en    (en),
-        .din   (reg_we),
-        .qout  (reg_we_o)
-    );
 
     prim_endff #(5, 0) reg_waddr_ff (
         .clk_i,
@@ -268,14 +221,6 @@ module id
         .en    (en),
         .din   (reg_waddr),
         .qout  (reg_waddr_o)
-    );
-
-    prim_endff #(1, 0) csr_we_ff (
-        .clk_i,
-        .rst_ni(~clear & rst_ni),
-        .en    (en),
-        .din   (csr_we),
-        .qout  (csr_we_o)
     );
 
     prim_endff #(32, 0) csr_waddr_ff (
@@ -294,45 +239,36 @@ module id
         .qout  (csr_rdata_o)
     );
 
-    prim_endff #(32, 0) op1_ff (
+    prim_endff #(32, 0) rs1_rdata_ff (
         .clk_i,
         .rst_ni(~clear & rst_ni),
         .en    (en),
-        .din   (op1),
-        .qout  (op1_o)
+        .din   (rs1_rdata_i),
+        .qout  (rs1_rdata_o)
     );
 
-    prim_endff #(32, 0) op2_ff (
+    prim_endff #(32, 0) rs2_rdata_ff (
         .clk_i,
         .rst_ni(~clear & rst_ni),
         .en    (en),
-        .din   (op2),
-        .qout  (op2_o)
+        .din   (rs2_rdata_i),
+        .qout  (rs2_rdata_o)
     );
 
-    prim_endff #(32, 0) reg1_rdata_ff (
+    prim_endff #(RegAddrBus, 0) rs1_raddr_ff (
         .clk_i,
         .rst_ni(~clear & rst_ni),
         .en    (en),
-        .din   (reg1_rdata_i),
-        .qout  (reg1_rdata_o)
+        .din   (rs1_raddr_o),
+        .qout  (rs1_raddr_pass_o)
     );
 
-    prim_endff #(32, 0) reg2_rdata_ff (
+    prim_endff #(RegAddrBus, 0) rs2_raddr_ff (
         .clk_i,
         .rst_ni(~clear & rst_ni),
         .en    (en),
-        .din   (reg2_rdata_i),
-        .qout  (reg2_rdata_o)
+        .din   (rs2_raddr_o),
+        .qout  (rs2_raddr_pass_o)
     );
-
-    prim_endff #(RegBus, 0) store_data_ff (
-        .clk_i,
-        .rst_ni(~clear & rst_ni),
-        .en    (en),
-        .din   (store_data),
-        .qout  (store_data_o)
-    );
-
 
 endmodule

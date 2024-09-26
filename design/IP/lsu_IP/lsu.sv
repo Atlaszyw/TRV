@@ -1,24 +1,21 @@
 `timescale 1ns / 1ns
 
-module lsu
-    import tinyriscv_pkg::*;
-(
+module lsu (
     // CPU 内部接口
-    input                   req_valid,
-    output logic            req_ready,
-    input            [31:0] addr,
-    input            [31:0] wdata,
-    output logic     [31:0] rdata,
-    input  bytelen_e        bytelen,
-    input                   ls,         // 00: load, 01: store
-    input                   sign,
+    input               req_valid,
+    output logic        req_ready,
+    input        [31:0] addr,
+    input        [31:0] wdata,
+    output logic [31:0] rdata,
+    input        [ 1:0] bytelen,
+    input               ls,         // 00: load, 01: store
 
     // APB 接口
     apb4_intf.master apb_mst
 );
 
     // 状态机状态定义
-    typedef enum logic {
+    typedef enum logic [1:0] {
         DISABLE,
         ENABLE
     } state_t;
@@ -46,54 +43,16 @@ module lsu
         apb_mst.PSEL   = req_valid;
         apb_mst.PADDR  = {addr[31:2], 2'b00};
         apb_mst.PWRITE = ls;
-        req_ready      = apb_mst.PREADY * apb_mst.PENABLE;
+        req_ready      = apb_mst.PREADY;
+        rdata          = apb_mst.PRDATA;
     end : comb_logic
-
-    always_comb begin : rdata_logic
-        rdata = '0;
-        if (apb_mst.PREADY & apb_mst.PENABLE & apb_mst.PSEL) begin
-            case (bytelen)
-                B: begin
-                    if (sign)
-                        case (addr[1:0])
-                            2'b00:   rdata = {{24{apb_mst.PRDATA[7]}}, apb_mst.PRDATA[7:0]};
-                            2'b01:   rdata = {{24{apb_mst.PRDATA[15]}}, apb_mst.PRDATA[15:8]};
-                            2'b10:   rdata = {{24{apb_mst.PRDATA[23]}}, apb_mst.PRDATA[23:16]};
-                            default: rdata = {{24{apb_mst.PRDATA[31]}}, apb_mst.PRDATA[31:24]};
-                        endcase
-                    else
-                        case (addr[1:0])
-                            2'b00:   rdata = {24'b0, apb_mst.PRDATA[7:0]};
-                            2'b01:   rdata = {24'b0, apb_mst.PRDATA[15:8]};
-                            2'b10:   rdata = {24'b0, apb_mst.PRDATA[23:16]};
-                            default: rdata = {24'b0, apb_mst.PRDATA[31:24]};
-                        endcase
-                end
-                H: begin
-                    if (sign) begin
-                        if (~addr[1]) rdata = {{16{apb_mst.PRDATA[15]}}, apb_mst.PRDATA[15:0]};
-                        else rdata = {{16{apb_mst.PRDATA[31]}}, apb_mst.PRDATA[31:16]};
-                    end
-                    else begin
-                        if (~addr[1]) rdata = {16'b0, apb_mst.PRDATA[15:0]};
-                        else rdata = {16'b0, apb_mst.PRDATA[31:16]};
-                    end
-
-                end
-                W: begin
-                    rdata = apb_mst.PRDATA;
-                end
-                default: ;
-            endcase
-        end
-    end : rdata_logic
 
     always_comb begin : wdata_pstrb_logic
         apb_mst.PWDATA = '0;
         apb_mst.PSTRB  = 4'b0000;
-        if (apb_mst.PSEL) begin
+        if (req_valid) begin
             case (bytelen)
-                B: begin
+                2'b00: begin
                     case (addr[1:0])
                         2'b00: begin
                             apb_mst.PWDATA = {24'b0, wdata[7:0]};
@@ -113,7 +72,7 @@ module lsu
                         end
                     endcase
                 end
-                H: begin
+                2'b01: begin
                     case (addr[1])
                         1'b0: begin
                             apb_mst.PWDATA = {16'b0, wdata[15:0]};
@@ -125,7 +84,7 @@ module lsu
                         end
                     endcase
                 end
-                W: begin
+                2'b10: begin
                     apb_mst.PWDATA = wdata;
                     apb_mst.PSTRB  = 4'b1111;
                 end

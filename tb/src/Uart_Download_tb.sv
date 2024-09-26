@@ -18,14 +18,15 @@
 module tb_top ();
     import SimSrcGen_pkg::*;
     localparam bolt = 1000000000 / 115200;
+    logic succ;
     //-----------------------------------------------------//
     // Signal
     //-----------------------------------------------------//
-    logic [7:0] pack1[35] = '{
-        0,
-        1,
-        2,
-        3,
+    logic [7:0] pack1[38] = '{
+        8'hAA,
+        8'hBB,
+        8'hCC,
+        8'hDD,
         0,
         0,
         0,
@@ -138,17 +139,9 @@ module tb_top ();
     logic clk_i;
     logic rst_ni;
 
-    logic uart_debug_pin;
     logic uart_tx_pin;
     logic uart_rx_pin;
-    wire [15:0] gpio;
-    logic uart_debug_pin_r;
 
-    wire [2:0] pwm_o;
-    wire scl_o;
-    wire sda_io;
-
-    reg gpiodriver;
     initial begin
         GenClk(clk_i, 20, 20);
     end
@@ -172,57 +165,20 @@ module tb_top ();
     assign uart_debug_pin = uart_debug_pin_r;
     tinyriscv_soc_top i_tinyriscv_soc_top (
 
-        .clk_i (clk_i),
-        .rst_ni(rst_ni),
+        .clk_i,
+        .rst_ni,
 
-        .uart_debug_pin(uart_debug_pin),  // 串口下载使能引脚
 
-        .uart_tx_pin(uart_tx_pin),  // UART发送引脚
-        .uart_rx_pin(uart_rx_pin),  // UART接收引脚
-        .gpio_out   (gpio),         // GPIO引脚
-
-        .pwm_o (pwm_o),
-        .scl_o (scl_o),
-        .sda_io(sda_io)
+        .tx(uart_tx_pin),  // UART发送引脚
+        .rx(uart_rx_pin),  // UART接收引脚
+        .succ
     );
 
     task uart_send_package(input [7:0] data_pak[35], ref logic rx_pin);
         begin
-            uart_send_byte(data_pak[0], rx_pin);
-            uart_send_byte(data_pak[1], rx_pin);
-            uart_send_byte(data_pak[2], rx_pin);
-            uart_send_byte(data_pak[3], rx_pin);
-            uart_send_byte(data_pak[4], rx_pin);
-            uart_send_byte(data_pak[5], rx_pin);
-            uart_send_byte(data_pak[6], rx_pin);
-            uart_send_byte(data_pak[7], rx_pin);
-            uart_send_byte(data_pak[8], rx_pin);
-            uart_send_byte(data_pak[9], rx_pin);
-            uart_send_byte(data_pak[10], rx_pin);
-            uart_send_byte(data_pak[11], rx_pin);
-            uart_send_byte(data_pak[12], rx_pin);
-            uart_send_byte(data_pak[13], rx_pin);
-            uart_send_byte(data_pak[14], rx_pin);
-            uart_send_byte(data_pak[15], rx_pin);
-            uart_send_byte(data_pak[16], rx_pin);
-            uart_send_byte(data_pak[17], rx_pin);
-            uart_send_byte(data_pak[18], rx_pin);
-            uart_send_byte(data_pak[19], rx_pin);
-            uart_send_byte(data_pak[20], rx_pin);
-            uart_send_byte(data_pak[21], rx_pin);
-            uart_send_byte(data_pak[22], rx_pin);
-            uart_send_byte(data_pak[23], rx_pin);
-            uart_send_byte(data_pak[24], rx_pin);
-            uart_send_byte(data_pak[25], rx_pin);
-            uart_send_byte(data_pak[26], rx_pin);
-            uart_send_byte(data_pak[27], rx_pin);
-            uart_send_byte(data_pak[28], rx_pin);
-            uart_send_byte(data_pak[29], rx_pin);
-            uart_send_byte(data_pak[30], rx_pin);
-            uart_send_byte(data_pak[31], rx_pin);
-            uart_send_byte(data_pak[32], rx_pin);
-            uart_send_byte(data_pak[33], rx_pin);
-            uart_send_byte(data_pak[34], rx_pin);
+            for (int i = 0; i < 35; i++) begin
+                uart_send_byte(data_pak[i], rx_pin);
+            end
         end
     endtask
 

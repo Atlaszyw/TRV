@@ -3,8 +3,8 @@
 *.ko
 *.obj
 
-/fpga_prj
-/fpga
+/xilinx_fpga
+/fpga_xilinx
 generated
 *.bin
 *.elf
