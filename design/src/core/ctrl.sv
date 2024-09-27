@@ -23,8 +23,6 @@ module ctrl
     input                     jump_flag_i,
     input [InstAddrBus - 1:0] jump_addr_i,
 
-    // from jtag
-    input jtag_halt_flag_i,
 
     // from clint
     input hold_flag_clint_i,
@@ -44,7 +42,7 @@ module ctrl
         // 默认不暂停
         hold_flag_o = Pipe_Flow;
         // 按优先级处理不同模块的请求
-        if (jump_flag_i || hold_flag_clint_i == HoldEnable || jtag_halt_flag_i == HoldEnable) begin
+        if (jump_flag_i || hold_flag_clint_i == HoldEnable) begin
             // 清空整条流水线
             hold_flag_o = Pipe_Clear;
         end

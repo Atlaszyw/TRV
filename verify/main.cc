@@ -1,7 +1,7 @@
 // Verilated -*- C++ -*-
 // DESCRIPTION: main() calling loop, created with Verilator --main
 
-#include "Vtinyriscv_soc_top.h"
+#include "TRV.h"
 #include "svdpi.h"
 #include "verilated.h"
 #include "verilated_vcd_c.h"
@@ -21,7 +21,7 @@ int main( int argc, char** argv, char** )
     contextp->commandArgs( argc, argv );
 
     // Construct the Verilated model, from Vtop.h generated from Verilating
-    const std::unique_ptr<Vtinyriscv_soc_top> topp{ new Vtinyriscv_soc_top{ contextp.get( ) } };
+    const std::unique_ptr<TRV> topp{ new TRV{ contextp.get( ) } };
 
     std::vector<std::string> memcases = {
         "/home/main/Projects/tinyriscv/tb/mul.mif",

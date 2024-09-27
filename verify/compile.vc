@@ -1,0 +1,16 @@
+--timescale 1ns/1ps
+
+--clk clk_i
+
+-DSIM
+-I../design/src/inc
+-y ../design/src/core
+-y ../design/src/intf
+-y ../design/src/debug
+-y ../design/src/perips
+-y ../design/src/utils
+
+-top tinyriscv_soc_top
+
+../design/src/pkg/tinyriscv_pkg.sv
+../design/src/soc/tinyriscv_soc_top.sv

@@ -98,8 +98,8 @@ module uart #(
     assign apb_slave.PSLVERR = 1'b0;
 
     // 波特率计算
-    logic [15:0] divisor;
-    assign divisor = {DLM, DLL};
+    logic [31:0] divisor;
+    assign divisor = {16'b0, DLM, DLL};
 
     // 生成波特率时钟使能信号
     logic baud_tick;
@@ -111,12 +111,12 @@ module uart #(
             baud_tick    <= 1'b0;
         end
         else begin
-            if (baud_counter >= divisor << 4) begin
+            if (baud_counter >= divisor << 2'd2) begin
                 baud_counter <= 32'h0;
                 baud_tick    <= 1'b1;
             end
             else begin
-                baud_counter <= baud_counter + 1;
+                baud_counter <= baud_counter + 1'b1;
                 baud_tick    <= 1'b0;
             end
         end
@@ -159,7 +159,7 @@ module uart #(
                     tx           <= tx_shift_reg[0];
                     tx_shift_reg <= {1'b1, tx_shift_reg[10:1]};
                     tx_bit_cnt   <= tx_bit_cnt + 1;
-                    if (tx_bit_cnt == (1 + data_bits_num + parity_enable + stop_bits_num - 1)) begin
+                    if (tx_bit_cnt == (4'd1 + 4'(data_bits_num) + 4'(parity_enable) + 4'(stop_bits_num) - 4'd1)) begin
                         tx_busy <= 1'b0;
                     end
                 end
@@ -172,10 +172,11 @@ module uart #(
                 // 从 THR 加载数据到移位寄存器
                 // 组装移位寄存器
                 case (data_bits_num)
-                    4'd5: tx_shift_reg <= {parity_enable ? even_parity ? ~(^THR[5-1:0]) : ^THR[5-1:0] : 1'b1, THR[5-1:0], 1'b0};
-                    4'd6: tx_shift_reg <= {parity_enable ? even_parity ? ~(^THR[6-1:0]) : ^THR[6-1:0] : 1'b1, THR[6-1:0], 1'b0};
-                    4'd7: tx_shift_reg <= {parity_enable ? even_parity ? ~(^THR[7-1:0]) : ^THR[7-1:0] : 1'b1, THR[7-1:0], 1'b0};
-                    4'd8: tx_shift_reg <= {parity_enable ? even_parity ? ~(^THR[8-1:0]) : ^THR[8-1:0] : 1'b1, THR[8-1:0], 1'b0};
+                    4'd5:    tx_shift_reg <= {4'b1111, ~parity_enable | even_parity ^ (^THR[5-1:0]), THR[5-1:0], 1'b0};
+                    4'd6:    tx_shift_reg <= {3'b111, ~parity_enable | even_parity ^ (^THR[6-1:0]), THR[6-1:0], 1'b0};
+                    4'd7:    tx_shift_reg <= {2'b11, ~parity_enable | even_parity ^ (^THR[7-1:0]), THR[7-1:0], 1'b0};
+                    4'd8:    tx_shift_reg <= {1'b1, ~parity_enable | even_parity ^ (^THR[8-1:0]), THR[8-1:0], 1'b0};
+                    default: ;
                 endcase
                 tx_bit_cnt <= 4'h0;
                 tx_busy    <= 1'b1;
@@ -187,7 +188,7 @@ module uart #(
     logic [10:0] rx_shift_reg;
     logic [3:0] rx_bit_cnt;
     logic rx_busy;
-    logic [15:0] rx_baud_counter;
+    logic [31:0] rx_baud_counter;
 
     // 接收器逻辑
     always_ff @(posedge apb_slave.PCLK) begin
@@ -196,7 +197,7 @@ module uart #(
             rx_bit_cnt      <= 4'h0;
             rx_busy         <= 1'b0;
             RBR             <= 8'h00;
-            rx_baud_counter <= 16'h0;
+            rx_baud_counter <= 32'h0;
         end
         else begin
             if (!rx_busy) begin
@@ -208,17 +209,18 @@ module uart #(
             end
             else begin
                 if (rx_baud_counter == 0) begin
-                    rx_baud_counter <= divisor << 4;
+                    rx_baud_counter <= divisor << 2'd2;
                     rx_shift_reg    <= {rx, rx_shift_reg[10:1]};
                     rx_bit_cnt      <= rx_bit_cnt + 1;
                     if (rx_bit_cnt == (4'd1 + 4'(data_bits_num) + 4'(parity_enable) + 4'(stop_bits_num) - 4'd1)) begin
                         rx_busy <= 1'b0;
                         // 检查奇偶校验、停止位等
                         case (data_bits_num)
-                            4'd5: RBR <= rx_shift_reg[5:1];
-                            4'd6: RBR <= rx_shift_reg[6:1];
-                            4'd7: RBR <= rx_shift_reg[7:1];
-                            4'd8: RBR <= rx_shift_reg[8:1];
+                            4'd5:    RBR <= {3'b0, rx_shift_reg[5:1]};
+                            4'd6:    RBR <= {2'b0, rx_shift_reg[6:1]};
+                            4'd7:    RBR <= {1'b0, rx_shift_reg[7:1]};
+                            4'd8:    RBR <= rx_shift_reg[8:1];
+                            default: ;
                         endcase
                     end
                 end
@@ -246,7 +248,8 @@ module uart #(
 
         if (baud_tick) begin
             if (tx_busy) begin
-                if (tx_bit_cnt == (1 + data_bits_num + parity_enable + stop_bits_num - 1)) LSR[6] <= 1'b1;  // 发送器空
+                if (tx_bit_cnt == (4'd1 + 4'(data_bits_num) + 4'(parity_enable) + 4'(stop_bits_num) - 1))
+                    LSR[6] <= 1'b1;  // 发送器空
             end
         end
         else if (!tx_busy && !LSR[5]) begin

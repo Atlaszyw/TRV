@@ -11,7 +11,6 @@ module instr_fetch
 
     input                           jump_flag_i,
     input logic [InstAddrBus - 1:0] jump_addr_i,
-    input                           jtag_reset_flag_i,
 
     // 每一个输出指令都要求输入信号有效
     input logic [InstBus - 1:0] instr_i,
@@ -46,7 +45,7 @@ module instr_fetch
     assign handshake           = instr_req_i & instr_valid_o;
 
     always_ff @(posedge clk_i) begin : state_d2q
-        if (~rst_ni || jtag_reset_flag_i) if_s_q <= ALIGNED;
+        if (~rst_ni) if_s_q <= ALIGNED;
         // 在存储半字时强制递进，否则使用握手信号判断是否递进
         else if (jump_fetch_phase_on & instr_ready_i) if_s_q <= if_s_d;
         else if (handshake) if_s_q <= if_s_d;
@@ -56,19 +55,24 @@ module instr_fetch
         if_s_d = if_s_q;
 
         if (jump_flag_i) begin
-            if (jump_addr_i[1:0] == ALIGNED) if_s_d = ALIGNED;
-            else if (jump_addr_i[1:0] == INIT_UNALIGNED) if_s_d = INIT_UNALIGNED;
+            // 根据跳转地址[1:0]判断状态是否是对齐还是非对齐跳转
+            if_s_d = if_state_e'(jump_addr_i[1:0]);
         end
         else
             case (if_s_q)
+                // 地址对齐
                 ALIGNED: begin
-                    if (low_compressed && high_compressed) if_s_d = UNALIGNED;
-                    else if (low_compressed && ~high_compressed) if_s_d = UNALIGNED_CONTINUE;
-                    else if_s_d = ALIGNED;
+                    // 取得两个压缩指令，暂时性非对齐
+                    if (low_compressed & high_compressed) if_s_d = UNALIGNED;
+                    // 低16位为压缩指令，而高16位为32位指令低16位，将持续保持非对齐状态
+                    else if (low_compressed & ~high_compressed) if_s_d = UNALIGNED_CONTINUE;
+                    // 保持对齐
+                    else
+                        if_s_d = ALIGNED;
                 end
                 INIT_UNALIGNED: begin
                     if (high_compressed) if_s_d = ALIGNED;
-                    else if (~high_compressed) if_s_d = UNALIGNED_CONTINUE;
+                    else if_s_d = UNALIGNED_CONTINUE;
                 end
                 UNALIGNED: begin
                     if_s_d = ALIGNED;
@@ -97,7 +101,7 @@ module instr_fetch
     end : pc_next_ctrl
 
     always_ff @(posedge clk_i) begin : pc_real_ctrl
-        if (~rst_ni || jtag_reset_flag_i) pc_real <= '0;  // 复位
+        if (~rst_ni) pc_real <= '0;  // 复位
         else if (jump_flag_i) pc_real <= jump_addr_i;  // 跳转
         else if (handshake) pc_real <= pc_next;  // 地址加
         else pc_real <= pc_real;  // 暂停
@@ -118,7 +122,7 @@ module instr_fetch
     end : pc_o_ctrl
 
     always_ff @(posedge clk_i) begin : instr_buffer_ctrl
-        if (~rst_ni || jtag_reset_flag_i || jump_flag_i) instr_buffer <= 16'd1;
+        if (~rst_ni || jump_flag_i) instr_buffer <= 16'd1;
         else if (jump_fetch_phase_on && instr_ready_i) instr_buffer <= instr_i[31:16];
         else if (if_s_q == UNALIGNED_CONTINUE && if_s_d == UNALIGNED_CONTINUE && handshake) instr_buffer <= instr_i[31:16];
         else if (if_s_q == ALIGNED && if_s_d == UNALIGNED_CONTINUE && handshake) instr_buffer <= instr_i[31:16];

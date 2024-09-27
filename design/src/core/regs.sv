@@ -27,11 +27,6 @@ module regs
     input [RegAddrBus - 1:0] waddr_i,  // 写寄存器地址
     input [    RegBus - 1:0] wdata_i,  // 写寄存器数据
 
-    // from jtag
-    input                    jtag_we_i,    // 写寄存器标志
-    input [RegAddrBus - 1:0] jtag_addr_i,  // 读、写寄存器地址
-    input [    RegBus - 1:0] jtag_data_i,  // 写寄存器数据
-
     // from id
     input [RegAddrBus - 1:0] raddr1_i,  // 读寄存器1地址
     input                    r1_en_i,
@@ -45,9 +40,6 @@ module regs
 
     // to id
     output logic [RegBus - 1:0] rdata2_o,  // 读寄存器2数据
-
-    // to jtag
-    output logic [RegBus - 1:0] jtag_data_o,  // 读寄存器数据
 
     output logic succ,
     output logic over
@@ -71,9 +63,7 @@ module regs
         if ((we_i) && (waddr_i != '0)) begin
             regs[waddr_i] <= wdata_i;
         end
-        else if ((jtag_we_i) && (jtag_addr_i != '0)) begin
-            regs[jtag_addr_i] <= jtag_data_i;
-        end
+
 
     end
 
@@ -107,16 +97,6 @@ module regs
                 rdata2_o = regs[raddr2_i];
             end
         else rdata2_o = '0;
-    end
-
-    // jtag读寄存器
-    always_comb begin
-        if (jtag_addr_i == '0) begin
-            jtag_data_o = '0;
-        end
-        else begin
-            jtag_data_o = regs[jtag_addr_i];
-        end
     end
 
 endmodule

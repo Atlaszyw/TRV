@@ -46,7 +46,7 @@ module lsu
         apb_mst.PSEL   = req_valid;
         apb_mst.PADDR  = {addr[31:2], 2'b00};
         apb_mst.PWRITE = ls;
-        req_ready      = apb_mst.PREADY * apb_mst.PENABLE;
+        req_ready      = apb_mst.PREADY & apb_mst.PENABLE;
     end : comb_logic
 
     always_comb begin : rdata_logic

@@ -112,9 +112,7 @@ package tinyriscv_pkg;
     localparam logic [11:0] CSR_MSTATUS = 12'h300;
     localparam logic [11:0] CSR_MSCRATCH = 12'h340;
 
-    localparam int unsigned RomNum = 1024;  // rom depth(how many words)
 
-    localparam int unsigned MemNum = 16;  // memory depth(how many words)
     localparam int unsigned MemBus = 32;
     localparam int unsigned MemAddrBus = 32;
 

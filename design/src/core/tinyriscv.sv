@@ -27,14 +27,6 @@ module tinyriscv
     input        [    MemBus - 1:0] pc_data_i,  // 取到的指令内容
     input                           pc_ready_i,
 
-    input        [RegAddrBus - 1:0] jtag_reg_addr_i,  // jtag模块读、写寄存器的地址
-    input        [    RegBus - 1:0] jtag_reg_data_i,  // jtag模块写寄存器数据
-    input                           jtag_reg_we_i,    // jtag模块写寄存器标志
-    output logic [    RegBus - 1:0] jtag_reg_data_o,  // jtag模块读取到的寄存器数据
-
-    input jtag_halt_flag_i,  // jtag暂停标志
-    input jtag_reset_flag_i, // jtag复位PC标志
-
     input [INT_BUS - 1:0] int_i,  // 中断信号
 
 
@@ -133,10 +125,9 @@ module tinyriscv
         .instr_ready_i(pc_ready_i),
         .instr_req_i  (pc_req),
 
-        .jump_flag_i      (ctrl_jump_flag_o),
-        .jump_addr_i      (ctrl_jump_addr_o),
-        .jtag_reset_flag_i(jtag_reset_flag_i),
-        .instr_i          (pc_data_i),
+        .jump_flag_i(ctrl_jump_flag_o),
+        .jump_addr_i(ctrl_jump_addr_o),
+        .instr_i    (pc_data_i),
 
         .instr_o      (if_instr),
         .instr_valid_o(instr_valid),
@@ -153,27 +144,22 @@ module tinyriscv
         .hold_flag_o      (ctrl_hold_flag_o),
         .hold_flag_clint_i(clint_hold_flag_o),
         .jump_flag_o      (ctrl_jump_flag_o),
-        .jump_addr_o      (ctrl_jump_addr_o),
-        .jtag_halt_flag_i (jtag_halt_flag_i)
+        .jump_addr_o      (ctrl_jump_addr_o)
     );
 
     // regs模块例化
     regs u_regs (
         .clk_i,
         .rst_ni,
-        .we_i       (wb_reg_we_o),
-        .waddr_i    (wb_reg_waddr_o),
-        .wdata_i    (wb_reg_wdata_o),
-        .raddr1_i   (id_reg1_raddr),
-        .rdata1_o   (regs_rdata1),
-        .r1_en_i    (id_reg1r_en),
-        .raddr2_i   (id_reg2_raddr),
-        .rdata2_o   (regs_rdata2),
-        .r2_en_i    (id_reg2r_en),
-        .jtag_we_i  (jtag_reg_we_i),
-        .jtag_addr_i(jtag_reg_addr_i),
-        .jtag_data_i(jtag_reg_data_i),
-        .jtag_data_o(jtag_reg_data_o),
+        .we_i    (wb_reg_we_o),
+        .waddr_i (wb_reg_waddr_o),
+        .wdata_i (wb_reg_wdata_o),
+        .raddr1_i(id_reg1_raddr),
+        .rdata1_o(regs_rdata1),
+        .r1_en_i (id_reg1r_en),
+        .raddr2_i(id_reg2_raddr),
+        .rdata2_o(regs_rdata2),
+        .r2_en_i (id_reg2r_en),
 
         .succ,
         .over

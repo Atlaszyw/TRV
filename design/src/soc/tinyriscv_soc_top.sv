@@ -101,14 +101,14 @@ module tinyriscv_soc_top
         instr_data
     );
 
-//    gpio_apb4 #(
-//        .GPIO_NUM(2)
-//    ) u_gpio (
-//        .apb_slv(apb_slv[3]),
-//        .io_pin_i,
-//        .reg_ctrl,
-//        .io_pin_o
-//    );
+    //    gpio_apb4 #(
+    //        .GPIO_NUM(2)
+    //    ) u_gpio (
+    //        .apb_slv(apb_slv[3]),
+    //        .io_pin_i,
+    //        .reg_ctrl,
+    //        .io_pin_o
+    //    );
 
 
     uart uart (

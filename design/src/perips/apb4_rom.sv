@@ -17,8 +17,8 @@
 module apb4_rom
     import tinyriscv_pkg::*;
 #(
-    parameter int unsigned ADDR_WIDTH  = 13,        // 地址宽度（表示支持的地址空间，例如 4KB）
-    parameter int unsigned DATA_WIDTH  = 32,        // 数据宽度（通常为 32 位或 64 位）
+    parameter int unsigned ADDR_WIDTH  = 13,       // 地址宽度（表示支持的地址空间，例如 4KB）
+    parameter int unsigned DATA_WIDTH  = 32,       // 数据宽度（通常为 32 位或 64 位）
     parameter string       MemInitFile = "lw.mif"
 ) (
     // APB4 接口
@@ -26,7 +26,7 @@ module apb4_rom
 
     input [MemAddrBus - 1:0] addr_i,  // addr
 
-    output logic [Width - 1:0] data_o  // read data
+    output logic [DATA_WIDTH - 1:0] data_o  // read data
 );
     localparam int unsigned Depth = (1 << (ADDR_WIDTH - $clog2(DATA_WIDTH / 8))) - 1;
     localparam int unsigned Width = DATA_WIDTH;

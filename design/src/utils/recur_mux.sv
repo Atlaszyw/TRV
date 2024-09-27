@@ -10,7 +10,6 @@ module recur_mux #(
     output [      WIDTH-1:0] data_o
 );
 
-    wire [WIDTH-1:0] data_lo, data_hi;
 
     generate
         if (HI == LO) begin : g_leaf
@@ -18,6 +17,8 @@ module recur_mux #(
             assign data_o = data_i[HI];
         end
         else begin : g_nonleaf
+            logic [WIDTH-1:0] data_lo, data_hi;
+
             // Non-leaf node: split inputs and recursively instantiate sub-muxes
             localparam int MID = (HI + LO) >> 1;
 

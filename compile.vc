@@ -1,7 +1,5 @@
 -Mdir build
 -cc
--main
--binary
 -O3
 -trace
 --timing
