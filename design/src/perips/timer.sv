@@ -15,7 +15,7 @@
  */
 // 32 bits count up timer module
 module timer
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
 
     input clk_i,

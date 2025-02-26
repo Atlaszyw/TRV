@@ -13,9 +13,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-// tinyriscv处理器核顶层模块
-module tinyriscv
-    import tinyriscv_pkg::*;
+// riscvv处理器核顶层模块
+module riscvv
+    import riscvv_pkg::*;
 (
 
     input clk_i,

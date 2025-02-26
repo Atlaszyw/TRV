@@ -1,4 +1,4 @@
-package tinyriscv_pkg;
+package riscvv_pkg;
     localparam int unsigned CpuResetAddr = 32'h0;
 
     localparam bit HoldEnable = 1'b1;

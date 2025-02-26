@@ -63,11 +63,11 @@ module tb_top ();
     // end
     // assign gpio[1]        = gpiodriver;
 
-    assign sda_io = i_tinyriscv_soc_top.sda_t ? 1'bz : sda_r;
+    assign sda_io = i_riscvv_soc_top.sda_t ? 1'bz : sda_r;
 
     initial begin
         #50000;
-        @(negedge i_tinyriscv_soc_top.sda_t) sda_r = '0;
+        @(negedge i_riscvv_soc_top.sda_t) sda_r = '0;
         #cycle;
         sda_r = '1;
         #cycle;
@@ -103,7 +103,7 @@ module tb_top ();
         sda_r = '0;
     end
     assign uart_debug_pin = '0;
-    tinyriscv_soc_top i_tinyriscv_soc_top (
+    riscvv_soc_top i_riscvv_soc_top (
 
         .clk_i (clk_i),
         .rst_ni(rst_ni),

@@ -1,5 +1,5 @@
 module wb
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
     input clk_i,
     input rst_ni,

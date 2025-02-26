@@ -1,6 +1,6 @@
 // 带使能端、复位后输出为0的触发器
 module prim_endff
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 #(
     parameter int unsigned            DW      = 32,
     parameter logic        [DW - 1:0] DEFAULT = '0

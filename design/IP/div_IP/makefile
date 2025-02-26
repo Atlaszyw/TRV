@@ -24,11 +24,11 @@ VCS_FLAGS = -full64 \
 			/home/soft/synopsys/verdi/verdi/P-2019.06-SP2/share/PLI/VCS/LINUX64/pli.a \
 			-timescale=1ns/10ps \
 			+vcs+lic+wait \
+			-l $(SIM_DIR)/compile.log \
 			$(foreach marco,$(MACROS),+define+$(marco)) \
 			$(foreach incdir,$(INC_DIRS),+incdir+$(incdir)) \
 			$(foreach filelist, $(LIST_FILE), -F $(filelist)) \
 			$(foreach extlib, $(EXT_DIRS), -y $(extlib) +libext+.v+.sv) \
-			-l $(SIM_DIR)/compile.log
 
 
 # Define the name of the simulation executable

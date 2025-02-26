@@ -10,7 +10,7 @@
 -y ../design/src/perips
 -y ../design/src/utils
 
--top tinyriscv_soc_top
+-top riscvv_soc_top
 
-../design/src/pkg/tinyriscv_pkg.sv
-../design/src/soc/tinyriscv_soc_top.sv
+../design/src/pkg/riscvv_pkg.sv
+../design/src/soc/riscvv_soc_top.sv

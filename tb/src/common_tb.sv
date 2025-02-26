@@ -48,7 +48,7 @@ module tb_top ();
   end
 
   assign uart_debug_pin = '0;
-  tinyriscv_soc_top i_tinyriscv_soc_top (
+  riscvv_soc_top i_riscvv_soc_top (
 
     .clk_i (clk_i),
     .rst_ni(rst_ni),

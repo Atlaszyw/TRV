@@ -1,7 +1,7 @@
 `timescale 1ns / 1ns
 
 module lsu
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
     // CPU 内部接口
     input                   req_valid,

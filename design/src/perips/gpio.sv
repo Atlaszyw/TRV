@@ -1,5 +1,5 @@
 module gpio_apb4
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 #(
     parameter  int unsigned GPIO_NUM  = 16,
     localparam int unsigned GPIO_NUM_ = GPIO_NUM > MemBus ? MemBus : GPIO_NUM

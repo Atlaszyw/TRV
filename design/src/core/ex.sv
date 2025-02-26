@@ -1,6 +1,6 @@
 // 执行模块
 module ex
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
     input clk_i,
     input rst_ni,

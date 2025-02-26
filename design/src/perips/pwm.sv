@@ -1,5 +1,5 @@
 module pwm
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 #(
     parameter int unsigned CHANNEL = 4
 ) (

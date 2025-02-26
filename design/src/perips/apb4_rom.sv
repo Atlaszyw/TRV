@@ -15,7 +15,7 @@
  */
 
 module apb4_rom
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 #(
     parameter int unsigned ADDR_WIDTH  = 13,       // 地址宽度（表示支持的地址空间，例如 4KB）
     parameter int unsigned DATA_WIDTH  = 32,       // 数据宽度（通常为 32 位或 64 位）

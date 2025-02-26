@@ -1,5 +1,5 @@
 module i2c
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 #(
     parameter int unsigned       CLK_FREQ = 32'd50_000_000,
     parameter int unsigned       SCL_FREQ = 32'd100_000,

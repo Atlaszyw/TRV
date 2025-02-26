@@ -163,7 +163,7 @@ module tb_top ();
 
     assign gpio[1]        = gpiodriver;
     assign uart_debug_pin = uart_debug_pin_r;
-    tinyriscv_soc_top i_tinyriscv_soc_top (
+    riscvv_soc_top i_riscvv_soc_top (
 
         .clk_i,
         .rst_ni,

@@ -59,7 +59,7 @@ VERILATOR_FLAGS += --trace
 # Generate coverage analysis
 # VERILATOR_FLAGS += --coverage
 # Run make to compile model, with as many CPUs as are free
-# VERILATOR_FLAGS += --build --build-jobs 20
+VERILATOR_FLAGS += --build --build-jobs 20
 # Run Verilator in debug mode
 #VERILATOR_FLAGS += --debug
 # Add this trace to get a backtrace in gdb
@@ -94,7 +94,7 @@ veri:
 	$(VERILATOR) $(VERILATOR_FLAGS) $(VERILATOR_INPUT)
 
 share: build/TRV__ver.d
-	clang++ -shared -fPIC -o libTRV.so build/libTRV.a util.cc -I$(BUILD_DIR) -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd
+	clang++ -shared -o libTRV.so build/libTRV.a util.cc -I$(BUILD_DIR) -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd
 
 sim: veri
 	@echo

@@ -1,5 +1,5 @@
 module div
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 #(
     parameter WIDTH = 32
 ) (

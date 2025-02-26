@@ -16,7 +16,7 @@
 // 译码模块
 // 纯组合逻辑电路
 module id
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
 
     input                     clk_i,

@@ -13,7 +13,7 @@
 
 
 module comp
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
     input  logic        clk_i,
     input  logic        rst_ni,

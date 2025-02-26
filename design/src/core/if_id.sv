@@ -16,7 +16,7 @@
 
 // 将指令向译码模块传递
 module if_id
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
 
     input clk_i,

@@ -24,9 +24,9 @@ int main( int argc, char** argv, char** )
     const std::unique_ptr<TRV> topp{ new TRV{ contextp.get( ) } };
 
     std::vector<std::string> memcases = {
-        "/home/main/Projects/tinyriscv/tb/mul.mif",
-        "/home/main/Projects/tinyriscv/tb/mulhu.mif",
-        "/home/main/Projects/tinyriscv/tb/lw.mif",
+        "/home/main/Projects/riscvv/tb/mul.mif",
+        "/home/main/Projects/riscvv/tb/mulhu.mif",
+        "/home/main/Projects/riscvv/tb/lw.mif",
     };
 
     printf( "time precision is %d\n", contextp->timeprecision( ) );
@@ -39,13 +39,13 @@ int main( int argc, char** argv, char** )
         topp->trace( m_trace, 10 );
         m_trace->open( vcd_file.c_str( ) );
 
-        svScope curr_scope = svGetScopeFromName( "TOP.tinyriscv_soc_top.u_L1" );
+        svScope curr_scope = svGetScopeFromName( "TOP.riscvv_soc_top.u_L1" );
         assert( curr_scope );
         svSetScope( curr_scope );
 
         topp->simutil_memload( memcase.c_str( ) );
 
-        curr_scope = svGetScopeFromName( "TOP.tinyriscv_soc_top.u_ram" );
+        curr_scope = svGetScopeFromName( "TOP.riscvv_soc_top.u_ram" );
         assert( curr_scope );
         svSetScope( curr_scope );
 

@@ -1,5 +1,4 @@
 {
-    "verilog.linting.slang.arguments": "--std 1800-2023 -j 12 -I/home/main/Projects/tinyriscv/design/src/... -y /home/main/Projects/tinyriscv/design/src/... --Y sv --Y v",
     "clangd.arguments": [
         "--all-scopes-completion",
         "--background-index=true",
@@ -16,5 +15,9 @@
     "clangd.fallbackFlags": [
         "-I/home/main/Projects/tinyriscv/tests/example/include",
         "-I/home/main/Projects/tinyriscv/boot/inc"
-    ]
+    ],
+    "verilog.lint.slang.includes": [
+        "design/src/inc"
+    ],
+    "verilog.lint.slang.args": "-y design/src/..."
 }

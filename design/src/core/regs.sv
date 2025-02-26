@@ -16,7 +16,7 @@
 
 // 通用寄存器模块
 module regs
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
 
     input clk_i,

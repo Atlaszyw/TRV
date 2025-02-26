@@ -18,7 +18,7 @@
 // core local interruptor module
 // 核心中断管理、仲裁模块
 module clint
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 (
 
     input clk_i,

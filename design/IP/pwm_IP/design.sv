@@ -1,5 +1,5 @@
 module design
-    import tinyriscv_pkg::*;
+    import riscvv_pkg::*;
 #(
     parameter int unsigned channel = 4
 ) (

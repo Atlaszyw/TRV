@@ -248,8 +248,7 @@ module uart #(
 
         if (baud_tick) begin
             if (tx_busy) begin
-                if (tx_bit_cnt == (4'd1 + 4'(data_bits_num) + 4'(parity_enable) + 4'(stop_bits_num) - 1))
-                    LSR[6] <= 1'b1;  // 发送器空
+                if (tx_bit_cnt == (4'd1 + 4'(data_bits_num) + 4'(parity_enable) + 4'(stop_bits_num) - 1)) LSR[6] <= 1'b1;  // 发送器空
             end
         end
         else if (!tx_busy && !LSR[5]) begin

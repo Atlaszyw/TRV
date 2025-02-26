@@ -14,9 +14,9 @@
  limitations under the License.
  */
 
-// tinyriscv soc顶层模块
-module tinyriscv_soc_top
-    import tinyriscv_pkg::*;
+// riscvv soc顶层模块
+module riscvv_soc_top
+    import riscvv_pkg::*;
 #(
     parameter int unsigned GPIO_NUM = 11
 ) (
@@ -41,7 +41,7 @@ module tinyriscv_soc_top
 );
     logic                      rst_nid;
     logic                      over;
-    // tinyriscv
+    // riscvv
     logic [     INT_BUS - 1:0] int_flag;
 
     // gpio
@@ -71,8 +71,8 @@ module tinyriscv_soc_top
         rst_nid
     );
 
-    // tinyriscv处理器核模块例化
-    tinyriscv u_tinyriscv (
+    // riscvv处理器核模块例化
+    riscvv u_riscvv (
         .clk_i (clk_i),
         .rst_ni(rst_nid),
 
