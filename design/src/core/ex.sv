@@ -187,23 +187,6 @@ module ex
         op1 = '0;
         op2 = '0;
         case (opcode)
-            INST_TYPE_I: begin
-                op1 = reg1_rdata;
-                op2 = {{20{inst_i[31]}}, inst_i[31:20]};
-            end
-            INST_TYPE_R_M: begin
-                op1 = reg1_rdata;
-                op2 = reg2_rdata;
-            end
-
-            INST_TYPE_L: begin
-                op1 = reg1_rdata;
-                op2 = {{20{inst_i[31]}}, inst_i[31:20]};
-            end
-            INST_TYPE_S: begin
-                op1 = reg1_rdata;
-                op2 = {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
-            end
             INST_TYPE_B: begin
                 op1 = inst_addr_i;
                 op2 = {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
@@ -255,16 +238,16 @@ module ex
             INST_TYPE_I: begin
                 reg_we = '1;
                 case (funct3)
-                    INST_ADDI:  reg_wdata = op1_add_op2_res;
+                    INST_ADDI:  reg_wdata = reg1_rdata +  {{20{inst_i[31]}}, inst_i[31:20]};
                     INST_SLTI:  reg_wdata = {32{(~compare)}} & 32'h1;
                     INST_SLTIU: reg_wdata = {32{(~compare)}} & 32'h1;
-                    INST_XORI:  reg_wdata = op1 ^ op2;
-                    INST_ORI:   reg_wdata = op1 | op2;
-                    INST_ANDI:  reg_wdata = op1 & op2;
-                    INST_SLLI:  reg_wdata = op1 << inst_i[24:20];
+                    INST_XORI:  reg_wdata = reg1_rdata ^  {{20{inst_i[31]}}, inst_i[31:20]};
+                    INST_ORI:   reg_wdata = reg1_rdata |  {{20{inst_i[31]}}, inst_i[31:20]};
+                    INST_ANDI:  reg_wdata = reg1_rdata &  {{20{inst_i[31]}}, inst_i[31:20]};
+                    INST_SLLI:  reg_wdata = reg1_rdata << inst_i[24:20];
                     INST_SRI: begin
-                        if (inst_i[30] == 1'b1) reg_wdata = (sri_shift & sri_shift_mask) | ({32{op1[31]}} & (~sri_shift_mask));
-                        else reg_wdata = op1 >> inst_i[24:20];
+                        if (inst_i[30] == 1'b1) reg_wdata = (sri_shift & sri_shift_mask) | ({32{reg1_rdata[31]}} & (~sri_shift_mask));
+                        else reg_wdata = reg1_rdata >> inst_i[24:20];
                     end
                     default:    reg_wdata = '0;
                 endcase
@@ -275,19 +258,19 @@ module ex
                     reg_we = '1;
                     case (funct3)
                         INST_ADD_SUB: begin
-                            if (inst_i[30] == 1'b0) reg_wdata = op1_add_op2_res;
-                            else reg_wdata = op1 - op2;
+                            if (inst_i[30] == 1'b0) reg_wdata = reg1_rdata + reg2_rdata;
+                            else reg_wdata = reg1_rdata - reg2_rdata;
                         end
-                        INST_SLL:  reg_wdata = op1 << op2[4:0];
+                        INST_SLL:  reg_wdata = reg1_rdata << reg2_rdata[4:0];
                         INST_SLT:  reg_wdata = {32{(~compare)}} & 32'h1;
                         INST_SLTU: reg_wdata = {32{(~compare)}} & 32'h1;
-                        INST_XOR:  reg_wdata = op1 ^ op2;
+                        INST_XOR:  reg_wdata = reg1_rdata ^ reg2_rdata;
                         INST_SR: begin
-                            if (inst_i[30] == 1'b1) reg_wdata = (sr_shift & sr_shift_mask) | ({32{op1[31]}} & (~sr_shift_mask));
-                            else reg_wdata = op1 >> op2[4:0];
+                            if (inst_i[30] == 1'b1) reg_wdata = (sr_shift & sr_shift_mask) | ({32{reg1_rdata[31]}} & (~sr_shift_mask));
+                            else reg_wdata = reg1_rdata >> reg2_rdata[4:0];
                         end
-                        INST_OR:   reg_wdata = op1 | op2;
-                        INST_AND:  reg_wdata = op1 & op2;
+                        INST_OR:   reg_wdata = reg1_rdata | reg2_rdata;
+                        INST_AND:  reg_wdata = reg1_rdata & reg2_rdata;
                         default: begin
                             reg_wdata = '0;
                         end
@@ -310,7 +293,7 @@ module ex
             INST_TYPE_L: begin
                 mem_req   = '1;
                 reg_we    = mem_req & mem_ready;
-                mem_addr  = op1_add_op2_res;
+                mem_addr  = reg1_rdata + {{20{inst_i[31]}}, inst_i[31:20]};
                 reg_wdata = lsu_rdata;
                 case (funct3)
                     INST_LB: begin
@@ -339,7 +322,7 @@ module ex
             INST_TYPE_S: begin
                 mem_req    = '1;
                 mem_we     = '1;
-                mem_addr   = op1_add_op2_res;
+                mem_addr   = reg1_rdata + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
                 store_data = reg2_rdata;
                 case (funct3)
                     INST_SB: bytelen = B;
@@ -352,27 +335,27 @@ module ex
                 case (funct3)
                     INST_BEQ: begin
                         jump_flag = compare;
-                        jump_addr = {32{compare}} & op1_add_op2_res;
+                        jump_addr = {32{compare}} & (op1 + op2);
                     end
                     INST_BNE: begin
                         jump_flag = ~compare;
-                        jump_addr = {32{(~compare)}} & op1_add_op2_res;
+                        jump_addr = {32{(~compare)}} & (op1 + op2);
                     end
                     INST_BLT: begin
                         jump_flag = ~compare;
-                        jump_addr = {32{(~compare)}} & op1_add_op2_res;
+                        jump_addr = {32{(~compare)}} & (op1 + op2);
                     end
                     INST_BGE: begin
                         jump_flag = compare;
-                        jump_addr = {32{(compare)}} & op1_add_op2_res;
+                        jump_addr = {32{(compare)}} & (op1 + op2);
                     end
                     INST_BLTU: begin
                         jump_flag = ~compare;
-                        jump_addr = {32{(~compare)}} & op1_add_op2_res;
+                        jump_addr = {32{(~compare)}} & (op1 + op2);
                     end
                     INST_BGEU: begin
                         jump_flag = compare;
-                        jump_addr = {32{(compare)}} & op1_add_op2_res;
+                        jump_addr = {32{(compare)}} & (op1 + op2);
                     end
                     default: ;
                 endcase
@@ -380,22 +363,22 @@ module ex
             INST_JAL: begin
                 jump_flag = '1;
                 reg_we    = '1;
-                jump_addr = op1_add_op2_res;
+                jump_addr = (op1 + op2);
                 reg_wdata = inst_addr_next_type_i ? inst_addr_i + 32'd2 : inst_addr_i + 32'd4;
             end
             INST_JALR: begin
                 jump_flag = '1;
                 reg_we    = '1;
-                jump_addr = op1_add_op2_res;
+                jump_addr = (op1 + op2);
                 reg_wdata = inst_addr_next_type_i ? inst_addr_i + 32'd2 : inst_addr_i + 32'd4;
             end
             INST_LUI: begin
                 reg_we    = '1;
-                reg_wdata = op1_add_op2_res;
+                reg_wdata = (op1 + op2);
             end
             INST_AUIPC: begin
                 reg_we    = '1;
-                reg_wdata = op1_add_op2_res;
+                reg_wdata = (op1 + op2);
             end
             INST_FENCE: begin
                 jump_flag = '1;
@@ -443,8 +426,8 @@ module ex
         .rst_ni,
         .op_i      (funct3),
         .valid_i   (div_valid),
-        .dividend_i(op1),
-        .divisor_i (op2),
+        .dividend_i(reg1_rdata),
+        .divisor_i (reg2_rdata),
         .result_o  (div_data),
         .ready_o   (div_ready)
     );
@@ -454,8 +437,8 @@ module ex
         .rst_ni,
         .op_i          (funct3),
         .valid_i       (mult_valid),
-        .multiplicand_i(op1),
-        .multiplier_i  (op2),
+        .multiplicand_i(reg1_rdata),
+        .multiplier_i  (reg2_rdata),
         .result_o      (mult_data),
         .ready_o       (mult_ready)
     );
