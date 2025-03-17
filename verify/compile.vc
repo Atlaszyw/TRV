@@ -1,9 +1,20 @@
---timescale 1ns/1ps
+-Mdir build
 
+--MMD
+--cc
+--exe
+--trace
 --clk clk_i
+--build
+--build-jobs 20
 
+-prefix riscvv
+
+--timescale 1ns/1ps
 -DSIM
+
 -I../design/src/inc
+
 -y ../design/src/core
 -y ../design/src/intf
 -y ../design/src/debug
@@ -14,3 +25,4 @@
 
 ../design/src/pkg/riscvv_pkg.sv
 ../design/src/soc/riscvv_soc_top.sv
+main.cc

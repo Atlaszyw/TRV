@@ -19,7 +19,7 @@ module apb4_rom
 #(
     parameter int unsigned ADDR_WIDTH  = 13,       // 地址宽度（表示支持的地址空间，例如 4KB）
     parameter int unsigned DATA_WIDTH  = 32,       // 数据宽度（通常为 32 位或 64 位）
-    parameter string       MemInitFile = "lw.mif"
+    parameter string       MemInitFile = ""
 ) (
     // APB4 接口
     apb4_intf.slave apb_if,
